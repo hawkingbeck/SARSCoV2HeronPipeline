@@ -21,6 +21,6 @@ WORKDIR ${FUNCTION_DIR}
 
 # Copy handler function
 COPY app/ .
-RUN chmod 755 /home/app/entryPoint.sh
+# RUN chmod 755 /home/app/entryPoint.sh
 RUN chmod 755 /home/app/runPango.py
 ENTRYPOINT python /home/app/runPango.py
