@@ -21,6 +21,7 @@ namespace HeronPipeline
             {
                 MaxAzs = 1, ///TODO: Increase this once EIP's are freed
                 Cidr = "11.0.0.0/16",
+                NatGateways = 1,
                 SubnetConfiguration = new[]{
                     new SubnetConfiguration {
                         CidrMask = 24,
@@ -31,10 +32,17 @@ namespace HeronPipeline
                         CidrMask = 24,
                         Name = "application",
                         SubnetType = SubnetType.PRIVATE
-                    }}
+                    }},
             });
-            
-            
+
+            var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps
+            {
+                Vpc = vpc,
+                AllowAllOutbound = true
+            });
+            secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllIcmp(), "All Incoming");
+            secGroup.Node.AddDependency(vpc);
+
             //++++++++++++++++++++++++++++++++++++++++++
             // File System (EFS)
             //++++++++++++++++++++++++++++++++++++++++++
@@ -43,16 +51,29 @@ namespace HeronPipeline
                 Vpc = vpc,
                 ThroughputMode = ThroughputMode.PROVISIONED,
                 ProvisionedThroughputPerSecond = Size.Mebibytes(20),
-                PerformanceMode = PerformanceMode.GENERAL_PURPOSE
+                PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
+                RemovalPolicy = RemovalPolicy.DESTROY,
+                Encrypted = false
+                //SecurityGroup = vpc.VpcDefaultSecurityGroup
             });
+
+
+            //var pipelineEFSMountTarget = new CfnMountTarget(this, "pipelineEFSMountTarget", new CfnMountTargetProps
+            //{
+            //    FileSystemId = pipelineEFS.FileSystemId,
+            //    SecurityGroups = new string[] { vpc.VpcDefaultSecurityGroup },
+            //    SubnetId = vpc.PrivateSubnets[0].SubnetId
+            //});
 
             var pipelineEFSAccessPoint = new AccessPoint(this, "pipelineEFSAccessPoint", new AccessPointProps
             {
                 FileSystem = pipelineEFS,
                 PosixUser = new PosixUser { Gid = "1000", Uid = "1000"},
+                CreateAcl = new Acl { OwnerUid = "1000", OwnerGid = "1000", Permissions="0777"},
                 Path = "/efs"
             });
             pipelineEFSAccessPoint.Node.AddDependency(pipelineEFS);
+            //pipelineEFSAccessPoint.Node.AddDependency(pipelineEFSMountTarget);
 
             var volume1 = new Amazon.CDK.AWS.ECS.Volume();
             volume1.EfsVolumeConfiguration = new EfsVolumeConfiguration
@@ -63,10 +84,10 @@ namespace HeronPipeline
                     AccessPointId = pipelineEFSAccessPoint.AccessPointId,
                     Iam = "ENABLED"
                 },
-                TransitEncryption = "ENABLED",
-                
+                TransitEncryption = "ENABLED"
             };
             volume1.Name = "efsVolume";
+            //volume1.
             
 
             //++++++++++++++++++++++++++++++++++++++++++
@@ -129,18 +150,16 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 },
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
 
             });
 
             var lqpDownloadMetaDataLogGroup = new LogGroup(this, "lqpDownloadMetaDataLogGroup", new LogGroupProps
             {
                 LogGroupName = "lqpDownloadMetaDataLogGroup",
-                Retention = RetentionDays.ONE_WEEK
-
+                Retention = RetentionDays.ONE_WEEK,
+                RemovalPolicy = RemovalPolicy.DESTROY
             });
-
-
 
             lqpDownloadMetaDataTask.AddContainer("lqpContainer", new ContainerDefinitionOptions
             {
@@ -148,29 +167,38 @@ namespace HeronPipeline
                     Repository.FromRepositoryArn(this, "id", "arn:aws:ecr:eu-west-1:889562587392:low_quality_placement/low_quality_placement"),
                     "latest"),
                 Logging = new AwsLogDriver(new AwsLogDriverProps { StreamPrefix = "lqpDownloadMetaData", LogGroup = lqpDownloadMetaDataLogGroup }),
-                EntryPoint = new string[] { "sh", "/home/app/lqp-fargateDataPrep.sh" },
+                EntryPoint = new string[] { "sh", "/home/app/lqp-fargateDataPrep.sh" }
                 
             });
-
-            if (lqpDownloadMetaDataTask.DefaultContainer != null) {
-                lqpDownloadMetaDataTask.DefaultContainer.AddMountPoints(new MountPoint[] {
+            var container = lqpDownloadMetaDataTask.FindContainer("lqpContainer");
+            container.AddMountPoints(new MountPoint[] {
                     new MountPoint
                     {
                         SourceVolume = "efsVolume",
                         ContainerPath = "/mnt/efs0",
-                        ReadOnly = false
+                        ReadOnly = false,
                     }
                 });
-            }
-            else
-            {
-                var i = 1;  
-            }
 
-            
+            //lqpDownloadMetaDataTask.DefaultContainer.AddMountPoints(new MountPoint[] {
+            //        new MountPoint
+            //        {
+            //            SourceVolume = "efsVolume",
+            //            ContainerPath = "/mnt/efs0",
+            //            ReadOnly = false,
+            //        }
+            //    });
 
-
-
+            //if (lqpDownloadMetaDataTask.DefaultContainer != null) {
+            //    lqpDownloadMetaDataTask.DefaultContainer.AddMountPoints(new MountPoint[] {
+            //        new MountPoint
+            //        {
+            //            SourceVolume = "efsVolume",
+            //            ContainerPath = "/mnt/efs0",
+            //            ReadOnly = false,
+            //        }
+            //    });
+            //}
         }
     }
 }
