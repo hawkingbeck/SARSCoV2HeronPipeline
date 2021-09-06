@@ -16,7 +16,11 @@
     <PackageReference Include="Amazon.CDK.AWS.ECS.Patterns" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.EFS" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.IAM" Version="1.121.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Lambda" Version="1.121.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Lambda.Python" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.S3" Version="1.121.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Stepfunctions" Version="1.121.0" />
+    <PackageReference Include="Amazon.CDK.AWS.Stepfunctions.Tasks" Version="1.121.0" />
 
     <!-- jsii Roslyn analyzers (un-comment to obtain compile-time checks for missing required props -->
     <PackageReference Include="Amazon.Jsii.Analyzers" Version="*" PrivateAssets="all" />
