@@ -310,6 +310,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable {
                                 Name = "DATE_PARTITION",
                                 Value = "$.date"
+                            },
+                            new TaskEnvironmentVariable {
+                              Name = "PARTITION_COUNT",
+                              Value = "119"
                             }
                         }
                     }
