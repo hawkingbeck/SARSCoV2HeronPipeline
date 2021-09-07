@@ -11,13 +11,15 @@ using Amazon.CDK.AWS.StepFunctions.Tasks;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Lambda.Python;
 
+
+// /home/ec2-user/.nvm/versions/node/v16.3.0
 namespace HeronPipeline
 {
     public class HeronPipelineStack : Stack
     {
         internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
-          
+
             //++++++++++++++++++++++++++++++++++++++++++
             // VPC
             //++++++++++++++++++++++++++++++++++++++++++
@@ -274,11 +276,12 @@ namespace HeronPipeline
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
                 ItemsPath = "$.runbaseConfig.batches",
-                ResultPath = "null",
-                Parameters = {
-                {"", ""}
-              }
+                ResultPath = "null"
+                // Parameters = {
+                // {"", ""} 
+              //}
             });
+            // lqpRunBaseMapState.Iterator = 
 
 
             var chain = Chain
