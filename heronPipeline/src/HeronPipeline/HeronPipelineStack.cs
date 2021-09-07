@@ -190,7 +190,7 @@ namespace HeronPipeline
                         }
                     }
                 },
-                ResultPath = null
+                ResultPath = JsonPath.DISCARD
             });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -250,7 +250,7 @@ namespace HeronPipeline
                         }
                     }
                 },
-                ResultPath = null
+                ResultPath = JsonPath.DISCARD
             });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -268,7 +268,6 @@ namespace HeronPipeline
                 TaskRole = ecsExecutionRole,
                 Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
             });
-            var lqpTidyContainer = lqpTidyTaskDefinition.FindContainer("lqpTidyContainer");
             lqpTidyTaskDefinition.AddContainer("lqpTidyContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
                 Image = lqpImage,
@@ -284,6 +283,7 @@ namespace HeronPipeline
                 }),
                 EntryPoint = new string[] { "python", "/home/app/lqp-fargateTidy.py" }
             });
+            var lqpTidyContainer = lqpTidyTaskDefinition.FindContainer("lqpTidyContainer");
             lqpTidyContainer.AddMountPoints(new MountPoint[] {
                     new MountPoint {
                         SourceVolume = "efsVolume",
@@ -314,7 +314,7 @@ namespace HeronPipeline
                         }
                     }
                 },
-                ResultPath = null
+                ResultPath = JsonPath.DISCARD
             });
 
 
@@ -344,12 +344,10 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
-                ItemsPath = "$.runbaseConfig.batches",
+                ItemsPath = "$.Payload.batches",
                 ResultPath = JsonPath.DISCARD
             });
 
-
-            
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
 
