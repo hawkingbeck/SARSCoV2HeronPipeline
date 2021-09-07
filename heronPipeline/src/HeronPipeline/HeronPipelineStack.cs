@@ -229,7 +229,7 @@ namespace HeronPipeline
                     }
                 });
 
-            var lqpRunBaseTask = new EcsRunTask(this, "lqpRunBaseECSTask", new EcsRunTaskProps{
+            var lqpRunBaseTask = new EcsRunTask(this, "lqpRunBaseStepFunctionTask", new EcsRunTaskProps{
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
                 TaskDefinition = lqpRunBaseTaskDefinition,
@@ -277,11 +277,9 @@ namespace HeronPipeline
                 InputPath = "$",
                 ItemsPath = "$.runbaseConfig.batches",
                 ResultPath = "null"
-                // Parameters = {
-                // {"", ""} 
-              //}
             });
-            // lqpRunBaseMapState.Iterator = 
+            
+            lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
 
             var chain = Chain
