@@ -17,6 +17,7 @@ namespace HeronPipeline
     {
         internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
+          
             //++++++++++++++++++++++++++++++++++++++++++
             // VPC
             //++++++++++++++++++++++++++++++++++++++++++
