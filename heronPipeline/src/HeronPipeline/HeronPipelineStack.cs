@@ -126,7 +126,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
 
             // +++++++++++++++++++++++++++++++++++++++++++++
-            // Task definition for LQP metadata prepreation
+            // Task definition for LQP metadata preparation
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpImage = ContainerImage.FromEcrRepository(
                     Repository.FromRepositoryArn(this, "lqpImage", "arn:aws:ecr:eu-west-1:889562587392:low_quality_placement/low_quality_placement"),
@@ -254,6 +254,71 @@ namespace HeronPipeline
             });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
+            // Task definition for LQP tidy
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var lqpTidyTaskDefinition = new TaskDefinition(this, "lqpTidyTask", new TaskDefinitionProps
+            {
+                Family = "lqpTidyTask",
+                Cpu = "512",
+                MemoryMiB = "2048",
+                EphemeralStorageGiB = 50,
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            });
+            var lqpTidyContainer = lqpTidyTaskDefinition.FindContainer("lqpTidyContainer");
+            lqpTidyTaskDefinition.AddContainer("lqpTidyContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = lqpImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "lqpTidy",
+                    LogGroup = new LogGroup(this, "lqpTidyLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "lqpTidyLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                }),
+                EntryPoint = new string[] { "python", "/home/app/lqp-fargateTidy.py" }
+            });
+            lqpTidyContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+
+            var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = lqpRunBaseTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = lqpRunBaseContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable {
+                                Name = "LQP_DATA_ROOT",
+                                Value = "/mnt/efs0/lqpModel/metaData"
+                            },
+                            new TaskEnvironmentVariable {
+                                Name = "DATE_PARTITION",
+                                Value = "$.date"
+                            }
+                        }
+                    }
+                },
+                ResultPath = null
+            });
+
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++++++++++ Lambda Functions +++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -273,11 +338,17 @@ namespace HeronPipeline
             // +++++++++++++ State Machines ++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++ LQP Prepare MetaData Step Function +++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
                 ItemsPath = "$.runbaseConfig.batches",
                 ResultPath = JsonPath.DISCARD
             });
+
+
             
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
@@ -285,7 +356,8 @@ namespace HeronPipeline
             var chain = Chain
                 .Start(lqpPrepareMetaDataTask)
                 .Next(lqpCreateRunBaseConfigTask)
-                .Next(lqpRunBaseMapState);
+                .Next(lqpRunBaseMapState)
+                .Next(lqpTidyTask);
 
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
