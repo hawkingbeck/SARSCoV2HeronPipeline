@@ -276,7 +276,7 @@ namespace HeronPipeline
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
                 ItemsPath = "$.runbaseConfig.batches",
-                ResultPath = "null"
+                ResultPath = JsonPath.DISCARD
             });
             
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
@@ -284,7 +284,8 @@ namespace HeronPipeline
 
             var chain = Chain
                 .Start(lqpPrepareMetaDataTask)
-                .Next(lqpCreateRunBaseConfigTask);
+                .Next(lqpCreateRunBaseConfigTask)
+                .Next(lqpRunBaseMapState);
 
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
