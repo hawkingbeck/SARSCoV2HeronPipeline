@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Amazon.CDK;
 using Amazon.CDK.AWS.S3;
 using Amazon.CDK.AWS.ECS;
@@ -10,6 +12,7 @@ using Amazon.CDK.AWS.StepFunctions;
 using Amazon.CDK.AWS.StepFunctions.Tasks;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Lambda.Python;
+using Stack = Amazon.CDK.Stack;
 
 
 // /home/ec2-user/.nvm/versions/node/v16.3.0
@@ -369,10 +372,14 @@ namespace HeronPipeline
               
             });
 
+            var parameters = new Dictionary<string, object>();
+            parameters.Add("date", "$.date");
+
             var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
               InputPath = "$",
               ItemsPath = "$.runbaseConfig.batches",
-              ResultPath = JsonPath.DISCARD
+              ResultPath = JsonPath.DISCARD,
+              Parameters = parameters
             });
 
             lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
