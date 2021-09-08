@@ -127,7 +127,12 @@ namespace HeronPipeline
             // +++++++++++++ TASK DEFINTIONS +++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-
+            var retryItem = new RetryProps {
+              BackoffRate = 5,
+              Interval = Duration.Seconds(1),
+              MaxAttempts = 5,
+              Errors = new string[] {"States.ALL"}
+            };
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP metadata preparation
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -249,12 +254,18 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable {
                                 Name = "DATE",
                                 Value = "$.date"
+                            },
+                            new TaskEnvironmentVariable {
+                              Name = "LSB_JOBINDEX",
+                              Value = "$.partition.partition"
                             }
+                            
                         }
                     }
                 },
                 ResultPath = JsonPath.DISCARD
             });
+            lqpRunBaseTask.AddRetry(retryItem);
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP tidy
@@ -345,12 +356,6 @@ namespace HeronPipeline
             // +++++++++++++ State Machines ++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var retryItem = new RetryProps {
-              BackoffRate = 5,
-              Interval = Duration.Seconds(1),
-              MaxAttempts = 5,
-              Errors = new string[] {"States.ALL"}
-            };
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData RunBase Nested ++++
@@ -362,7 +367,6 @@ namespace HeronPipeline
                 
             });
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
-            lqpRunBaseMapState.AddRetry(retryItem);
 
             var runBaseChain = Chain
               .Start(lqpRunBaseMapState);
