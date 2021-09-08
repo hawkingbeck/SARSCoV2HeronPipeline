@@ -333,7 +333,8 @@ namespace HeronPipeline
             });
             var lqpCreateRunBaseConfigTask = new LambdaInvoke(this, "lqpCreateRunBaseConfig", new LambdaInvokeProps{
                 LambdaFunction = createRunBaseConfigFunction,
-                ResultPath = "$.runbaseConfig"
+                ResultPath = "$.runbaseConfig",
+                PayloadResponseOnly = true
             });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -347,7 +348,7 @@ namespace HeronPipeline
             // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
-                InputPath = "$",
+                InputPath = "$.",
                 ItemsPath = "$.runbaseConfig.Payload.batches",
                 ResultPath = JsonPath.DISCARD
             });
@@ -359,10 +360,12 @@ namespace HeronPipeline
                 Definition = runBaseChain
             });
 
+            //var runBaseInput = new TaskInput { Type = InputType.TEXT, Value = }
+
             var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
             {
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
-              // Input = 
+              InputPath = "$."
               
             });
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -373,7 +376,7 @@ namespace HeronPipeline
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
 
-            var chain = Chain
+            var lqpPrepareMetaDataChain = Chain
                 .Start(lqpPrepareMetaDataTask)
                 .Next(lqpCreateRunBaseConfigTask)
                 .Next(runLqpMetaDataRunBaseStateMachineTask)
@@ -381,7 +384,7 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
-                Definition = chain
+                Definition = lqpPrepareMetaDataChain
             });
         }
     }
