@@ -347,7 +347,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var retryItem = new RetryProps {
               BackoffRate = 5,
-              Interval = new Duration {},
+              Interval = Duration.Seconds(1),
               MaxAttempts = 5,
               Errors = new string[] {"States.ALL"}
             };
@@ -362,6 +362,7 @@ namespace HeronPipeline
                 
             });
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
+            lqpRunBaseMapState.AddRetry(retryItem);
 
             var runBaseChain = Chain
               .Start(lqpRunBaseMapState);
@@ -386,12 +387,12 @@ namespace HeronPipeline
               InputPath = "$",
               ItemsPath = "$.runbaseConfig.batches",
               ResultPath = JsonPath.DISCARD,
-              Parameters = parameters
+              Parameters = parameters,
               
             });
 
             lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
-            lqpPrepareMetaDataRunBaseMap.AddRetry();
+            lqpPrepareMetaDataRunBaseMap.AddRetry(retryItem);
 
             
             // +++++++++++++++++++++++++++++++++++++++++++++
