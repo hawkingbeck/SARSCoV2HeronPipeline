@@ -244,7 +244,7 @@ namespace HeronPipeline
                                 Value = "/mnt/efs0/lqpModel/metaData"
                             },
                             new TaskEnvironmentVariable {
-                                Name = "DATE_PARTITION",
+                                Name = "DATE",
                                 Value = "$.date"
                             }
                         }
@@ -256,8 +256,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP tidy
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpTidyTaskDefinition = new TaskDefinition(this, "lqpTidyTask", new TaskDefinitionProps
-            {
+            var lqpTidyTaskDefinition = new TaskDefinition(this, "lqpTidyTask", new TaskDefinitionProps{
                 Family = "lqpTidyTask",
                 Cpu = "512",
                 MemoryMiB = "2048",
@@ -292,8 +291,7 @@ namespace HeronPipeline
                     }
                 });
 
-            var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps
-            {
+            var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
                 TaskDefinition = lqpRunBaseTaskDefinition,
@@ -344,8 +342,9 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
 
+
             // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++ LQP Prepare MetaData Step Function +++++
+            // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
@@ -353,13 +352,31 @@ namespace HeronPipeline
                 ResultPath = JsonPath.DISCARD
             });
 
+            var runBaseChain = Chain
+              .Start(lqpRunBaseMapState);
+            
+            var lqpPrepareMetaDataRunbaseStateMachine = new StateMachine(this, "lqpPrepMetaDataRunBaseStateMachine", new StateMachineProps{
+                Definition = runBaseChain
+            });
+
+            var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
+            {
+              StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
+              // Input = 
+              
+            });
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++ LQP Prepare MetaData Step Function +++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            
+
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
 
             var chain = Chain
                 .Start(lqpPrepareMetaDataTask)
                 .Next(lqpCreateRunBaseConfigTask)
-                .Next(lqpRunBaseMapState)
+                .Next(runLqpMetaDataRunBaseStateMachineTask)
                 .Next(lqpTidyTask);
 
 
