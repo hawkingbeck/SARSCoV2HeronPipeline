@@ -362,14 +362,22 @@ namespace HeronPipeline
                 Definition = runBaseChain
             });
 
-            //var runBaseInput = new TaskInput { Type = InputType.TEXT, Value = }
-
             var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
             {
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
-              InputPath = "$."
+              InputPath = "$"
               
             });
+
+            var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.runbaseConfig.batches",
+              ResultPath = JsonPath.DISCARD
+            });
+
+            lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
+
+            
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData Step Function +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -381,7 +389,7 @@ namespace HeronPipeline
             var lqpPrepareMetaDataChain = Chain
                 .Start(lqpPrepareMetaDataTask)
                 .Next(lqpCreateRunBaseConfigTask)
-                .Next(runLqpMetaDataRunBaseStateMachineTask)
+                .Next(lqpPrepareMetaDataRunBaseMap)
                 .Next(lqpTidyTask);
 
 
