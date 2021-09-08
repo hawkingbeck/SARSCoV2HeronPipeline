@@ -294,12 +294,12 @@ namespace HeronPipeline
             var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
-                TaskDefinition = lqpRunBaseTaskDefinition,
+                TaskDefinition = lqpTidyTaskDefinition,
                 AssignPublicIp = true,
                 LaunchTarget = new EcsFargateLaunchTarget(),
                 ContainerOverrides = new ContainerOverride[] {
                     new ContainerOverride {
-                        ContainerDefinition = lqpRunBaseContainer,
+                        ContainerDefinition = lqpTidyContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable {
                                 Name = "LQP_DATA_ROOT",
@@ -347,7 +347,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
+            var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
                 InputPath = "$.",
                 ItemsPath = "$.runbaseConfig.Payload.batches",
                 ResultPath = JsonPath.DISCARD,
@@ -375,7 +375,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             
 
-            lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
+            // lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
 
             var lqpPrepareMetaDataChain = Chain
