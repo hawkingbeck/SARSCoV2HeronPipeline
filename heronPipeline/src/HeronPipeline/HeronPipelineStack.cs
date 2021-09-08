@@ -373,7 +373,8 @@ namespace HeronPipeline
             });
 
             var parameters = new Dictionary<string, object>();
-            parameters.Add("date", "$.date");
+            parameters.Add("date.$", "$.date");
+            parameters.Add("partitions.$", "$$.Map.Item.Value");
 
             var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
               InputPath = "$",
@@ -394,8 +395,8 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataChain = Chain
-                .Start(lqpPrepareMetaDataTask)
-                .Next(lqpCreateRunBaseConfigTask)
+                // .Start(lqpPrepareMetaDataTask)
+                .Start(lqpCreateRunBaseConfigTask)
                 .Next(lqpPrepareMetaDataRunBaseMap)
                 .Next(lqpTidyTask);
 
