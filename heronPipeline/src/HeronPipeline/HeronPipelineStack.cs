@@ -345,14 +345,19 @@ namespace HeronPipeline
             // +++++++++++++ State Machines ++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-
+            var retryItem = new RetryProps {
+              BackoffRate = 5,
+              Interval = new Duration {},
+              MaxAttempts = 5,
+              Errors = new string[] {"States.ALL"}
+            };
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
-                InputPath = "$.",
-                ItemsPath = "$.runbaseConfig.Payload.batches",
+                InputPath = "$",
+                ItemsPath = "$.partitions",
                 ResultPath = JsonPath.DISCARD,
                 
             });
@@ -368,22 +373,25 @@ namespace HeronPipeline
             var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
             {
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
-              InputPath = "$"
+              InputPath = "$",
+              ResultPath = JsonPath.DISCARD
               
             });
 
             var parameters = new Dictionary<string, object>();
             parameters.Add("date.$", "$.date");
-            parameters.Add("partitions.$", "$$.Map.Item.Value");
+            parameters.Add("partitions.$", "$$.Map.Item.Value.partitions");
 
             var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
               InputPath = "$",
               ItemsPath = "$.runbaseConfig.batches",
               ResultPath = JsonPath.DISCARD,
               Parameters = parameters
+              
             });
 
             lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
+            lqpPrepareMetaDataRunBaseMap.AddRetry();
 
             
             // +++++++++++++++++++++++++++++++++++++++++++++
