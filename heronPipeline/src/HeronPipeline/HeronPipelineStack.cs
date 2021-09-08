@@ -185,7 +185,7 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable {
                                 Name = "DATE_PARTITION",
-                                Value = "$.date"
+                                Value = JsonPath.StringAt("$.date") //"$.date"
                             }
                         }
                     }
@@ -331,10 +331,11 @@ namespace HeronPipeline
                 Entry = "src/functions/createRunBaseConfig",
                 Runtime = Runtime.PYTHON_3_7,
                 Index = "app.py",
-                Handler = "lambda_handler"
+                Handler = "lambda_handler",
             });
             var lqpCreateRunBaseConfigTask = new LambdaInvoke(this, "lqpCreateRunBaseConfig", new LambdaInvokeProps{
-                LambdaFunction = createRunBaseConfigFunction
+                LambdaFunction = createRunBaseConfigFunction,
+                ResultPath = "$.runbaseConfig"
             });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -348,7 +349,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$",
-                ItemsPath = "$.Payload.batches",
+                ItemsPath = "$.runbaseConfig.Payload.batches",
                 ResultPath = JsonPath.DISCARD
             });
 
