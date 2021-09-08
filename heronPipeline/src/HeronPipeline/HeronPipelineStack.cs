@@ -350,8 +350,10 @@ namespace HeronPipeline
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMap", new MapProps{
                 InputPath = "$.",
                 ItemsPath = "$.runbaseConfig.Payload.batches",
-                ResultPath = JsonPath.DISCARD
+                ResultPath = JsonPath.DISCARD,
+                
             });
+            lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
             var runBaseChain = Chain
               .Start(lqpRunBaseMapState);
