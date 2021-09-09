@@ -456,10 +456,10 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataChain = Chain
-                // .Start(lqpPrepareMetaDataTask)
-                // .Next(lqpCreateRunBaseConfigTask)
-                // .Next(lqpPrepareMetaDataRunBaseMap)
-                .Start(lqpTidyTask);
+                .Start(lqpPrepareMetaDataTask)
+                .Next(lqpCreateRunBaseConfigTask)
+                .Next(lqpPrepareMetaDataRunBaseMap)
+                .Next(lqpTidyTask);
 
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
