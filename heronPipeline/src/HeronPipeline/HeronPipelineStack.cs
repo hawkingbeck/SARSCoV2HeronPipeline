@@ -253,11 +253,11 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable {
                                 Name = "DATE",
-                                Value = "$.date"
+                                Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable {
                               Name = "LSB_JOBINDEX",
-                              Value = "$.partition.partition"
+                              Value = JsonPath.StringAt("$.partition")
                             }
                             
                         }
@@ -362,7 +362,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var runBaseParameters = new Dictionary<string, object>();
             runBaseParameters.Add("date.$", "$.date");
-            runBaseParameters.Add("partitions.$", "$$.Map.Item.Value.partitions");
+            runBaseParameters.Add("partition.$", "$$.Map.Item.Value.partition");
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
                 InputPath = "$",
                 ItemsPath = "$.partitions",
@@ -413,8 +413,8 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataChain = Chain
-                // .Start(lqpPrepareMetaDataTask)
-                .Start(lqpCreateRunBaseConfigTask)
+                .Start(lqpPrepareMetaDataTask)
+                .Next(lqpCreateRunBaseConfigTask)
                 .Next(lqpPrepareMetaDataRunBaseMap)
                 .Next(lqpTidyTask);
 
