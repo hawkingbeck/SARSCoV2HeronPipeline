@@ -127,7 +127,12 @@ namespace HeronPipeline
             // +++++++++++++ TASK DEFINTIONS +++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-
+            var retryItem = new RetryProps {
+              BackoffRate = 5,
+              Interval = Duration.Seconds(1),
+              MaxAttempts = 5,
+              Errors = new string[] {"States.ALL"}
+            };
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP metadata preparation
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -248,13 +253,19 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable {
                                 Name = "DATE",
-                                Value = "$.date"
+                                Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable {
+                              Name = "LSB_JOBINDEX",
+                              Value = JsonPath.StringAt("$.partition")
                             }
+                            
                         }
                     }
                 },
                 ResultPath = JsonPath.DISCARD
             });
+            lqpRunBaseTask.AddRetry(retryItem);
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP tidy
@@ -345,24 +356,21 @@ namespace HeronPipeline
             // +++++++++++++ State Machines ++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var retryItem = new RetryProps {
-              BackoffRate = 5,
-              Interval = Duration.Seconds(1),
-              MaxAttempts = 5,
-              Errors = new string[] {"States.ALL"}
-            };
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
+            var runBaseParameters = new Dictionary<string, object>();
+            runBaseParameters.Add("date.$", "$.date");
+            runBaseParameters.Add("partition.$", "$$.Map.Item.Value.partition");
             var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
                 InputPath = "$",
                 ItemsPath = "$.partitions",
                 ResultPath = JsonPath.DISCARD,
+                Parameters = runBaseParameters
                 
             });
             lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
-            lqpRunBaseMapState.AddRetry(retryItem);
 
             var runBaseChain = Chain
               .Start(lqpRunBaseMapState);
@@ -374,6 +382,7 @@ namespace HeronPipeline
 
             var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
             {
+              IntegrationPattern = IntegrationPattern.RUN_JOB,
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
               InputPath = "$",
               ResultPath = JsonPath.DISCARD,
@@ -394,7 +403,7 @@ namespace HeronPipeline
             });
 
             lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
-            lqpPrepareMetaDataRunBaseMap.AddRetry(retryItem);
+            // lqpPrepareMetaDataRunBaseMap.AddRetry(retryItem);
 
             
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -406,8 +415,8 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataChain = Chain
-                // .Start(lqpPrepareMetaDataTask)
-                .Start(lqpCreateRunBaseConfigTask)
+                .Start(lqpPrepareMetaDataTask)
+                .Next(lqpCreateRunBaseConfigTask)
                 .Next(lqpPrepareMetaDataRunBaseMap)
                 .Next(lqpTidyTask);
 
