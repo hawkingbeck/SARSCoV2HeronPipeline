@@ -105,6 +105,7 @@ namespace HeronPipeline
             });
 
             samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
+                IndexName = "lastChangedDate",
                 PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
                 SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
                 ProjectionType = ProjectionType.ALL
@@ -112,7 +113,7 @@ namespace HeronPipeline
 
             var sequencesTable = new Table(this, "sequencesTable", new TableProps {
                 BillingMode = BillingMode.PAY_PER_REQUEST,
-                PartitionKey = new Attribute { Name = "seqHash"}
+                PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING}
             });
 
             //++++++++++++++++++++++++++++++++++++++++++
@@ -423,9 +424,7 @@ namespace HeronPipeline
               IntegrationPattern = IntegrationPattern.RUN_JOB,
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
               InputPath = "$",
-              ResultPath = JsonPath.DISCARD,
-              IntegrationPattern = IntegrationPattern.RUN_JOB
-              
+              ResultPath = JsonPath.DISCARD
             });
 
             var parameters = new Dictionary<string, object>();
