@@ -360,7 +360,7 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable {
                                 Name = "DATE_PARTITION",
-                                Value = "$.date"
+                                Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable {
                               Name = "PARTITION_COUNT",
