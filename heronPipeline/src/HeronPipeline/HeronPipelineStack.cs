@@ -371,11 +371,13 @@ namespace HeronPipeline
                 Definition = runBaseChain
             });
 
+
             var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
             {
               StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
               InputPath = "$",
-              ResultPath = JsonPath.DISCARD
+              ResultPath = JsonPath.DISCARD,
+              IntegrationPattern = IntegrationPattern.RUN_JOB
               
             });
 
