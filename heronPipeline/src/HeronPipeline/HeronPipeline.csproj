@@ -10,7 +10,7 @@
   <ItemGroup>
     <!-- CDK Construct Library dependencies -->
     <PackageReference Include="Amazon.CDK" Version="1.121.0" />
-    <PackageReference Include="Amazon.CDK.AWS.DynamoDB" Version="1.122.0" />
+    <PackageReference Include="Amazon.CDK.AWS.DynamoDB" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.EC2" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.ECR" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.ECS" Version="1.121.0" />
@@ -20,7 +20,7 @@
     <PackageReference Include="Amazon.CDK.AWS.Lambda" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.Lambda.Python" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.S3" Version="1.121.0" />
-    <PackageReference Include="Amazon.CDK.AWS.SQS" Version="1.122.0" />
+    <PackageReference Include="Amazon.CDK.AWS.SQS" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.Stepfunctions" Version="1.121.0" />
     <PackageReference Include="Amazon.CDK.AWS.Stepfunctions.Tasks" Version="1.121.0" />
 
