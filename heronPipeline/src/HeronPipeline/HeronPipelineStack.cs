@@ -91,7 +91,7 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             //+++++++++++++++ Storage ++++++++++++++++++
             //++++++++++++++++++++++++++++++++++++++++++
-            new Bucket(this, "dataBucket", new BucketProps{
+            var pipelineBucket = new Bucket(this, "dataBucket", new BucketProps{
                 Versioned = true,
                 RemovalPolicy = RemovalPolicy.DESTROY,
                 AutoDeleteObjects = true
@@ -365,6 +365,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable {
                               Name = "PARTITION_COUNT",
                               Value = "119"
+                            },
+                            new TaskEnvironmentVariable {
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
                             }
                         }
                     }
@@ -452,10 +456,10 @@ namespace HeronPipeline
 
 
             var lqpPrepareMetaDataChain = Chain
-                .Start(lqpPrepareMetaDataTask)
-                .Next(lqpCreateRunBaseConfigTask)
-                .Next(lqpPrepareMetaDataRunBaseMap)
-                .Next(lqpTidyTask);
+                // .Start(lqpPrepareMetaDataTask)
+                // .Next(lqpCreateRunBaseConfigTask)
+                // .Next(lqpPrepareMetaDataRunBaseMap)
+                .Start(lqpTidyTask);
 
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
