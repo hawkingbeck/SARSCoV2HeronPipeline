@@ -444,17 +444,11 @@ namespace HeronPipeline
             });
 
             lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
-            // lqpPrepareMetaDataRunBaseMap.AddRetry(retryItem);
 
             
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData Step Function +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            
-
-            // lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
-
-
             var lqpPrepareMetaDataChain = Chain
                 .Start(lqpPrepareMetaDataTask)
                 .Next(lqpCreateRunBaseConfigTask)
