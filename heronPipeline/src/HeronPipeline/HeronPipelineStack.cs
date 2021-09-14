@@ -504,11 +504,13 @@ namespace HeronPipeline
                     {"HERON_DAILY_PROCESSING_QUEUE",dailyProcessingQueue.QueueUrl}
                 }
             });
+
             var getMessageCountTask = new LambdaInvoke(this, "getMessageCountTask", new LambdaInvokeProps{
                 LambdaFunction = getMessageCountFunction,
                 ResultPath = "$.messageCount",
                 PayloadResponseOnly = true
             });
+            
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
