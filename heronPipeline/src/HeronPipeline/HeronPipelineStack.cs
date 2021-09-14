@@ -386,6 +386,13 @@ namespace HeronPipeline
             fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
             fileSystemConfig.LocalMountPath = "/mnt/efs0";
 
+            var s3CrudpPolicyStatement = new PolicyStatement(new PolicyStatementProps
+            {
+                Effect = Effect.ALLOW,
+                Actions = new string[] { "sts:AssumeRole" },
+                Principals = new ServicePrincipal[] { new ServicePrincipal("ecs-tasks.amazonaws.com") }
+            });
+
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
 
             var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
@@ -411,6 +418,9 @@ namespace HeronPipeline
                 Filesystem = lambdaPipelineFileSystem,
                 Vpc = vpc
             });
+
+            checkLqpMetaDataIsPresentFunction.AddToRolePolicy()
+
             checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
 
             var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
