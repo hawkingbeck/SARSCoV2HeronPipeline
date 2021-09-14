@@ -456,6 +456,16 @@ namespace HeronPipeline
                 Principals = new ServicePrincipal[] { new ServicePrincipal("ecs-tasks.amazonaws.com") }
             });
 
+            var sqsAccessPolicyStatement = new PolicyStatement( new PolicyStatementProps {
+              Effect = Effect.ALLOW,
+              Actions = new string[] { "sqs:*"},
+            });
+            sqsAccessPolicyStatement.AddResources(new string[] {
+              dailyProcessingQueue.QueueArn,
+              reprocessingQueue.QueueArn
+            });
+            
+
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
             // Mark: RunBase
             var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
@@ -504,6 +514,7 @@ namespace HeronPipeline
                     {"HERON_DAILY_PROCESSING_QUEUE",dailyProcessingQueue.QueueUrl}
                 }
             });
+            getMessageCountFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
             var getMessageCountTask = new LambdaInvoke(this, "getMessageCountTask", new LambdaInvokeProps{
                 LambdaFunction = getMessageCountFunction,
