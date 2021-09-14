@@ -393,6 +393,23 @@ namespace HeronPipeline
                 ResultPath = "$.runbaseConfig",
                 PayloadResponseOnly = true
             });
+            var checkLqpMetaDataIsPresentFunction = new PythonFunction(this, "checkLqpMetaDataIsPresentFunction", new PythonFunctionProps {
+                Entry = "src/functions/checkLqpMetaDataIsPresent",
+                Runtime = Runtime.PYTHON_3_7,
+                Index = "app.py",
+                Handler = "lambda_handler",
+                Environment = new Dictionary<string, string> {
+                  {"LQP_DATA_ROOT","/mnt/efs0/lqpModel/metaData"},
+                  {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName}
+                }
+            });
+            checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
+
+            var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
+                LambdaFunction = checkLqpMetaDataIsPresentFunction,
+                ResultPath = "$.metaDataPresent",
+                PayloadResponseOnly = true
+            });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
