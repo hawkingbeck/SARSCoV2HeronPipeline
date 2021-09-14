@@ -419,8 +419,6 @@ namespace HeronPipeline
                 Vpc = vpc
             });
 
-            // checkLqpMetaDataIsPresentFunction.AddToRolePolicy()
-
             checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
 
             var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
@@ -493,6 +491,18 @@ namespace HeronPipeline
 
             var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
                 Definition = lqpPrepareMetaDataChain
+            });
+
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++ Heron Pipeline State Machine ++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var pipelineChain = Chain
+                    .Start(checkLqpMetaDataIsPresentTask);
+
+            var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
+            {
+                Definition = pipelineChain
             });
         }
     }
