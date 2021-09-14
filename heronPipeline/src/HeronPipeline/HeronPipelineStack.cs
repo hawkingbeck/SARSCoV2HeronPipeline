@@ -419,7 +419,7 @@ namespace HeronPipeline
                 Vpc = vpc
             });
 
-            checkLqpMetaDataIsPresentFunction.AddToRolePolicy()
+            // checkLqpMetaDataIsPresentFunction.AddToRolePolicy()
 
             checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
 
