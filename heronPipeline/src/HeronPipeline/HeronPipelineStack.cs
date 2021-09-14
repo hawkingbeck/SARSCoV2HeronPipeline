@@ -403,8 +403,7 @@ namespace HeronPipeline
                         Retention = RetentionDays.ONE_WEEK,
                         RemovalPolicy = RemovalPolicy.DESTROY
                     })
-                }),
-                EntryPoint = new string[] { "python", "/home/app/app.py" }
+                })
             });
             var addSequencesToQueueContainer = addSequencesToQueueTaskDefinition.FindContainer("addSequencesToQueueContainer");
 
@@ -562,8 +561,8 @@ namespace HeronPipeline
             // +++++++ Heron Pipeline State Machine ++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
-            var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.checkForMetaData.metaDataReady"), true);
-            var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.checkForMetaData.metaDataReady"), false);
+            var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), true);
+            var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), false);
 
             var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
                 Comment = "Is LQP metadata available?"
