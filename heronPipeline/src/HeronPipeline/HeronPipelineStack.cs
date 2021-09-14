@@ -428,11 +428,11 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable{
                                 Name = "HERON_PROCESSING_QUEUE",
-                                Value = reprocessingQueue.QueueName
+                                Value = reprocessingQueue.QueueUrl
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_DAILY_PROCESSING_QUEUE",
-                              Value = dailyProcessingQueue.QueueName
+                              Value = dailyProcessingQueue.QueueUrl
                             }
                         }
                     }
