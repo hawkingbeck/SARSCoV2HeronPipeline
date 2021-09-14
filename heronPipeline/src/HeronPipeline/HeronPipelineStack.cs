@@ -457,7 +457,7 @@ namespace HeronPipeline
             });
 
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
-
+            // Mark: RunBase
             var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
                 Entry = "src/functions/createRunBaseConfig",
                 Runtime = Runtime.PYTHON_3_7,
@@ -469,6 +469,7 @@ namespace HeronPipeline
                 ResultPath = "$.runbaseConfig",
                 PayloadResponseOnly = true
             });
+            // Mark: checkMetaData
             var checkLqpMetaDataIsPresentFunction = new PythonFunction(this, "checkLqpMetaDataIsPresentFunction", new PythonFunctionProps {
                 Entry = "src/functions/checkLqpMetaDataIsPresent",
                 Runtime = Runtime.PYTHON_3_7,
@@ -487,6 +488,25 @@ namespace HeronPipeline
             var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
                 LambdaFunction = checkLqpMetaDataIsPresentFunction,
                 ResultPath = "$.metaDataPresent",
+                PayloadResponseOnly = true
+            });
+
+            // Mark: getMessageCount
+            var getMessageCountFunction = new PythonFunction(this, "getMessageCountFunction", new PythonFunctionProps{
+                Entry = "src/functions/getMessageCount",
+                Runtime = Runtime.PYTHON_3_7,
+                Index = "app.py",
+                Handler = "lambda_handler",
+                Environment = new Dictionary<string, string> {
+                    {"EXECUTION_MODE",JsonPath.StringAt("$.executionMode")},
+                    {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
+                    {"HERON_PROCESSING_QUEUE", reprocessingQueue.QueueUrl},
+                    {"HERON_DAILY_PROCESSING_QUEUE",dailyProcessingQueue.QueueUrl}
+                }
+            });
+            var getMessageCountTask = new LambdaInvoke(this, "getMessageCountTask", new LambdaInvokeProps{
+                LambdaFunction = getMessageCountFunction,
+                ResultPath = "$.messageCount",
                 PayloadResponseOnly = true
             });
 
@@ -567,7 +587,13 @@ namespace HeronPipeline
             var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
                 Comment = "Is LQP metadata available?"
             });
-            metaDataReadyChoiceTask.When(metaDataPresentCondition, next: addSequencesToQueueTask);
+
+            var processMessagesChain = Chain
+              .Start(addSequencesToQueueTask)
+              .Next(getMessageCountTask)
+              .Next(pipelineFinishTask);
+
+            metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
             metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: pipelineFinishTask);
 
             var pipelineChain = Chain
