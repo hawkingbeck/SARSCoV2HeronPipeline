@@ -382,6 +382,12 @@ namespace HeronPipeline
             // ++++++++++++ Lambda Functions +++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
+            var fileSystemConfig = new FileSystemConfig();
+            fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
+            fileSystemConfig.LocalMountPath = "/mnt/efs0";
+
+            var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
+
             var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
                 Entry = "src/functions/createRunBaseConfig",
                 Runtime = Runtime.PYTHON_3_7,
@@ -401,7 +407,9 @@ namespace HeronPipeline
                 Environment = new Dictionary<string, string> {
                   {"LQP_DATA_ROOT","/mnt/efs0/lqpModel/metaData"},
                   {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName}
-                }
+                },
+                Filesystem = lambdaPipelineFileSystem,
+                Vpc = vpc
             });
             checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
 
