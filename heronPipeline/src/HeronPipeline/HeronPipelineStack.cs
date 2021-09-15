@@ -627,7 +627,7 @@ namespace HeronPipeline
               Runtime = Runtime.PYTHON_3_7,
               Index = "app.py",
               Handler = "lambda_handler",
-              Timeout = new Duration(900).seconds()
+              Timeout = Duration.Seconds(900)
             });
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
