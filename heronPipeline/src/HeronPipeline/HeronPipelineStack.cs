@@ -522,6 +522,21 @@ namespace HeronPipeline
                 PayloadResponseOnly = true
             });
             
+            // Mark: readSampleBatch
+            var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
+              Entry = "src/functions/readSampleBatchFromQueue",
+              Runtime = Runtime.PYTHON_3_7,
+              Index = "app.py",
+              Handler = "lambda_handler"
+            });
+            readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+
+            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
+              LambdaFunction = readSampleBatchFunction,
+              ResultPath = "$.sampleBatch",
+              PayloadResponseOnly = true
+            });
+
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -616,6 +631,16 @@ namespace HeronPipeline
             var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
             {
                 Definition = pipelineChain
+            });
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++ Process Sample Batch State Machine +++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var processSampleBatchChain = Chain
+              .Start(readSampleBatchCountTask);
+            
+            var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
+              Definition = processSampleBatchChain
             });
         }
     }
