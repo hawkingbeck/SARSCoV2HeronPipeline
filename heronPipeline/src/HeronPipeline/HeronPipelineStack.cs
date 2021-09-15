@@ -626,7 +626,8 @@ namespace HeronPipeline
               Entry = "src/functions/readSampleBatchFromQueue",
               Runtime = Runtime.PYTHON_3_7,
               Index = "app.py",
-              Handler = "lambda_handler"
+              Handler = "lambda_handler",
+              Timeout = new Duration(900).seconds()
             });
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
