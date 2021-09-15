@@ -521,7 +521,6 @@ namespace HeronPipeline
                 ResultPath = "$.messageCount",
                 PayloadResponseOnly = true
             });
-            
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++ State Machines ++++++++++++++++
@@ -617,11 +616,12 @@ namespace HeronPipeline
                 Definition = pipelineChain
             });
 
+            
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ Process Sample Batch State Machine +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
 
-            // Mark: readSampleBatch
+            // Mark: Lambda Functions
             var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
               Entry = "src/functions/readSampleBatchFromQueue",
               Runtime = Runtime.PYTHON_3_7,
@@ -630,21 +630,53 @@ namespace HeronPipeline
             });
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
-            var messagesAvailableChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
-                Comment = "are there any messages in the sample batch"
-            });
-
-            var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
-            var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
-
-            messagesAvailableChoiceTask.When(messagesAvailableCondition, pipelineFinishTask);
-            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, pipelineFinishTask);
-
             var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
               LambdaFunction = readSampleBatchFunction,
               ResultPath = "$.sampleBatch",
               PayloadResponseOnly = true
             });
+            readSampleBatchCountTask.AddRetry(retryItem);
+
+            var alignFastaFunction = new DockerImageFunction(this, "alignFastaFunction", new DockerImageFunctionProps{
+              Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction")
+            });
+
+            var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
+              LambdaFunction = alignFastaFunction,
+              ResultPath = JsonPath.DISCARD,
+              PayloadResponseOnly = true
+            });
+            alignFastaTask.AddRetry(retryItem);
+
+            var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
+
+            var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
+                Comment = "are there any messages in the sample batch"
+            });
+
+
+            // Process Samples Map State
+            var processSamplesMapParameters = new Dictionary<string, object>();
+            processSamplesMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            processSamplesMapParameters.Add("message.$", "$$.Map.Item.Value");
+
+            var processSamplesMap = new Map(this, "processSamplesMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.sampleBatch.messageList",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = processSamplesMapParameters,
+            });
+
+            processSamplesMap.Iterator(Chain.Start(alignFastaTask));
+
+            var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+            var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+
+            var processSamplesChain = Chain
+              .Start(processSamplesMap);
+
+            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
             var processSampleBatchChain = Chain
               .Start(readSampleBatchCountTask)
