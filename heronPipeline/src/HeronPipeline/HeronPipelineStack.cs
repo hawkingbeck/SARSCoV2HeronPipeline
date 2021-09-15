@@ -522,22 +522,6 @@ namespace HeronPipeline
                 PayloadResponseOnly = true
             });
             
-            // Mark: readSampleBatch
-            var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
-              Entry = "src/functions/readSampleBatchFromQueue",
-              Runtime = Runtime.PYTHON_3_7,
-              Index = "app.py",
-              Handler = "lambda_handler"
-            });
-            readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-
-            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
-              LambdaFunction = readSampleBatchFunction,
-              ResultPath = "$.sampleBatch",
-              PayloadResponseOnly = true
-            });
-
-
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++ State Machines ++++++++++++++++
@@ -636,8 +620,35 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ Process Sample Batch State Machine +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
+
+            // Mark: readSampleBatch
+            var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
+              Entry = "src/functions/readSampleBatchFromQueue",
+              Runtime = Runtime.PYTHON_3_7,
+              Index = "app.py",
+              Handler = "lambda_handler"
+            });
+            readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+
+            var messagesAvailableChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
+                Comment = "are there any messages in the sample batch"
+            });
+
+            var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+            var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+
+            messagesAvailableChoiceTask.When(messagesAvailableCondition, pipelineFinishTask);
+            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, pipelineFinishTask);
+
+            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
+              LambdaFunction = readSampleBatchFunction,
+              ResultPath = "$.sampleBatch",
+              PayloadResponseOnly = true
+            });
+
             var processSampleBatchChain = Chain
-              .Start(readSampleBatchCountTask);
+              .Start(readSampleBatchCountTask)
+              .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
               Definition = processSampleBatchChain
