@@ -805,7 +805,8 @@ namespace HeronPipeline
                 NetworkMode = NetworkMode.AWS_VPC,
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
             });
 
             lqpPlaceTaskDefinition.AddContainer("lqpPlaceContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
@@ -831,6 +832,46 @@ namespace HeronPipeline
                         ReadOnly = false,
                     }
                 });
+            var lqpPlaceTask = new EcsRunTask(this, "lqpTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = lqpPlaceTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = lqpPlaceContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_KEY_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "LQP_DATA_ROOT",
+                              Value = "/mnt/efs0/lqpModel/metaData"
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
 
             // Process Samples Map State
             var processSamplesMapParameters = new Dictionary<string, object>();
@@ -860,7 +901,10 @@ namespace HeronPipeline
             var pangolinChain = Chain
                 .Start(pangolinTask);
 
-            placeSequencesParallel.Branch(new Chain[] { pangolinChain });
+            var lqpPlaceChain = Chain
+              .Start(lqpPlaceTask);
+
+            placeSequencesParallel.Branch(new Chain[] { pangolinChain, lqpPlaceChain });
 
 
             var processSamplesChain = Chain
