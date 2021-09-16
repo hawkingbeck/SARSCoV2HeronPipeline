@@ -694,6 +694,27 @@ namespace HeronPipeline
               PayloadResponseOnly = true
             });
 
+            var prepareSequencesFunction = new PythonFunction(this, "prepareSequencesFunction", new PythonFunctionProps{
+              Entry = "src/prepareSequencesFunction",
+              Runtime = Runtime.PYTHON_3_7,
+              Index = "app.py",
+              Handler = "lambda_handler",
+              Timeout = Duration.Seconds(900),
+              Environment = new Dictionary<string, string> {
+                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+                {"SAMPLE_DATA_ROOT", "/mnt/efs0/sampleData"}
+              }
+            });
+            prepareSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            prepareSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
+
+
+            var prepareSequencesTask = new LambdaInvoke(this, "prepareSequencesTask", new LambdaInvokeProps{
+              LambdaFunction = prepareSequencesFunction,
+              ResultPath = "$.sequenceFiles",
+              PayloadResponseOnly = true
+            });
+
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
 
             var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
@@ -723,7 +744,8 @@ namespace HeronPipeline
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
 
             var processSamplesChain = Chain
-              .Start(processSamplesMap);
+              .Start(processSamplesMap)
+              .Next(prepareSequencesTask);
 
             messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
             messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
