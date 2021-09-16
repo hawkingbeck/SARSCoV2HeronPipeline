@@ -640,7 +640,15 @@ namespace HeronPipeline
 
             var alignFastaFunction = new DockerImageFunction(this, "alignFastaFunction", new DockerImageFunctionProps{
               Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction"),
-              Timeout = Duration.Seconds(900)
+              Timeout = Duration.Seconds(900),
+              Environment = new Dictionary<string, string> {
+                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+                {"HERON_SAMPLES_TABLE", samplesTable.TableName},
+                {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
+                {"REF_FASTA_KEY", "resources/MN908947.fa"},
+                {"TRIM_START", "265"},
+                {"TRIM_END", "29674"},
+              }
             });
 
             var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
