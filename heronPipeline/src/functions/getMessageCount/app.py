@@ -40,14 +40,13 @@ def lambda_handler(event, context):
     queue.load()
 
     attributes = queue.attributes
-    mapStateSize = math.ceil(int(attributes['ApproximateNumberOfMessages'])/1000)
-    mapStateSize2 = math.ceil(int(attributes['ApproximateNumberOfMessages'])/40000)
-    processSequencesMapConfig = [{'id': f} for f in range(mapStateSize)]
+    sequenceCount = int(attributes['ApproximateNumberOfMessages'])
+    sequencesPerMapIteration = 40*1000
+    mapIterationsRequired = math.ceil(sequenceCount / sequencesPerMapIteration)
     nestedProcessConfig = [{'id': f} for f in range(40)]
-    manageProcessSequencesBatchMapConfig = [{'id': f, 'process': nestedProcessConfig} for f in range(mapStateSize2)]
+    manageProcessSequencesBatchMapConfig = [{'id': f, 'process': nestedProcessConfig} for f in range(mapIterationsRequired)]
 
     return {
-      'processSequencesMapConfig': processSequencesMapConfig,
       'manageProcessSequencesBatchMapConfig': manageProcessSequencesBatchMapConfig,
       'messageCount': attributes['ApproximateNumberOfMessages'],
       'queueName': queueName
