@@ -645,7 +645,41 @@ namespace HeronPipeline
                 Definition = pipelineChain
             });
 
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++++ Start Sample Batch Processing ++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var startSampleProcessingMapParameters = new Dictionary<string, object>();
+            startSampleProcessingMapParameters.Add("date.$", "$.date");
+            startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
+            startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // parameters.Add("iterations.$", "$.messageCount");
+
+            var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = startSampleProcessingMapParameters,
+            });
+
+            var placeholderTask2 = new Succeed(this, "placeholderTask2");
+            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask));
             
+            
+            
+            var startNestedSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.iterations",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = startSampleProcessingMapParameters,
+            });
+            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
+
+            var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
+
+            var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
+              Definition = startNestedSampleProcessingDefinition
+            });
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ Process Sample Batch State Machine +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
