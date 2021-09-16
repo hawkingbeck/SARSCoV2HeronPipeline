@@ -449,11 +449,13 @@ namespace HeronPipeline
             fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
             fileSystemConfig.LocalMountPath = "/mnt/efs0";
 
-            var s3CrudpPolicyStatement = new PolicyStatement(new PolicyStatementProps
+            var s3AccessPolicyStatement = new PolicyStatement(new PolicyStatementProps
             {
                 Effect = Effect.ALLOW,
-                Actions = new string[] { "sts:AssumeRole" },
-                Principals = new ServicePrincipal[] { new ServicePrincipal("ecs-tasks.amazonaws.com") }
+                Actions = new string[] { "s3:*" }
+            });
+            s3AccessPolicyStatement.AddResources(new string[] {
+              pipelineBucket.BucketArn
             });
 
             var sqsAccessPolicyStatement = new PolicyStatement( new PolicyStatementProps {
@@ -650,6 +652,7 @@ namespace HeronPipeline
                 {"TRIM_END", "29674"},
               }
             });
+            alignFastaFunction.AddToRolePolicy(s3AccessPolicyStatement);
 
             var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
               LambdaFunction = alignFastaFunction,
@@ -657,6 +660,21 @@ namespace HeronPipeline
               PayloadResponseOnly = true
             });
             alignFastaTask.AddRetry(retryItem);
+
+            var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
+              Entry = "src/functions/genotypeVaraints",
+              Runtime = Runtime.PYTHON_3_7,
+              Index = "app.py",
+              Handler = "lambda_handler",
+              Timeout = Duration.Seconds(900)
+            });
+            genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
+
+            var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
+              LambdaFunction = genotypeVariantsFunction,
+              ResultPath = JsonPath.DISCARD,
+              PayloadResponseOnly = true
+            });
 
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
 
@@ -677,7 +695,11 @@ namespace HeronPipeline
               Parameters = processSamplesMapParameters,
             });
 
-            processSamplesMap.Iterator(Chain.Start(alignFastaTask));
+            var processSamplesMapChain = Chain
+              .Start(alignFastaTask)
+              .Next(genotypeVariantsTask);
+
+            processSamplesMap.Iterator(processSamplesMapChain);
 
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
