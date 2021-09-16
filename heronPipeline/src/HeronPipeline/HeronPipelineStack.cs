@@ -455,7 +455,8 @@ namespace HeronPipeline
                 Actions = new string[] { "s3:*" }
             });
             s3AccessPolicyStatement.AddResources(new string[] {
-              pipelineBucket.BucketArn
+              pipelineBucket.BucketArn,
+              pipelineBucket.BucketArn + "/"
             });
 
             var sqsAccessPolicyStatement = new PolicyStatement( new PolicyStatementProps {
