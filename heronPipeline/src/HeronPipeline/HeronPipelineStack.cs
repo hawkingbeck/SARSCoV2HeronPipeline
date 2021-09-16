@@ -599,106 +599,15 @@ namespace HeronPipeline
                 Definition = lqpPrepareMetaDataChain
             });
 
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++ startNestedSampleProcessingMap ++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            var startSampleProcessingMapParameters = new Dictionary<string, object>();
-            startSampleProcessingMapParameters.Add("date.$", "$.date");
-            startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
-            startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            // parameters.Add("iterations.$", "$.messageCount");
-            var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.iterations",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters,
-            });
 
-            var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters,
-            });
-            var placeholderTask2 = new Succeed(this, "placeholderTask2");
-            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
-            var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
-
-            var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
-              Definition = startNestedSampleProcessingDefinition
-            });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++ Heron Pipeline State Machine ++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
-            var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), true);
-            var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), false);
-
-            var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
-                Comment = "Is LQP metadata available?"
-            });
-
-            var launchSampleProcessingMapParameters = new Dictionary<string, object>();
-            launchSampleProcessingMapParameters.Add("date.$", "$.date");
-            launchSampleProcessingMapParameters.Add("queue.$", "$.messageCount.queueName");
-            launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            // parameters.Add("iterations.$", "$.messageCount");
-
-            var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = launchSampleProcessingMapParameters,
-            });
-
-            var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
-              StateMachine = startNestedSampleProcessingStateMachine,
-              IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD
-            });
-
-            // var placeholderTask = new Succeed(this, "placeholderTask");
-            launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
-
-            var processMessagesChain = Chain
-              .Start(addSequencesToQueueTask)
-              .Next(getMessageCountTask)
-              .Next(launchSampleProcessingMap)
-              .Next(pipelineFinishTask);
-
-            metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
-            metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: pipelineFinishTask);
-
-            var pipelineChain = Chain
-                    .Start(checkLqpMetaDataIsPresentTask)
-                    .Next(metaDataReadyChoiceTask);
-
-            var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
-            {
-                Definition = pipelineChain
-            });
-
-
-          
-            var placeholderTask3 = new Succeed(this, "placeholderTask3");
-            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask3));
-
-            
-
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++++ Start Sample Batch Processing ++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            
-            
-            
-            
-            
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ Process Sample Batch State Machine +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-
-            // Mark: Lambda Functions
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
             var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
               Entry = "src/functions/readSampleBatchFromQueue",
               Runtime = Runtime.PYTHON_3_7,
@@ -862,8 +771,6 @@ namespace HeronPipeline
             var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
                 Comment = "are there any messages in the sample batch"
             });
-
-
             //LQP Place Task
             var lqpPlaceTaskDefinition = new TaskDefinition(this, "lqpPlaceTaskDefinition", new TaskDefinitionProps{
                 Family = "lqpPlace",
@@ -989,6 +896,103 @@ namespace HeronPipeline
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
               Definition = processSampleBatchChain
             });
+
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++ Start Nested Process Sample Batch ++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var startSampleProcessingMapParameters = new Dictionary<string, object>();
+            startSampleProcessingMapParameters.Add("date.$", "$.date");
+            startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
+            startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+
+            var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.iterations",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = startSampleProcessingMapParameters,
+            });
+
+            var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = startSampleProcessingMapParameters,
+            });
+
+            var startNestedProcessSamplesStateMachine = new StepFunctionsStartExecution(this, "startNestedProcessSamplesStateMachine", new StepFunctionsStartExecutionProps{
+              StateMachine = processSampleBatchStateMachine,
+              IntegrationPattern = IntegrationPattern.RUN_JOB,
+              ResultPath = JsonPath.DISCARD
+            });
+            startSampleProcessingMap.Iterator(Chain.Start(startNestedProcessSamplesStateMachine));
+            var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
+
+            var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
+              Definition = startNestedSampleProcessingDefinition
+            });
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++ Heron Pipeline State Machine ++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
+            var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), true);
+            var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), false);
+
+            var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
+                Comment = "Is LQP metadata available?"
+            });
+
+            var launchSampleProcessingMapParameters = new Dictionary<string, object>();
+            launchSampleProcessingMapParameters.Add("date.$", "$.date");
+            launchSampleProcessingMapParameters.Add("queue.$", "$.messageCount.queueName");
+            launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // parameters.Add("iterations.$", "$.messageCount");
+
+            var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = launchSampleProcessingMapParameters,
+            });
+
+            var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
+              StateMachine = startNestedSampleProcessingStateMachine,
+              IntegrationPattern = IntegrationPattern.RUN_JOB,
+              ResultPath = JsonPath.DISCARD
+            });
+
+            // var placeholderTask = new Succeed(this, "placeholderTask");
+            launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
+
+            var processMessagesChain = Chain
+              .Start(addSequencesToQueueTask)
+              .Next(getMessageCountTask)
+              .Next(launchSampleProcessingMap)
+              .Next(pipelineFinishTask);
+
+            metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
+            metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: pipelineFinishTask);
+
+            var pipelineChain = Chain
+                    .Start(checkLqpMetaDataIsPresentTask)
+                    .Next(metaDataReadyChoiceTask);
+
+            var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
+            {
+                Definition = pipelineChain
+            });
+
+            var placeholderTask3 = new Succeed(this, "placeholderTask3");
+            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask3));
         }
     }
 }
