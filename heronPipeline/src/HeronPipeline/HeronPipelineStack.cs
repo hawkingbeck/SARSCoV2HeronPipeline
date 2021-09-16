@@ -611,6 +611,22 @@ namespace HeronPipeline
                 Comment = "Is LQP metadata available?"
             });
 
+            var launchSampleProcessingMapParameters = new Dictionary<string, object>();
+            parameters.Add("date.$", "$.date");
+            parameters.Add("queue.$", "$.messageCount.queueName");
+            parameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // parameters.Add("iterations.$", "$.messageCount");
+
+            var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = launchSampleProcessingMapParameters,
+            });
+
+
+            launchSampleProcessingMap.Iterator(Chain.Start(pipelineFinishTask));
+
             var processMessagesChain = Chain
               .Start(addSequencesToQueueTask)
               .Next(getMessageCountTask)
