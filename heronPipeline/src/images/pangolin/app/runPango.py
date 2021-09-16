@@ -28,7 +28,6 @@ dateString = os.getenv('DATE_PARTITION')
 seqFile = os.getenv('SEQ_BATCH_FILE') # Path to the EFS file that we wish to process
 seqConsensusFile = os.getenv('SEQ_CONSENSUS_BATCH_FILE') # Path to the EFS file that we wish to process
 keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence hash and id
-
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 batchUUID = os.path.splitext(os.path.basename(seqFile))[0].replace("sequences_", "")
