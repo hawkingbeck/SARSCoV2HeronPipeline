@@ -964,13 +964,20 @@ namespace HeronPipeline
               Parameters = launchSampleProcessingMapParameters,
             });
 
+            var stateMachineInput = TaskInput.fromObject()
+            // "queueName.$": "$.queueName",
+            // "payload.$": "$.payload",
+            // "date.$": "$.date",
+            // "recipeFilePath.$": "$.recipeFilePath"
+              
+
             var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
               StateMachine = startNestedSampleProcessingStateMachine,
               IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD
+              ResultPath = JsonPath.DISCARD,
+              Input = 
             });
 
-            // var placeholderTask = new Succeed(this, "placeholderTask");
             launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
 
             var processMessagesChain = Chain
