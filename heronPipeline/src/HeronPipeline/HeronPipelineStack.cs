@@ -924,11 +924,21 @@ namespace HeronPipeline
               Parameters = startSampleProcessingMapParameters,
             });
 
+            var stateMachineInputObject2 = new Dictionary<string, object> {
+                {"queueName", JsonPath.StringAt("$.queueName")},
+                {"payload", JsonPath.StringAt("$.payload")},
+                {"date", JsonPath.StringAt("$.date")},
+                {"recipeFilePath", JsonPath.StringAt("$recipleFilePath")}
+            };
+            var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
+
             var startNestedProcessSamplesStateMachine = new StepFunctionsStartExecution(this, "startNestedProcessSamplesStateMachine", new StepFunctionsStartExecutionProps{
               StateMachine = processSampleBatchStateMachine,
               IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD
+              ResultPath = JsonPath.DISCARD,
+              Input = stateMachineInput2
             });
+
             startSampleProcessingMap.Iterator(Chain.Start(startNestedProcessSamplesStateMachine));
             var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
 
@@ -955,7 +965,6 @@ namespace HeronPipeline
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
             launchSampleProcessingMapParameters.Add("queue.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            // parameters.Add("iterations.$", "$.messageCount");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
               InputPath = "$",
@@ -964,18 +973,20 @@ namespace HeronPipeline
               Parameters = launchSampleProcessingMapParameters,
             });
 
-            var stateMachineInput = TaskInput.fromObject()
-            // "queueName.$": "$.queueName",
-            // "payload.$": "$.payload",
-            // "date.$": "$.date",
-            // "recipeFilePath.$": "$.recipeFilePath"
+            var stateMachineInputObject = new Dictionary<string, object> {
+                {"queueName", JsonPath.StringAt("$.queueName")},
+                {"payload", JsonPath.StringAt("$.payload")},
+                {"date", JsonPath.StringAt("$.date")},
+                {"recipeFilePath", JsonPath.StringAt("$recipleFilePath")}
+            };
+            var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
 
             var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
               StateMachine = startNestedSampleProcessingStateMachine,
               IntegrationPattern = IntegrationPattern.RUN_JOB,
               ResultPath = JsonPath.DISCARD,
-              Input = 
+              Input = stateMachineInput
             });
 
             launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
@@ -997,9 +1008,6 @@ namespace HeronPipeline
             {
                 Definition = pipelineChain
             });
-
-            var placeholderTask3 = new Succeed(this, "placeholderTask3");
-            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask3));
         }
     }
 }
