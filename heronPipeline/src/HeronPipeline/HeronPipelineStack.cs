@@ -662,7 +662,7 @@ namespace HeronPipeline
             alignFastaTask.AddRetry(retryItem);
 
             var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
-              Entry = "src/functions/genotypeVaraints",
+              Entry = "src/functions/genotypeVariants",
               Runtime = Runtime.PYTHON_3_7,
               Index = "app.py",
               Handler = "lambda_handler",
