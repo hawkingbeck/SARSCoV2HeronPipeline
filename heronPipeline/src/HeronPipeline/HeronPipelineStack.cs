@@ -910,12 +910,12 @@ namespace HeronPipeline
             startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
             startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
 
-            var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.iterations",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters,
-            });
+            // var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
+            //   InputPath = "$",
+            //   ItemsPath = "$.iterations",
+            //   ResultPath = JsonPath.DISCARD,
+            //   Parameters = startSampleProcessingMapParameters,
+            // });
 
             var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
               InputPath = "$",
@@ -928,7 +928,7 @@ namespace HeronPipeline
                 {"queueName", JsonPath.StringAt("$.queueName")},
                 {"payload", JsonPath.StringAt("$.payload")},
                 {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$recipleFilePath")}
+                {"recipeFilePath", JsonPath.StringAt("$.recipleFilePath")}
             };
             var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
 
@@ -977,7 +977,7 @@ namespace HeronPipeline
                 {"queueName", JsonPath.StringAt("$.queueName")},
                 {"payload", JsonPath.StringAt("$.payload")},
                 {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$recipleFilePath")}
+                {"recipeFilePath", JsonPath.StringAt("$.recipleFilePath")}
             };
             var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
