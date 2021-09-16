@@ -654,6 +654,7 @@ namespace HeronPipeline
               }
             });
             alignFastaFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            alignFastaFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
             var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
               LambdaFunction = alignFastaFunction,
@@ -670,6 +671,7 @@ namespace HeronPipeline
               Timeout = Duration.Seconds(900)
             });
             genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            genotypeVariantsFunction.AddToRolePolicy(sqsAccessPolicyStatement);
 
             var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
               LambdaFunction = genotypeVariantsFunction,
