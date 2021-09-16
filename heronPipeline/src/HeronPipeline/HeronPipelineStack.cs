@@ -703,7 +703,9 @@ namespace HeronPipeline
               Environment = new Dictionary<string, string> {
                 {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
                 {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
-              }
+              },
+              Filesystem = lambdaPipelineFileSystem,
+              Vpc = vpc
             });
             prepareSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
             prepareSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
@@ -712,7 +714,7 @@ namespace HeronPipeline
             var prepareSequencesTask = new LambdaInvoke(this, "prepareSequencesTask", new LambdaInvokeProps{
               LambdaFunction = prepareSequencesFunction,
               ResultPath = "$.sequenceFiles",
-              PayloadResponseOnly = true
+              PayloadResponseOnly = true,
             });
 
 
