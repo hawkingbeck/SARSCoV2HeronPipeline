@@ -760,6 +760,22 @@ namespace HeronPipeline
                         ContainerDefinition = pangolinContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_CONSENSUS_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_KEY_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                            },
+                            new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
                               Value = pipelineBucket.BucketName
                             },
