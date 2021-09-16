@@ -715,6 +715,64 @@ namespace HeronPipeline
               PayloadResponseOnly = true
             });
 
+
+            var pangolinImage = ContainerImage.FromAsset("src/images/pangolin");
+            var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
+                Family = "pangolin",
+                Cpu = "1024",
+                MemoryMiB = "4096",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole
+            });
+            pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = pangolinImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "pangolin",
+                    LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "pangolinLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                })
+            });
+            var pangolinContainer = pangolinTaskDefinition.FindContainer("pangolinContainer");
+            pangolinContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+            var pangolinTask = new EcsRunTask(this, "pangolinTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = pangolinTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = pangolinContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
+
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
 
             var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
