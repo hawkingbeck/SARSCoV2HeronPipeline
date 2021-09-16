@@ -821,6 +821,11 @@ namespace HeronPipeline
               OutputPath = JsonPath.DISCARD
             });
 
+            var pangolinChain = Chain
+                .Start(pangolinTask);
+
+            placeSequencesParallel.Branch(new Chain[] { pangolinChain });
+
 
             var processSamplesChain = Chain
               .Start(processSamplesMap)
