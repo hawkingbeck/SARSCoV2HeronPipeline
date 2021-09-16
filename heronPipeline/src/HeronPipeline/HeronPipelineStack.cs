@@ -639,7 +639,8 @@ namespace HeronPipeline
             readSampleBatchCountTask.AddRetry(retryItem);
 
             var alignFastaFunction = new DockerImageFunction(this, "alignFastaFunction", new DockerImageFunctionProps{
-              Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction")
+              Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction"),
+              Timeout = Duration.Seconds(900)
             });
 
             var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
