@@ -808,6 +808,30 @@ namespace HeronPipeline
                 TaskRole = ecsExecutionRole
             });
 
+            lqpPlaceTaskDefinition.AddContainer("lqpPlaceContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = lqpImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "lqpPlace",
+                    LogGroup = new LogGroup(this, "lqpPlaceLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "lqpPlaceLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                }),
+                EntryPoint = new string[] { "python", "/home/app/lqp-fargatePlace.py" }
+            });
+            var lqpPlaceContainer = lqpTidyTaskDefinition.FindContainer("lqpPlaceContainer");
+            lqpPlaceContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+
             // Process Samples Map State
             var processSamplesMapParameters = new Dictionary<string, object>();
             processSamplesMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
