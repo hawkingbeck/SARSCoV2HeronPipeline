@@ -630,6 +630,7 @@ namespace HeronPipeline
             var processMessagesChain = Chain
               .Start(addSequencesToQueueTask)
               .Next(getMessageCountTask)
+              .Next(launchSampleProcessingMap)
               .Next(pipelineFinishTask);
 
             metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
