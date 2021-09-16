@@ -823,7 +823,7 @@ namespace HeronPipeline
                 }),
                 EntryPoint = new string[] { "python", "/home/app/lqp-fargatePlace.py" }
             });
-            var lqpPlaceContainer = lqpTidyTaskDefinition.FindContainer("lqpPlaceContainer");
+            var lqpPlaceContainer = lqpPlaceTaskDefinition.FindContainer("lqpPlaceContainer");
             lqpPlaceContainer.AddMountPoints(new MountPoint[] {
                     new MountPoint {
                         SourceVolume = "efsVolume",
