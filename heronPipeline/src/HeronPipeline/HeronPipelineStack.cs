@@ -467,6 +467,15 @@ namespace HeronPipeline
               dailyProcessingQueue.QueueArn,
               reprocessingQueue.QueueArn
             });
+
+            var dynamoDBAccessPolicyStatement = new PolicyStatement(new PolicyStatementProps{
+              Effect = Effect.ALLOW,
+              Actions = new string[] {"dynamodb:*"}
+            });
+            dynamoDBAccessPolicyStatement.AddResources(new string[]{
+              samplesTable.TableArn,
+              sequencesTable.TableArn
+            });
             
 
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
@@ -655,6 +664,7 @@ namespace HeronPipeline
             });
             alignFastaFunction.AddToRolePolicy(s3AccessPolicyStatement);
             alignFastaFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+            alignFastaFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
             var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
               LambdaFunction = alignFastaFunction,
@@ -668,10 +678,15 @@ namespace HeronPipeline
               Runtime = Runtime.PYTHON_3_7,
               Index = "app.py",
               Handler = "lambda_handler",
-              Timeout = Duration.Seconds(900)
+              Timeout = Duration.Seconds(900),
+              Environment = new Dictionary<string, string> {
+                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+                {"HERON_SEQUENCES_TABLE",sequencesTable.TableName}
+              }
             });
             genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
             genotypeVariantsFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+            genotypeVariantsFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
             var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
               LambdaFunction = genotypeVariantsFunction,
