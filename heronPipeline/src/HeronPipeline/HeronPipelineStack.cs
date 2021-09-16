@@ -624,8 +624,8 @@ namespace HeronPipeline
               Parameters = launchSampleProcessingMapParameters,
             });
 
-
-            launchSampleProcessingMap.Iterator(Chain.Start(pipelineFinishTask));
+            var placeholderTask = new Succeed(this, "placeholderTask");
+            launchSampleProcessingMap.Iterator(Chain.Start(placeholderTask));
 
             var processMessagesChain = Chain
               .Start(addSequencesToQueueTask)
