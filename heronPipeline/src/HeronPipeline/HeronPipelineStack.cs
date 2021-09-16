@@ -647,13 +647,19 @@ namespace HeronPipeline
 
 
             // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++++ Start Sample Batch Processing ++++++++
+            // +++++ startNestedSampleProcessingMap ++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var startSampleProcessingMapParameters = new Dictionary<string, object>();
             startSampleProcessingMapParameters.Add("date.$", "$.date");
             startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
             startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
             // parameters.Add("iterations.$", "$.messageCount");
+            var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
+              InputPath = "$",
+              ItemsPath = "$.iterations",
+              ResultPath = JsonPath.DISCARD,
+              Parameters = startSampleProcessingMapParameters,
+            });
 
             var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
               InputPath = "$",
@@ -661,25 +667,36 @@ namespace HeronPipeline
               ResultPath = JsonPath.DISCARD,
               Parameters = startSampleProcessingMapParameters,
             });
-
-            var placeholderTask2 = new Succeed(this, "placeholderTask2");
-            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
             
-            
-            
-            var startNestedSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.iterations",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters,
-            });
-            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
-
             var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
 
             var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
               Definition = startNestedSampleProcessingDefinition
             });
+
+            var placeholderTask2 = new Succeed(this, "placeholderTask2");
+            var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
+              StateMachine = startNestedSampleProcessingStateMachine,
+              IntegrationPattern = IntegrationPattern.RUN_JOB,
+              ResultPath = JsonPath.DISCARD
+            });
+            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
+
+            
+
+            var placeholderTask3 = new Succeed(this, "placeholderTask3");
+            startNestedSampleProcessingMap.Iterator(Chain.Start(placeholderTask3));
+
+            
+
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            // ++++++ Start Sample Batch Processing ++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++
+            
+            
+            
+            
+            
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ Process Sample Batch State Machine +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
