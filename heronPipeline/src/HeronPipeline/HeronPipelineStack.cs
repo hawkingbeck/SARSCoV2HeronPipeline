@@ -749,7 +749,7 @@ namespace HeronPipeline
                         ReadOnly = false,
                     }
                 });
-            var pangolinTask = new EcsRunTask(this, "pangolinTask", new EcsRunTaskProps
+            var pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
@@ -832,7 +832,7 @@ namespace HeronPipeline
                         ReadOnly = false,
                     }
                 });
-            var lqpPlaceTask = new EcsRunTask(this, "lqpTask", new EcsRunTaskProps
+            var lqpPlaceTask = new EcsRunTask(this, "lqpPlaceTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,

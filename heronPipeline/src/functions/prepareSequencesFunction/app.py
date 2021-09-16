@@ -48,7 +48,7 @@ def lambda_handler(event, context):
   sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
   outputFileUUID = str(uuid.uuid4())
   if not os.path.exists(sampleDataRootSeqBatchesDir):
-    os.mkdir(sampleDataRootSeqBatchesDir)
+    os.makedirs(sampleDataRootSeqBatchesDir)
 
   outputFastaFile = f"/tmp/sequences_{outputFileUUID}.fasta"
   outputFastaConsensusFile = f"/tmp/sequences_consensus_{outputFileUUID}.fasta"
