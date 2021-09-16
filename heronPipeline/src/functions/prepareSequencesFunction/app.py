@@ -44,17 +44,17 @@ def lambda_handler(event, context):
   # Step 2. Download the messages and concat into
   #         a single file and save to EFS
   ##############################################
-  lqpDataRoot = os.getenv('LQP_DATA_ROOT')
-  lqpDataRootSeqBatchesDir = f"{lqpDataRoot}/{dateString}/seqBatchFiles"
+  sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
+  sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
   outputFileUUID = str(uuid.uuid4())
-  if not os.path.exists(lqpDataRootSeqBatchesDir):
-    os.mkdir(lqpDataRootSeqBatchesDir)
+  if not os.path.exists(sampleDataRootSeqBatchesDir):
+    os.mkdir(sampleDataRootSeqBatchesDir)
 
   outputFastaFile = f"/tmp/sequences_{outputFileUUID}.fasta"
   outputFastaConsensusFile = f"/tmp/sequences_consensus_{outputFileUUID}.fasta"
-  efsOutputFastaFile = f"{lqpDataRootSeqBatchesDir}/sequences_{outputFileUUID}.fasta"
-  efsOutputConsensusFastaFile = f"{lqpDataRootSeqBatchesDir}/sequences_consensus{outputFileUUID}.fasta"
-  outputPlacementKeyFile = f"{lqpDataRootSeqBatchesDir}/sequences_{outputFileUUID}.json"
+  efsOutputFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_{outputFileUUID}.fasta"
+  efsOutputConsensusFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{outputFileUUID}.fasta"
+  outputPlacementKeyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{outputFileUUID}.json"
   seqList = list()
   with open(outputFastaFile, "w+") as outputFile:
     for message in messageList:
@@ -95,16 +95,16 @@ def lambda_handler(event, context):
   ##############################################
   # Step 3. Upload resultant files to S3 and EFS
   ##############################################
-  S3Key = f"lqp/seqToPlace/{dateString}/sequences_{outputFileUUID}.fasta"
+  S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.fasta"
   bucket.upload_file(outputFastaFile, S3Key)
   copyfile(outputFastaFile, efsOutputFastaFile)
 
-  S3Key = f"lqp/seqToPlace/{dateString}/sequences_consensus{outputFileUUID}.fasta"
+  S3Key = f"seqToPlace/{dateString}/sequences_consensus{outputFileUUID}.fasta"
   bucket.upload_file(outputFastaConsensusFile, S3Key)
   copyfile(outputFastaConsensusFile, efsOutputConsensusFastaFile)
 
   seqDf.to_json(outputPlacementKeyFile, orient="records")
-  S3Key = f"lqp/seqToPlace/{dateString}/sequences_{outputFileUUID}.json"
+  S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.json"
   bucket.upload_file(outputPlacementKeyFile, S3Key)
 
   ##############################################

@@ -702,7 +702,7 @@ namespace HeronPipeline
               Timeout = Duration.Seconds(900),
               Environment = new Dictionary<string, string> {
                 {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
-                {"SAMPLE_DATA_ROOT", "/mnt/efs0/sampleData"}
+                {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
               }
             });
             prepareSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
