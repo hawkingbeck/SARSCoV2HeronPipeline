@@ -724,7 +724,8 @@ namespace HeronPipeline
                 NetworkMode = NetworkMode.AWS_VPC,
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
             });
             pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -795,6 +796,17 @@ namespace HeronPipeline
                 Comment = "are there any messages in the sample batch"
             });
 
+
+            //LQP Place Task
+            var lqpPlaceTaskDefinition = new TaskDefinition(this, "lqpPlaceTaskDefinition", new TaskDefinitionProps{
+                Family = "lqpPlace",
+                Cpu = "4096",
+                MemoryMiB = "8192",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole
+            });
 
             // Process Samples Map State
             var processSamplesMapParameters = new Dictionary<string, object>();
