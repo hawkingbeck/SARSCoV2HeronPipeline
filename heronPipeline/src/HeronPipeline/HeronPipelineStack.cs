@@ -663,7 +663,7 @@ namespace HeronPipeline
             });
 
             var placeholderTask2 = new Succeed(this, "placeholderTask2");
-            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask));
+            startSampleProcessingMap.Iterator(Chain.Start(placeholderTask2));
             
             
             
