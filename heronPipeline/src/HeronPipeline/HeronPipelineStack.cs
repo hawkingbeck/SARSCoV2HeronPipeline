@@ -695,7 +695,7 @@ namespace HeronPipeline
             });
 
             var prepareSequencesFunction = new PythonFunction(this, "prepareSequencesFunction", new PythonFunctionProps{
-              Entry = "src/prepareSequencesFunction",
+              Entry = "src/functions/prepareSequencesFunction",
               Runtime = Runtime.PYTHON_3_7,
               Index = "app.py",
               Handler = "lambda_handler",
