@@ -115,3 +115,25 @@ def lambda_handler(event, context):
   os.remove(localRecipeFilename)
 
   print(matched_recipe, matched_confidence, datetime.now(), sep="\t")
+
+  # Upsert the record for the sequence
+  seqHash = os.path.splitext(os.path.basename(fastaFileS3Key))[0]
+  dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
+  heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
+  sequencesTable = dynamodb.Table(heronSequencesTableName)
+  response = sequencesTable.query(
+        KeyConditionExpression=Key('seqHash').eq(seqHash)
+      )
+
+  if 'Items' in response:
+    if len(response['Items']) == 1:
+      item = response['Items'][0]
+      item['processingState'] = 'aligned'
+      ret = sequencesTable.update_item(
+          Key={'seqHash': seqHash},
+          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c",
+          ExpressionAttributeValues={
+            ':v': matched_recipe,
+            ':c': matched_confidence
+          }
+        )
