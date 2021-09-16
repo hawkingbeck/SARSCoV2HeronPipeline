@@ -817,9 +817,15 @@ namespace HeronPipeline
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
 
+            var placeSequencesParallel = new Parallel(this, "placeSequencesParallel", new ParallelProps{
+              OutputPath = JsonPath.DISCARD
+            });
+
+
             var processSamplesChain = Chain
               .Start(processSamplesMap)
-              .Next(prepareSequencesTask);
+              .Next(prepareSequencesTask)
+              .Next(placeSequencesParallel);
 
             messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
             messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
