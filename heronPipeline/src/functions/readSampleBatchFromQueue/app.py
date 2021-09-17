@@ -11,7 +11,7 @@ import json
 config = Config(
    retries = {
       'max_attempts': 10,
-      'mode': 'standard'
+      'mode': 'adaptive'
    }
 )
 
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
     # Create config for this execution
     #++++++++++++++++++++++++++++++++++++++++++++
     queueName = event['queueName']
-    sqs = boto3.resource('sqs')
+    sqs = boto3.resource('sqs', config=config)
     queue = sqs.Queue(queueName)
 
 
