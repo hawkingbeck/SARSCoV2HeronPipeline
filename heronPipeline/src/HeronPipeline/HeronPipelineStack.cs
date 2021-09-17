@@ -926,7 +926,7 @@ namespace HeronPipeline
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.messageCount.queueName")},
-                {"payload", JsonPath.StringAt("$$.Map.Item.Value")},
+                {"mapIterations", JsonPath.StringAt("$$.Map.Item.Value")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
@@ -966,6 +966,7 @@ namespace HeronPipeline
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
             launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            launchSampleProcessingMapParameters.Add("mapIterations.$", "$.mapIterations");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
               InputPath = "$",
