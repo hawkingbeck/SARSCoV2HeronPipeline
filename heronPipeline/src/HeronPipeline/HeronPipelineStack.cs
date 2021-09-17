@@ -926,7 +926,7 @@ namespace HeronPipeline
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.queueName")},
-                {"mapIterations", JsonPath.StringAt("$$.Map.Item.Value")},
+                // {"mapIterations", JsonPath.StringAt("$$.Map.Item.Value")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
