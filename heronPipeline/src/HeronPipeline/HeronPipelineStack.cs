@@ -961,12 +961,14 @@ namespace HeronPipeline
             var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
                 Comment = "Is LQP metadata available?"
             });
+            
 
+            // Input parameters to the map iteration state
             var launchSampleProcessingMapParameters = new Dictionary<string, object>();
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
             launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            launchSampleProcessingMapParameters.Add("mapIterations.$", "$.mapIterations");
+            // launchSampleProcessingMapParameters.Add("mapIterations.$", "$.mapIterations");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
               InputPath = "$",
@@ -977,7 +979,7 @@ namespace HeronPipeline
 
             var stateMachineInputObject = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.queueName")},
-                {"payload", JsonPath.StringAt("$.payload")},
+                // {"payload", JsonPath.StringAt("$.payload")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipleFilePath")}
             };
