@@ -667,6 +667,7 @@ namespace HeronPipeline
               ResultPath = JsonPath.DISCARD,
               PayloadResponseOnly = true
             });
+            genotypeVariantsTask.AddRetry(retryItem);
 
             var prepareSequencesFunction = new PythonFunction(this, "prepareSequencesFunction", new PythonFunctionProps{
               Entry = "src/functions/prepareSequencesFunction",
@@ -690,7 +691,7 @@ namespace HeronPipeline
               ResultPath = "$.sequenceFiles",
               PayloadResponseOnly = true,
             });
-
+            prepareSequencesTask.AddRetry(retryItem);
 
             var pangolinImage = ContainerImage.FromAsset("src/images/pangolin");
             var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
@@ -765,6 +766,7 @@ namespace HeronPipeline
                 },
                 ResultPath = JsonPath.DISCARD
             });
+            pangolinTask.AddRetry(retryItem);
 
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
 
@@ -846,6 +848,7 @@ namespace HeronPipeline
                 },
                 ResultPath = JsonPath.DISCARD
             });
+            lqpPlaceTask.AddRetry(retryItem);
 
             // Process Samples Map State
             var processSamplesMapParameters = new Dictionary<string, object>();
@@ -910,13 +913,6 @@ namespace HeronPipeline
             startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
             startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
 
-            // var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
-            //   InputPath = "$",
-            //   ItemsPath = "$.iterations",
-            //   ResultPath = JsonPath.DISCARD,
-            //   Parameters = startSampleProcessingMapParameters,
-            // });
-
             var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
               InputPath = "$",
               ItemsPath = "$.mapIterations",
@@ -926,7 +922,6 @@ namespace HeronPipeline
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.queueName")},
-                // {"mapIterations", JsonPath.StringAt("$$.Map.Item.Value")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
