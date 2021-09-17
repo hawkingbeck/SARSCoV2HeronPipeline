@@ -907,7 +907,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var startSampleProcessingMapParameters = new Dictionary<string, object>();
             startSampleProcessingMapParameters.Add("date.$", "$.date");
-            startSampleProcessingMapParameters.Add("queue.$", "$.queueName");
+            startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
             startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
 
             // var startNestedSampleProcessingMap = new Map(this, "startNestedSampleProcessingMap", new MapProps {
@@ -964,7 +964,7 @@ namespace HeronPipeline
 
             var launchSampleProcessingMapParameters = new Dictionary<string, object>();
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
-            launchSampleProcessingMapParameters.Add("queue.$", "$.messageCount.queueName");
+            launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
