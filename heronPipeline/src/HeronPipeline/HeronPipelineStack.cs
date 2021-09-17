@@ -925,12 +925,12 @@ namespace HeronPipeline
             });
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
-                {"queueName", JsonPath.StringAt("$.queueName")},
+                {"queueName", JsonPath.StringAt("$.messageCount.queueName")},
                 {"payload", JsonPath.StringAt("$$.Map.Item.Value")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
-            
+
             var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
 
             var startNestedProcessSamplesStateMachine = new StepFunctionsStartExecution(this, "startNestedProcessSamplesStateMachine", new StepFunctionsStartExecutionProps{
