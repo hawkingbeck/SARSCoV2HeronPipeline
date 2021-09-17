@@ -919,13 +919,13 @@ namespace HeronPipeline
 
             var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
               InputPath = "$",
-              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+              ItemsPath = "$.mapIterations",
               ResultPath = JsonPath.DISCARD,
               Parameters = startSampleProcessingMapParameters,
             });
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
-                {"queueName", JsonPath.StringAt("$.messageCount.queueName")},
+                {"queueName", JsonPath.StringAt("$.queueName")},
                 {"mapIterations", JsonPath.StringAt("$$.Map.Item.Value")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
@@ -968,7 +968,7 @@ namespace HeronPipeline
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
             launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value");
+            launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
               InputPath = "$",
