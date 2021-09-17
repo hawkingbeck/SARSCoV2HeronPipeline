@@ -168,7 +168,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             var retryItem = new RetryProps {
               BackoffRate = 5,
-              Interval = Duration.Seconds(1),
+              Interval = Duration.Seconds(2),
               MaxAttempts = 5,
               Errors = new string[] {"States.ALL"}
             };
