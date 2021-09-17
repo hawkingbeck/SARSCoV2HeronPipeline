@@ -30,7 +30,7 @@ namespace HeronPipeline
             // VPC
             //++++++++++++++++++++++++++++++++++++++++++
             var vpc = new Vpc(this, "vpc", new VpcProps{
-                MaxAzs = 2, ///TODO: Increase this once EIP's are freed
+                MaxAzs = 1, ///TODO: Increase this once EIP's are freed
                 Cidr = "11.0.0.0/16",
                 NatGateways = 1,
                 SubnetConfiguration = new[]{
@@ -918,6 +918,7 @@ namespace HeronPipeline
               ItemsPath = "$.mapIterations",
               ResultPath = JsonPath.DISCARD,
               Parameters = startSampleProcessingMapParameters,
+              MaxConcurrency = 2
             });
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
