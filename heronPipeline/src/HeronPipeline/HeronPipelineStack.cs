@@ -968,7 +968,7 @@ namespace HeronPipeline
             launchSampleProcessingMapParameters.Add("date.$", "$.date");
             launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
             launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            // launchSampleProcessingMapParameters.Add("mapIterations.$", "$.mapIterations");
+            launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value");
 
             var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
               InputPath = "$",
@@ -979,9 +979,9 @@ namespace HeronPipeline
 
             var stateMachineInputObject = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.queueName")},
-                // {"payload", JsonPath.StringAt("$.payload")},
+                {"mapIterations", JsonPath.StringAt("$.mapIterations")},
                 {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$.recipleFilePath")}
+                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
             var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
