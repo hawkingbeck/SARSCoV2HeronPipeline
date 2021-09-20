@@ -991,10 +991,77 @@ namespace HeronPipeline
 
             launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
 
+            // Export results task
+            var exportResultsImage = ContainerImage.FromAsset("src/images/exportResults");
+            var exportResultsTaskDefinition = new TaskDefinition(this, "exportResultsTaskDefinition", new TaskDefinitionProps{
+                Family = "exportResults",
+                Cpu = "512",
+                MemoryMiB = "512",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            });
+            exportResultsTaskDefinition.AddContainer("exportResultsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = exportResultsImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "exportResults",
+                    LogGroup = new LogGroup(this, "exportResultsLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "exportResultsLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                })
+            });
+            var exportResultsContainer = pangolinTaskDefinition.FindContainer("exportResultsContainer");
+            var exportResultsTask = new EcsRunTask(this, "exportResultsTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = pangolinTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = pangolinContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SAMPLES_TABLE",
+                                Value = samplesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "EXECUTION_ID",
+                              Value = JsonPath.StringAt("$$.Execution.Id")
+                            }
+                        }
+                    }
+                },
+                ResultPath = "$.result"
+            });
+            exportResultsTask.AddRetry(retryItem);
+
+
             var processMessagesChain = Chain
               .Start(addSequencesToQueueTask)
               .Next(getMessageCountTask)
               .Next(launchSampleProcessingMap)
+              .Next(exportResultsTask)
               .Next(pipelineFinishTask);
 
             metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
