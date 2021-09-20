@@ -917,8 +917,7 @@ namespace HeronPipeline
               InputPath = "$",
               ItemsPath = "$.mapIterations",
               ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters,
-              MaxConcurrency = 2
+              Parameters = startSampleProcessingMapParameters
             });
 
             var stateMachineInputObject2 = new Dictionary<string, object> {
@@ -971,6 +970,7 @@ namespace HeronPipeline
               ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
               ResultPath = JsonPath.DISCARD,
               Parameters = launchSampleProcessingMapParameters,
+              MaxConcurrency = 2
             });
 
             var stateMachineInputObject = new Dictionary<string, object> {
@@ -1000,8 +1000,7 @@ namespace HeronPipeline
                 NetworkMode = NetworkMode.AWS_VPC,
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+                TaskRole = ecsExecutionRole
             });
             exportResultsTaskDefinition.AddContainer("exportResultsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -1017,7 +1016,7 @@ namespace HeronPipeline
                     })
                 })
             });
-            var exportResultsContainer = pangolinTaskDefinition.FindContainer("exportResultsContainer");
+            var exportResultsContainer = exportResultsTaskDefinition.FindContainer("exportResultsContainer");
             var exportResultsTask = new EcsRunTask(this, "exportResultsTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
