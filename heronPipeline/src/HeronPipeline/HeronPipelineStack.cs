@@ -1021,12 +1021,12 @@ namespace HeronPipeline
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
-                TaskDefinition = pangolinTaskDefinition,
+                TaskDefinition = exportResultsTaskDefinition,
                 AssignPublicIp = true,
                 LaunchTarget = new EcsFargateLaunchTarget(),
                 ContainerOverrides = new ContainerOverride[] {
                     new ContainerOverride {
-                        ContainerDefinition = pangolinContainer,
+                        ContainerDefinition = exportResultsContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable{
                               Name = "DATE_PARTITION",
