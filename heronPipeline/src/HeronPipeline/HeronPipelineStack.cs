@@ -61,7 +61,7 @@ namespace HeronPipeline
             var pipelineEFS = new Amazon.CDK.AWS.EFS.FileSystem(this, "pipelineEFS", new FileSystemProps{
                 Vpc = vpc,
                 ThroughputMode = ThroughputMode.PROVISIONED,
-                ProvisionedThroughputPerSecond = Size.Mebibytes(20),
+                ProvisionedThroughputPerSecond = Size.Mebibytes(30),
                 PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
                 RemovalPolicy = RemovalPolicy.DESTROY,
                 Encrypted = false,
