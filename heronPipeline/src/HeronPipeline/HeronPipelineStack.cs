@@ -1063,8 +1063,30 @@ namespace HeronPipeline
               .Next(exportResultsTask)
               .Next(pipelineFinishTask);
 
+
+            //Prepare Meta data task
+            var prepareMetaDataInputObject = new Dictionary<string, object> {
+                {"queueName", JsonPath.StringAt("$.queueName")},
+                {"mapIterations", JsonPath.StringAt("$.mapIterations")},
+                {"date", JsonPath.StringAt("$.date")},
+                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+            };
+            var prepareMetaDataInput = TaskInput.FromObject(stateMachineInputObject);
+              
+
+            var startPrepareMetaDataStateMachine = new StepFunctionsStartExecution(this, "startPrepareMetaDataStateMachine", new StepFunctionsStartExecutionProps{
+              StateMachine = lqpPrepareMetaDataStateMachine,
+              IntegrationPattern = IntegrationPattern.RUN_JOB,
+              ResultPath = JsonPath.DISCARD,
+              Input = prepareMetaDataInput
+            });
+
+            var prepareMetaDataChain = Chain
+                .Start(startPrepareMetaDataStateMachine)
+                .Next(processMessagesChain);
+
             metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
-            metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: pipelineFinishTask);
+            metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: prepareMetaDataChain);
 
             var pipelineChain = Chain
                     .Start(checkLqpMetaDataIsPresentTask)
