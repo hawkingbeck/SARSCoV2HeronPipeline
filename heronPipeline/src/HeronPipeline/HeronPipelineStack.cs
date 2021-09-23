@@ -1066,7 +1066,6 @@ namespace HeronPipeline
 
             //Prepare Meta data task
             var prepareMetaDataInputObject = new Dictionary<string, object> {
-                {"queueName", JsonPath.StringAt("$.queueName")},
                 {"mapIterations", JsonPath.StringAt("$.mapIterations")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
