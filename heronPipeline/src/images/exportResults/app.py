@@ -84,12 +84,17 @@ def main():
   print(f"JoinedDf has length {len(joinedDf)}")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  # Remove any duplicated cogUkId's
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  deDupResults = joinedDf.sort_values(['cogUkId', 'pctCoveredBases', 'runCompleteDate']).drop_duplicates('cogUkId',keep='last')
+
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Upload to S3
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   fileName = f"{str(uuid.uuid4())}.csv"
   fileName = f"{executionId}.csv"
   
-  joinedDf.to_csv(f"/tmp/{fileName}", index=False)
+  deDupResults.to_csv(f"/tmp/{fileName}", index=False)
   bucket.upload_file(f"/tmp/{fileName}", f"results/{dateString}/{fileName}")
 
 
