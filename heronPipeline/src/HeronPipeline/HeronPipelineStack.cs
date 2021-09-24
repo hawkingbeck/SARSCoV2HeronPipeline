@@ -1070,7 +1070,7 @@ namespace HeronPipeline
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
             };
-            var prepareMetaDataInput = TaskInput.FromObject(stateMachineInputObject);
+            var prepareMetaDataInput = TaskInput.FromObject(prepareMetaDataInputObject);
               
 
             var startPrepareMetaDataStateMachine = new StepFunctionsStartExecution(this, "startPrepareMetaDataStateMachine", new StepFunctionsStartExecutionProps{
