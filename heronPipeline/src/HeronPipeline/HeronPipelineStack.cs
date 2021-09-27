@@ -32,18 +32,18 @@ namespace HeronPipeline
             var vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = 1, ///TODO: Increase this once EIP's are freed
                 Cidr = "12.0.0.0/16",
-                NatGateways = 1
-                // SubnetConfiguration = new[]{
-                //     new SubnetConfiguration {
-                //         CidrMask = 24,
-                //         Name = "ingress",
-                //         SubnetType = SubnetType.PUBLIC
-                //     },
-                //     new SubnetConfiguration {
-                //         CidrMask = 24,
-                //         Name = "application",
-                //         SubnetType = SubnetType.PRIVATE
-                //     }},
+                NatGateways = 1,
+                SubnetConfiguration = new[]{
+                    new SubnetConfiguration {
+                        CidrMask = 24,
+                        Name = "ingress",
+                        SubnetType = SubnetType.PUBLIC
+                    },
+                    new SubnetConfiguration {
+                        CidrMask = 24,
+                        Name = "application",
+                        SubnetType = SubnetType.PRIVATE
+                    }},
             });
 
             var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
