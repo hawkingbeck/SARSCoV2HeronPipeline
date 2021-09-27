@@ -66,6 +66,7 @@ subprocess.run(command)
 
 pLearnLineageDf = pd.read_csv("/tmp/outputPlearn.csv")
 usherLineageDf = pd.read_csv("/tmp/outputUsher.csv")
+# taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
 pLearnLineageDf['taxon'] = [f">{f}" for f in pLearnLineageDf['taxon']]
 usherLineageDf['taxon'] = [f">{f}" for f in usherLineageDf['taxon']]
 keyFileDf = pd.read_json(keyFile, orient="records")
