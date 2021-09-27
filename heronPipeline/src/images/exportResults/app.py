@@ -57,6 +57,8 @@ def main():
       sequencesDf = sequencesDf.append(pd.DataFrame(response['Items']))
       
   print(f"Extracted {len(sequencesDf)} sequences")
+  sequencesDf.to_csv("/tmp/sequences.csv", index=False)
+  bucket.upload_file("/tmp/sequences.csv", f"results/{dateString}/allSequences.csv")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Extract all data from the samples table
@@ -96,6 +98,10 @@ def main():
   
   deDupResults.to_csv(f"/tmp/{fileName}", index=False)
   bucket.upload_file(f"/tmp/{fileName}", f"results/{dateString}/{fileName}")
+
+  bucket.upload_file()
+
+  
 
 
 if __name__ == '__main__':
