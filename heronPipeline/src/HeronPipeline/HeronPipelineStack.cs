@@ -46,36 +46,20 @@ namespace HeronPipeline
                     }},
             });
 
-            var vpc2 = new Vpc(this, "vpc2", new VpcProps{
-                MaxAzs = 3,
-                Cidr = "12.0.0.0/16",
-                SubnetConfiguration = new[]{
-                    new SubnetConfiguration {
-                        CidrMask = 24,
-                        Name = "ingress",
-                        SubnetType = SubnetType.PUBLIC
-                    },
-                    new SubnetConfiguration {
-                        CidrMask = 24,
-                        Name = "application",
-                        SubnetType = SubnetType.PRIVATE
-                    }},
-            });
-
             var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
-                Vpc = vpc2,
+                Vpc = vpc,
                 AllowAllOutbound = true
             });
             secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllIcmp(), "All Incoming");
             secGroup.AddIngressRule(Peer.AnyIpv4(), Port.Tcp(2049), "EFS Port");
             secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
-            secGroup.Node.AddDependency(vpc2);
+            secGroup.Node.AddDependency(vpc);
 
             //++++++++++++++++++++++++++++++++++++++++++
             // File System (EFS)
             //++++++++++++++++++++++++++++++++++++++++++
             var pipelineEFS = new Amazon.CDK.AWS.EFS.FileSystem(this, "pipelineEFS", new FileSystemProps{
-                Vpc = vpc2,
+                Vpc = vpc,
                 ThroughputMode = ThroughputMode.PROVISIONED,
                 ProvisionedThroughputPerSecond = Size.Mebibytes(30),
                 PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
@@ -175,7 +159,7 @@ namespace HeronPipeline
             ecsExecutionRole.AssumeRolePolicy.AddStatements(policyStatement);
 
             var cluster = new Cluster(this, "heronCluster", new ClusterProps{
-                Vpc = vpc2,
+                Vpc = vpc,
                 EnableFargateCapacityProviders = true
             });
 
@@ -520,7 +504,7 @@ namespace HeronPipeline
                   {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName}
                 },
                 Filesystem = lambdaPipelineFileSystem,
-                Vpc = vpc2
+                Vpc = vpc
             });
 
             checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
@@ -698,7 +682,7 @@ namespace HeronPipeline
                 {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
               },
               Filesystem = lambdaPipelineFileSystem,
-              Vpc = vpc2
+              Vpc = vpc
             });
             prepareSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
             prepareSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
