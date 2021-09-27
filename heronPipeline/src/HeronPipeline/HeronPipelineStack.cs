@@ -31,7 +31,7 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             var vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = 3, ///TODO: Increase this once EIP's are freed
-                Cidr = "11.0.0.0/16",
+                Cidr = "12.0.0.0/16",
                 // NatGateways = 1,
                 // SubnetConfiguration = new[]{
                 //     new SubnetConfiguration {
@@ -101,7 +101,8 @@ namespace HeronPipeline
             var samplesTable = new Table(this, "samplesTable", new TableProps{
                 BillingMode = BillingMode.PAY_PER_REQUEST,
                 PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-                SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER}
+                SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
+                PointInTimeRecovery = true
             });
 
             samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
@@ -113,7 +114,8 @@ namespace HeronPipeline
 
             var sequencesTable = new Table(this, "sequencesTable", new TableProps {
                 BillingMode = BillingMode.PAY_PER_REQUEST,
-                PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING}
+                PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
+                PointInTimeRecovery = true
             });
 
             //++++++++++++++++++++++++++++++++++++++++++
