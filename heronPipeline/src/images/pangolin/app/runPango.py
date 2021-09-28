@@ -99,13 +99,14 @@ for index, row in pLearnJoinedDf.iterrows():
       print(f"Updating: {seqHash}")
       ret = sequencesTable.update_item(
           Key={'seqHash': seqHash},
-          UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoCalled=:p, pangoAmbiguityScore=:a, pangoVersion=:v",
+          UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoCalled=:p, pangoAmbiguityScore=:a, pangoVersion=:v",
           ExpressionAttributeValues={
             ':l': lineage,
             ':d': callDate,
             ':p': 'true',
             ':a': ambiguityScore,
-            ':v': pangoVersion
+            ':v': pangoVersion,
+            ':c': conflict
           }
         )
       updateCount += 1
