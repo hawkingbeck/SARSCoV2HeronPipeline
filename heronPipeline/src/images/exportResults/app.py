@@ -99,11 +99,6 @@ def main():
   deDupResults.to_csv(f"/tmp/{fileName}", index=False)
   bucket.upload_file(f"/tmp/{fileName}", f"results/{dateString}/{fileName}")
 
-  bucket.upload_file()
-
-  
-
-
 if __name__ == '__main__':
   main()
 
