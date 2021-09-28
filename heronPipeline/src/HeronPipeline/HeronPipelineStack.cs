@@ -1055,8 +1055,6 @@ namespace HeronPipeline
                 },
                 ResultPath = "$.result"
             });
-            exportResultsTask.AddRetry(retryItem);
-
 
             var processMessagesChain = Chain
               .Start(addSequencesToQueueTask)
