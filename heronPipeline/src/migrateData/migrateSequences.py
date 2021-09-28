@@ -18,7 +18,7 @@ bucketName = "heron-pipeline"
 sequencesS3Key = "dynamoBackup/allSequences.csv"
 heronSequencesTableName = "HeronPipelineStack-sequencesTableAE1FA49B-JC9JE7I63NG3"
 
-session = boto3.Session(aws_access_key_id='AKIA46HQP4EALV4WJB5Q',aws_secret_access_key='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')
+session = boto3.Session(aws_access_key_id='',aws_secret_access_key='')
 s3_client = session.client('s3')
 dynamodb = session.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
