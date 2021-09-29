@@ -50,8 +50,11 @@ def handler(event, context):
     mappedSamFastaLocalFilename = "/tmp/sample.mapped.sam"
     alignedLocalFilename = "/tmp/aligned.fa"
     
-    bucket.download_file(consensusFastaKey, sampleLocalFilename)
-    bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+    try:
+      bucket.download_file(consensusFastaKey, sampleLocalFilename)
+      bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+    except:
+      return {'fileNotFound': True}
 
     with open(sampleLocalFilename, 'r') as file:
       data = file.read()

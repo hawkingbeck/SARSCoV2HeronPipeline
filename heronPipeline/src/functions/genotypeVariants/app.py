@@ -40,8 +40,11 @@ def lambda_handler(event, context):
   localFastaFilename = f"/tmp/{str(uuid.uuid4())}.fasta"
   localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
 
-  bucket.download_file(fastaFileS3Key, localFastaFilename)
-  bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
+  try:
+    bucket.download_file(fastaFileS3Key, localFastaFilename)
+    bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
+  except:
+    return {'fileNotFound': True}
 
   #Get the aligned fasta from the fasta file and overwrite the file
   with open(localFastaFilename, "r") as fasta:
