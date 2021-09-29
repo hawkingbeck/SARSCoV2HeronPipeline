@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 import boto3
 from datetime import datetime
+from decimal import Decimal
 # from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
@@ -84,8 +85,8 @@ for index, row in pLearnJoinedDf.iterrows():
   # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
   seqHash = row["seqHash"]
   lineage = row["lineage"]
-  conflict = row['conflict']
-  ambiguityScore = row['ambiguity_score']
+  conflict = Decimal(str(row['conflict']))
+  ambiguityScore = Decimal(str(row['ambiguity_score']))
   pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
 
   seqId = row['seqId']
