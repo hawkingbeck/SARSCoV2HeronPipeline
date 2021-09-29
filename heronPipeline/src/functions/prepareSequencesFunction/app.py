@@ -61,15 +61,20 @@ def lambda_handler(event, context):
       s3Key = message['consensusFastaPath']
       seqHash = message['seqHash']
       localFilename = f"/tmp/{seqHash}.fa"
-      bucket.download_file(s3Key, localFilename)
-      with open(localFilename, "r") as faFile:
-        seqData = json.load(faFile)
-      alignedSeq = seqData["aligned"]
-      alignedSeqId = alignedSeq.splitlines()[0]
-      seqObject = {'seqId': alignedSeqId, 'seqHash': seqHash}
-      seqList.append(seqObject)
-      # outputFile.write(">")
-      outputFile.writelines(alignedSeq)
+      try:
+        bucket.download_file(s3Key, localFilename)
+
+        with open(localFilename, "r") as faFile:
+          seqData = json.load(faFile)
+        alignedSeq = seqData["aligned"]
+        alignedSeqId = alignedSeq.splitlines()[0]
+        seqObject = {'seqId': alignedSeqId, 'seqHash': seqHash}
+        seqList.append(seqObject)
+        # outputFile.write(">")
+        outputFile.writelines(alignedSeq)
+      except:
+        print(f"Could not download key: {s3Key}")
+      
     
     os.remove(localFilename)
 
@@ -79,15 +84,17 @@ def lambda_handler(event, context):
       s3Key = message['consensusFastaPath']
       seqHash = message['seqHash']
       localFilename = f"/tmp/{seqHash}.fa"
-      bucket.download_file(s3Key, localFilename)
-      with open(localFilename, "r") as faFile:
-        seqData = json.load(faFile)
-      alignedSeq = seqData["consensus"]
-      alignedSeqId = alignedSeq.splitlines()[0]
-      seqObject = {'seqId': alignedSeqId, 'seqHash': seqHash}
-      seqList.append(seqObject)
-      # outputFile.write(">")
-      outputFile.writelines(alignedSeq)
+      try:
+        bucket.download_file(s3Key, localFilename)
+        with open(localFilename, "r") as faFile:
+          seqData = json.load(faFile)
+        alignedSeq = seqData["consensus"]
+        alignedSeqId = alignedSeq.splitlines()[0]
+        seqObject = {'seqId': alignedSeqId, 'seqHash': seqHash}
+        seqList.append(seqObject)
+        outputFile.writelines(alignedSeq)
+      except:
+        print(f"Could not download key: {s3Key}")
     
     os.remove(localFilename)
 
