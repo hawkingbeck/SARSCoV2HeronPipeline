@@ -1,4 +1,5 @@
 import os
+import os.path
 import subprocess
 import pandas as pd
 import sys
@@ -76,7 +77,8 @@ def lambda_handler(event, context):
         print(f"Could not download key: {s3Key}")
       
     
-    os.remove(localFilename)
+    if os.path.isfile(localFilename):
+      os.remove(localFilename)
 
   seqList = list()
   with open(outputFastaConsensusFile, "w+") as outputFile:
@@ -96,29 +98,31 @@ def lambda_handler(event, context):
       except:
         print(f"Could not download key: {s3Key}")
     
-    os.remove(localFilename)
+    if os.path.isfile(localFilename):
+      os.remove(localFilename)
 
   seqDf = pd.DataFrame(seqList)
   ##############################################
   # Step 3. Upload resultant files to S3 and EFS
   ##############################################
-  S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.fasta"
-  bucket.upload_file(outputFastaFile, S3Key)
-  copyfile(outputFastaFile, efsOutputFastaFile)
+  if os.path.isfile(outputFastaFile):
+    S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.fasta"
+    bucket.upload_file(outputFastaFile, S3Key)
+    copyfile(outputFastaFile, efsOutputFastaFile)
 
-  S3Key = f"seqToPlace/{dateString}/sequences_consensus{outputFileUUID}.fasta"
-  bucket.upload_file(outputFastaConsensusFile, S3Key)
-  copyfile(outputFastaConsensusFile, efsOutputConsensusFastaFile)
+    S3Key = f"seqToPlace/{dateString}/sequences_consensus{outputFileUUID}.fasta"
+    bucket.upload_file(outputFastaConsensusFile, S3Key)
+    copyfile(outputFastaConsensusFile, efsOutputConsensusFastaFile)
 
-  seqDf.to_json(outputPlacementKeyFile, orient="records")
-  S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.json"
-  bucket.upload_file(outputPlacementKeyFile, S3Key)
+    seqDf.to_json(outputPlacementKeyFile, orient="records")
+    S3Key = f"seqToPlace/{dateString}/sequences_{outputFileUUID}.json"
+    bucket.upload_file(outputPlacementKeyFile, S3Key)
 
-  ##############################################
-  # Step 4. Remove fasta file from tmp dir to
-  #         free up space
-  ##############################################
-  os.remove(outputFastaFile)
-  os.remove(outputFastaConsensusFile)
+    ##############################################
+    # Step 4. Remove fasta file from tmp dir to
+    #         free up space
+    ##############################################
+    os.remove(outputFastaFile)
+    os.remove(outputFastaConsensusFile)
 
   return {'efsSeqFile': efsOutputFastaFile, 'efsSeqConsensusFile': efsOutputConsensusFastaFile, 'efsKeyFile': outputPlacementKeyFile}
