@@ -85,7 +85,7 @@ for index, row in pLearnJoinedDf.iterrows():
   # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
   seqHash = row["seqHash"]
   lineage = row["lineage"]
-  print(f"Conflict: {row['conflict']} ambiguity: {row['ambigutity_score']}")
+  print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
   conflict = Decimal(str(row['conflict']))
   ambiguityScore = Decimal(str(row['ambiguity_score']))
 
