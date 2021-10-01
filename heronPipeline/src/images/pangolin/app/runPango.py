@@ -54,6 +54,9 @@ print(f"PangoLearn Version")
 command = ["pangolin", "-pv"]
 subprocess.run(command)
 
+if os.path.isfile(seqConsensusFile) == False:
+  return {'error': 'fileNotFound'}
+
 command = ["pangolin", "--verbose", "--usher", seqConsensusFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
 print(f"Running Command: {command}")
 subprocess.run(command)
