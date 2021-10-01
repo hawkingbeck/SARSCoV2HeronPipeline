@@ -54,108 +54,106 @@ print(f"PangoLearn Version")
 command = ["pangolin", "-pv"]
 subprocess.run(command)
 
-if os.path.isfile(seqConsensusFile) == False:
-  return {'error': 'fileNotFound'}
+if os.path.isfile(seqConsensusFile) == True:
+  command = ["pangolin", "--verbose", "--usher", seqConsensusFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
+  print(f"Running Command: {command}")
+  subprocess.run(command)
 
-command = ["pangolin", "--verbose", "--usher", seqConsensusFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
-print(f"Running Command: {command}")
-subprocess.run(command)
+  command = ["pangolin", "--verbose", seqConsensusFile, "--outfile", "/tmp/outputPlearn.csv", "--alignment"]
+  print(f"Running Command: {command}")
+  subprocess.run(command)
 
-command = ["pangolin", "--verbose", seqConsensusFile, "--outfile", "/tmp/outputPlearn.csv", "--alignment"]
-print(f"Running Command: {command}")
-subprocess.run(command)
+  # S3Key = f"pangolin/outputUsher.csv"
+  # bucket.upload_file("/tmp/outputUsher.csv", S3Key)
 
-# S3Key = f"pangolin/outputUsher.csv"
-# bucket.upload_file("/tmp/outputUsher.csv", S3Key)
+  pLearnLineageDf = pd.read_csv("/tmp/outputPlearn.csv")
+  usherLineageDf = pd.read_csv("/tmp/outputUsher.csv")
 
-pLearnLineageDf = pd.read_csv("/tmp/outputPlearn.csv")
-usherLineageDf = pd.read_csv("/tmp/outputUsher.csv")
+  pLearnLineageDf['taxon'] = [f">{f}" for f in pLearnLineageDf['taxon']]
+  usherLineageDf['taxon'] = [f">{f}" for f in usherLineageDf['taxon']]
+  keyFileDf = pd.read_json(keyFile, orient="records")
 
-pLearnLineageDf['taxon'] = [f">{f}" for f in pLearnLineageDf['taxon']]
-usherLineageDf['taxon'] = [f">{f}" for f in usherLineageDf['taxon']]
-keyFileDf = pd.read_json(keyFile, orient="records")
+  pLearnJoinedDf = pd.merge(pLearnLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
+  usherJoinedDf = pd.merge(usherLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
 
-pLearnJoinedDf = pd.merge(pLearnLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
-usherJoinedDf = pd.merge(usherLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
+  callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
+  updateCount = 0
 
-callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
-updateCount = 0
+  # +++++++++++++++++++++++++++++++++++++++++
+  # Update pLearn calls
+  # +++++++++++++++++++++++++++++++++++++++++
+  for index, row in pLearnJoinedDf.iterrows():
+    # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
+    seqHash = row["seqHash"]
+    lineage = row["lineage"]
+    print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
+    conflict = Decimal(str(row['conflict']))
+    ambiguityScore = Decimal(str(row['ambiguity_score']))
 
-# +++++++++++++++++++++++++++++++++++++++++
-# Update pLearn calls
-# +++++++++++++++++++++++++++++++++++++++++
-for index, row in pLearnJoinedDf.iterrows():
-  # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
-  seqHash = row["seqHash"]
-  lineage = row["lineage"]
-  print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
-  conflict = Decimal(str(row['conflict']))
-  ambiguityScore = Decimal(str(row['ambiguity_score']))
+    if np.isnan(float(conflict)):
+      conflict = Decimal(0.0)
+    if np.isnan(float(ambiguityScore)):
+      ambiguityScore = Decimal(0.0)
+    
+    pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
 
-  if np.isnan(float(conflict)):
-    conflict = Decimal(0.0)
-  if np.isnan(float(ambiguityScore)):
-    ambiguityScore = Decimal(0.0)
-  
-  pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
+    seqId = row['seqId']
+    # Create query for dynamoDB
+    
+    sequencesTable = dynamodb.Table(heronSequencesTableName)
+    response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
+    if 'Items' in response:
+      if len(response['Items']) == 1:
+        item = response['Items'][0]
+        print(f"Updating: {seqHash}")
+        ret = sequencesTable.update_item(
+            Key={'seqHash': seqHash},
+            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoCalled=:p, pangoAmbiguityScore=:a, pangoVersion=:v",
+            ExpressionAttributeValues={
+              ':l': lineage,
+              ':d': callDate,
+              ':p': 'true',
+              ':a': ambiguityScore,
+              ':v': pangoVersion,
+              ':c': conflict
+            }
+          )
+        updateCount += 1
 
-  seqId = row['seqId']
-  # Create query for dynamoDB
-  
-  sequencesTable = dynamodb.Table(heronSequencesTableName)
-  response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-  if 'Items' in response:
-    if len(response['Items']) == 1:
-      item = response['Items'][0]
-      print(f"Updating: {seqHash}")
-      ret = sequencesTable.update_item(
-          Key={'seqHash': seqHash},
-          UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoCalled=:p, pangoAmbiguityScore=:a, pangoVersion=:v",
-          ExpressionAttributeValues={
-            ':l': lineage,
-            ':d': callDate,
-            ':p': 'true',
-            ':a': ambiguityScore,
-            ':v': pangoVersion,
-            ':c': conflict
-          }
-        )
-      updateCount += 1
+  print(f"Updated {updateCount} out of {len(pLearnJoinedDf)}")
 
-print(f"Updated {updateCount} out of {len(pLearnJoinedDf)}")
+  print(f"keyFileDf length: {len(keyFileDf)}")
+  print(f"lineageDf length: {len(pLearnLineageDf)}")
+  print(f"JoinedDf length: {len(pLearnJoinedDf)}")
 
-print(f"keyFileDf length: {len(keyFileDf)}")
-print(f"lineageDf length: {len(pLearnLineageDf)}")
-print(f"JoinedDf length: {len(pLearnJoinedDf)}")
+  # +++++++++++++++++++++++++++++++++++++++++
+  # Update Usher calls
+  # +++++++++++++++++++++++++++++++++++++++++
+  for index, row in usherJoinedDf.iterrows():
+    seqHash = row["seqHash"]
+    lineage = row["lineage"]
+    seqId = row['seqId']
+    # Create query for dynamoDB
+    
+    sequencesTable = dynamodb.Table(heronSequencesTableName)
+    response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
+    if 'Items' in response:
+      if len(response['Items']) == 1:
+        item = response['Items'][0]
+        print(f"Updating: {seqHash}")
+        ret = sequencesTable.update_item(
+            Key={'seqHash': seqHash},
+            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d, pangoUserCalled=:p",
+            ExpressionAttributeValues={
+              ':l': lineage,
+              ':d': callDate,
+              ':p': 'true'
+            }
+          )
+        updateCount += 1
 
-# +++++++++++++++++++++++++++++++++++++++++
-# Update Usher calls
-# +++++++++++++++++++++++++++++++++++++++++
-for index, row in usherJoinedDf.iterrows():
-  seqHash = row["seqHash"]
-  lineage = row["lineage"]
-  seqId = row['seqId']
-  # Create query for dynamoDB
-  
-  sequencesTable = dynamodb.Table(heronSequencesTableName)
-  response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-  if 'Items' in response:
-    if len(response['Items']) == 1:
-      item = response['Items'][0]
-      print(f"Updating: {seqHash}")
-      ret = sequencesTable.update_item(
-          Key={'seqHash': seqHash},
-          UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d, pangoUserCalled=:p",
-          ExpressionAttributeValues={
-            ':l': lineage,
-            ':d': callDate,
-            ':p': 'true'
-          }
-        )
-      updateCount += 1
+  print(f"Updated {updateCount} out of {len(usherJoinedDf)}")
 
-print(f"Updated {updateCount} out of {len(usherJoinedDf)}")
-
-print(f"keyFileDf length: {len(keyFileDf)}")
-print(f"lineageDf length: {len(usherLineageDf)}")
-print(f"JoinedDf length: {len(usherJoinedDf)}")
+  print(f"keyFileDf length: {len(keyFileDf)}")
+  print(f"lineageDf length: {len(usherLineageDf)}")
+  print(f"JoinedDf length: {len(usherJoinedDf)}")
