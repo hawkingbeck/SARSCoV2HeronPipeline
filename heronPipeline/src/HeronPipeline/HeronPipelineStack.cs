@@ -98,7 +98,7 @@ namespace HeronPipeline
             });
 
 
-            var samplesTable = new Table(this, "samplesTable", new TableProps{
+            var samplesTable = new Table(this, "heronSamplesTable", new TableProps{
                 BillingMode = BillingMode.PAY_PER_REQUEST,
                 PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
                 SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
@@ -112,7 +112,7 @@ namespace HeronPipeline
                 ProjectionType = ProjectionType.ALL
             });
 
-            var sequencesTable = new Table(this, "sequencesTable", new TableProps {
+            var sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
                 BillingMode = BillingMode.PAY_PER_REQUEST,
                 PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
                 PointInTimeRecovery = true
