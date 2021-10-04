@@ -95,7 +95,11 @@ if os.path.isfile(seqConsensusFile) == True:
     if np.isnan(float(ambiguityScore)):
       ambiguityScore = Decimal(0.0)
     
-    pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
+    # pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
+    version = row['version']
+    pangolinVersion = row['pangolin_version']
+    pangoLearnVersion = row['pangoLEARN_version']
+    pangoVersion = row['pango_version']
 
     seqId = row['seqId']
     # Create query for dynamoDB
@@ -108,13 +112,15 @@ if os.path.isfile(seqConsensusFile) == True:
         print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoCalled=:p, pangoAmbiguityScore=:a, pangoVersion=:v",
+            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv",
             ExpressionAttributeValues={
               ':l': lineage,
               ':d': callDate,
-              ':p': 'true',
               ':a': ambiguityScore,
-              ':v': pangoVersion,
+              ':v': version,
+              ':plnv': pangolinVersion,
+              ':plv': pangoLearnVersion,
+              ':pv': pangoVersion,
               ':c': conflict
             }
           )
@@ -143,11 +149,10 @@ if os.path.isfile(seqConsensusFile) == True:
         print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d, pangoUserCalled=:p",
+            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
             ExpressionAttributeValues={
               ':l': lineage,
-              ':d': callDate,
-              ':p': 'true'
+              ':d': callDate
             }
           )
         updateCount += 1
