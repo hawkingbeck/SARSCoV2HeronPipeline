@@ -109,7 +109,7 @@ def handler(event, context):
     
     sample['aligned'] = alignedFasta
 
-    s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))        
+    s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
 
     ##############################################
     # Step 1. Update the record in dynamoDB
