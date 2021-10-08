@@ -691,11 +691,11 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "HERON_SEQUENCES_TABLE",
                                 Value = sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "MESSAGE_LIST",
-                                Value = JsonPath.StringAt("$.sampleBatch.messageList")
-                            }
+                            // },
+                            // new TaskEnvironmentVariable{
+                            //     Name = "MESSAGE_LIST",
+                            //     Value = JsonPath.StringAt("$.sampleBatch.messageList").ToString()
+                            // }
                         }
                     }
                 },
@@ -872,11 +872,11 @@ namespace HeronPipeline
             });
             pangolinTask.AddRetry(retryItem);
 
-            // var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
+            var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
 
-            // var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
-            //     Comment = "are there any messages in the sample batch"
-            // });
+            var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
+                Comment = "are there any messages in the sample batch"
+            });
             //LQP Place Task
             var lqpPlaceTaskDefinition = new TaskDefinition(this, "lqpPlaceTaskDefinition", new TaskDefinitionProps{
                 Family = "lqpPlace",
@@ -995,16 +995,16 @@ namespace HeronPipeline
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
-            // messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
-            // messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
+            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
-            // var processSampleBatchChain = Chain
-            //   .Start(readSampleBatchCountTask)
-            //   .Next(messagesAvailableChoiceTask);
+            var processSampleBatchChain = Chain
+              .Start(readSampleBatchCountTask)
+              .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
-              //Definition = processSampleBatchChain
-              Definition = processSamplesChain
+              Definition = processSampleBatchChain
+            //   Definition = processSamplesChain
             });
 
 
