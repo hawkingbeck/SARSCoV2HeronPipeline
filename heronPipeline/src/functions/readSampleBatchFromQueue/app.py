@@ -38,6 +38,12 @@ def lambda_handler(event, context):
     sqs = boto3.resource('sqs', config=config)
     queue = sqs.Queue(queueName)
 
+    bucketName = event['bucketName']
+    s3 = boto3.resource('s3', region_name='eu-west-1')
+    bucket = s3.Bucket(bucketName)
+
+    dateString = os.getenv("DATE_PARTITION")
+
 
     #++++++++++++++++++++++++++++++++++++++++++++
     # Create config for this execution
@@ -65,6 +71,17 @@ def lambda_handler(event, context):
 
     messageCount = len(messageList)
 
-    messages = {'messageCount': messageCount, 'messageList': messageList, 'queueName': queueName}
+    messageListFileName = f"messageList{str(uuid4())}.json"
+    messageListS3Key = f"messageLists/{dateString}/{messageListFileName}"
+    # Save messageList to s3 as a json file
+    # with open(f"tmp/{messageListFileName}", "w") as write_file:
+    #   json.dump(messageList, write_file)
+
+
+    # Upload the file to S3
+    s3.Object(bucketName, messageListS3Key).put(Body=json.dumps(messageList))
+
+
+    messages = {'messageCount': messageCount, 'messageListS3Key': messageListS3Key, 'queueName': queueName}
 
     return messages

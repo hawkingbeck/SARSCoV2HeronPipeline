@@ -691,11 +691,11 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "HERON_SEQUENCES_TABLE",
                                 Value = sequencesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "MESSAGE_LIST_S3_KEY",
+                                Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
                             }
-                            // new TaskEnvironmentVariable{
-                            //     Name = "MESSAGE_LIST",
-                            //     Value = JsonPath.StringAt("$.sampleBatch.messageList").ToString()
-                            // }
                         }
                     }
                 },
