@@ -139,8 +139,8 @@ def main():
       startKey = response.get('LastEvaluatedKey', None)
       scan_kwargs['ExclusiveStartKey'] = startKey
       
-    # if messageCount > 100:
-    #     break
+    if messageCount > 1000:
+        break
     
 
   # Generate config for nested StepFunction map state
