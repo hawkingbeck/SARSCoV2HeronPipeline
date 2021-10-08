@@ -18,7 +18,6 @@ config = Config(
       'mode': 'standard'
    }
 )
-
     
 ##############################################
 # Step 1. Create resources
@@ -28,9 +27,12 @@ config = Config(
 dateString = os.getenv('DATE_PARTITION')
 seqConsensusFile = os.getenv('SEQ_CONSENSUS_BATCH_FILE') # Path to the EFS file that we wish to process
 keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence hash and id
+referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
+messageList = os.getenv('MESSAGE_LIST')
 batchUUID = os.path.splitext(os.path.basename(seqConsensusFile))[0].replace("sequences_", "")
+
 
 print(f"Processing seqBatchFile: {seqConsensusFile}")
 # Create the AWS resources: S3Bucket, dynamoDB Table, etc...
@@ -39,6 +41,28 @@ bucket = s3.Bucket(bucketName)
 dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
 
+referenceFastaLocalFilename = "/tmp/ref.fa"
+bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+
+
+# Iterate over each item in the message list and align the sample
+for message in messageList:
+   print(f"Message: {message.consensusFastaPath}")
+
+
 # Open and iterate over the file
 # seqConsensusFile
+# sequences = list()
+# with open(seqConsensusFile) as seqFile:
+#    sequences = seqFile.readlines()
+
+# numSequences = len(sequences) / 2
+
+# for i in range(numSequences):
+#    seqId = sequences[i*2]
+#    sequenceData = sequences[(i*2)+1]
+
+
+
+
 
