@@ -17,7 +17,7 @@ RUN apk add --no-cache \
 
 FROM python-alpine AS build-image
 # Install aws-lambda-cpp build dependencies
-RUN apk add --no-cache \
+RUN apt-get install \
     build-base \
     libtool \
     autoconf \
