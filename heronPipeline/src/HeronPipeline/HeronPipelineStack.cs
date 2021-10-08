@@ -618,6 +618,8 @@ namespace HeronPipeline
               Timeout = Duration.Seconds(900)
             });
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+            readSampleBatchFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            readSampleBatchFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
             var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
               LambdaFunction = readSampleBatchFunction,
