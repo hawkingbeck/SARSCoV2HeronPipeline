@@ -1030,7 +1030,8 @@ namespace HeronPipeline
             var stateMachineInputObject2 = new Dictionary<string, object> {
                 {"queueName", JsonPath.StringAt("$.queueName")},
                 {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
+                {"bucketName", pipelineBucket.BucketName}
             };
 
             var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
