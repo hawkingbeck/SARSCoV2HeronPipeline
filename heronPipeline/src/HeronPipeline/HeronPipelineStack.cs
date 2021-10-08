@@ -691,7 +691,7 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "HERON_SEQUENCES_TABLE",
                                 Value = sequencesTable.TableName
-                            // },
+                            }
                             // new TaskEnvironmentVariable{
                             //     Name = "MESSAGE_LIST",
                             //     Value = JsonPath.StringAt("$.sampleBatch.messageList").ToString()
