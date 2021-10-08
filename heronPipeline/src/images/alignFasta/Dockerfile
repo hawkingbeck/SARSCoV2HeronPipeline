@@ -8,8 +8,8 @@ ARG DISTRO_VERSION="3.12"
 # Grab a fresh copy of the image and install GCC
 FROM python:latest AS python-alpine
 # Install GCC (Alpine uses musl but we compile and link dependencies with GCC)
-RUN apk add --no-cache \
-    libstdc++
+# RUN apk add --no-cache \
+#     libstdc++
 
 #################################################
 # Stage 2 - build function and dependencies
@@ -17,26 +17,26 @@ RUN apk add --no-cache \
 
 FROM python-alpine AS build-image
 # Install aws-lambda-cpp build dependencies
-RUN apt-get install \
-    build-base \
-    libtool \
-    autoconf \
-    automake \
-    libexecinfo-dev \
-    make \
-    cmake \
-    libcurl \
-    zlib-dev \
-    git \
-    bzip2-dev \
-    xz-dev
+# RUN apt-get install \
+#     build-base \
+#     libtool \
+#     autoconf \
+#     automake \
+#     libexecinfo-dev \
+#     make \
+#     cmake \
+#     libcurl \
+#     zlib-dev \
+#     git \
+#     bzip2-dev \
+#     xz-dev
 # Include global args in this stage of the build
 ARG FUNCTION_DIR
 ARG RUNTIME_VERSION
 # Create function directory
 # RUN mkdir -p ${FUNCTION_DIR}
 
-COPY requirements.txt .
+# COPY requirements.txt .
 RUN python -m pip install numpy
 RUN python -m pip install pandas
 RUN python -m pip install boto3

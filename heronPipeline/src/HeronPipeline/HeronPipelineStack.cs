@@ -677,10 +677,6 @@ namespace HeronPipeline
                               Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable{
-                              Name = "SEQ_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
-                            },
-                            new TaskEnvironmentVariable{
                               Name = "SEQ_CONSENSUS_BATCH_FILE",
                               Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
                             },
@@ -767,14 +763,35 @@ namespace HeronPipeline
             });
             prepareSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
             prepareSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-
-
             var prepareSequencesTask = new LambdaInvoke(this, "prepareSequencesTask", new LambdaInvokeProps{
               LambdaFunction = prepareSequencesFunction,
               ResultPath = "$.sequenceFiles",
               PayloadResponseOnly = true,
             });
             prepareSequencesTask.AddRetry(retryItem);
+
+
+            var prepareConsensusSequencesFunction = new PythonFunction(this, "prepareConsensusSequencesFunction", new PythonFunctionProps{
+              Entry = "src/functions/prepareConsensusSequencesFunction",
+              Runtime = Runtime.PYTHON_3_7,
+              Index = "app.py",
+              Handler = "lambda_handler",
+              Timeout = Duration.Seconds(900),
+              Environment = new Dictionary<string, string> {
+                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+                {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
+              },
+              Filesystem = lambdaPipelineFileSystem,
+              Vpc = vpc
+            });
+            prepareConsensusSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            prepareConsensusSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
+            var prepareConsensusSequencesTask = new LambdaInvoke(this, "prepareConsensusSequencesTask", new LambdaInvokeProps{
+              LambdaFunction = prepareConsensusSequencesFunction,
+              ResultPath = "$.sequenceFiles",
+              PayloadResponseOnly = true,
+            });
+            prepareConsensusSequencesTask.AddRetry(retryItem);
 
             var pangolinImage = ContainerImage.FromAsset("src/images/pangolin");
             var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
@@ -968,7 +985,9 @@ namespace HeronPipeline
 
 
             var processSamplesChain = Chain
-              .Start(processSamplesMap)
+            //   .Start(processSamplesMap)
+              .Start(prepareConsensusSequencesTask)
+              .Next(alignFastaTask)
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
