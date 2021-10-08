@@ -963,8 +963,8 @@ namespace HeronPipeline
             });
 
             var processSamplesMapChain = Chain
-              .Start(alignFastaTask)
-              .Next(genotypeVariantsTask);
+            //   .Start(alignFastaTask)
+              .Start(genotypeVariantsTask);
 
             processSamplesMap.Iterator(processSamplesMapChain);
 
