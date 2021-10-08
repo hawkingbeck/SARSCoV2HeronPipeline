@@ -626,6 +626,87 @@ namespace HeronPipeline
             });
             readSampleBatchCountTask.AddRetry(retryItem);
 
+            // +++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++
+            var alignFastaImage = ContainerImage.FromAsset("src/images/alignFasta");
+            var alignFastaTaskDefinition = new TaskDefinition(this, "alignFastaTaskDefinition", new TaskDefinitionProps{
+                Family = "alignFasta",
+                Cpu = "1024",
+                MemoryMiB = "4096",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            });
+            alignFastaTaskDefinition.AddContainer("alignFastaContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = alignFastaImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "alignFasta",
+                    LogGroup = new LogGroup(this, "alignFastaLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "alignFastaLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                })
+            });
+            var alignFastaContainer = alignFastaTaskDefinition.FindContainer("alignFastaContainer");
+            alignFastaContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+            var alignFastaTask = new EcsRunTask(this, "alignFastaPlaceTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = alignFastaTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = alignFastaContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_CONSENSUS_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_KEY_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
+            alignFastaTask.AddRetry(retryItem);
+
+
+            // +++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++
+
             var alignFastaFunction = new DockerImageFunction(this, "alignFastaFunction", new DockerImageFunctionProps{
               Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction"),
               Timeout = Duration.Seconds(900),
@@ -642,12 +723,12 @@ namespace HeronPipeline
             alignFastaFunction.AddToRolePolicy(sqsAccessPolicyStatement);
             alignFastaFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
-            var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
-              LambdaFunction = alignFastaFunction,
-              ResultPath = JsonPath.DISCARD,
-              PayloadResponseOnly = true
-            });
-            alignFastaTask.AddRetry(retryItem);
+            // var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
+            //   LambdaFunction = alignFastaFunction,
+            //   ResultPath = JsonPath.DISCARD,
+            //   PayloadResponseOnly = true
+            // });
+            // alignFastaTask.AddRetry(retryItem);
 
             var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
               Entry = "src/functions/genotypeVariants",
