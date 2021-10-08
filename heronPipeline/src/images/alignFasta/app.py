@@ -6,6 +6,7 @@ import pandas as pd
 import argparse
 import numpy as np
 import boto3
+import json
 from datetime import datetime
 from decimal import Decimal
 # from botocore.exceptions import ClientError
@@ -30,7 +31,8 @@ keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-messageList = os.getenv('MESSAGE_LIST')
+messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
+
 batchUUID = os.path.splitext(os.path.basename(seqConsensusFile))[0].replace("sequences_", "")
 
 
@@ -42,8 +44,11 @@ dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
 
 referenceFastaLocalFilename = "/tmp/ref.fa"
+messageListLocalFilename = "/tmp/messageList.json"
 bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+bucket.download_file(messageListS3Key, messageListLocalFilename)
 
+messageList = json.load(messageListLocalFilename)
 
 # Iterate over each item in the message list and align the sample
 for message in messageList:
