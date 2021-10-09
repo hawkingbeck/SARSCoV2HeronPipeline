@@ -12,6 +12,9 @@ from decimal import Decimal
 # from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
+from datafunk.sam_2_fasta import *
+from Bio import SeqIO
+import pysam
 
 config = Config(
    retries = {
@@ -92,17 +95,36 @@ for message in messageList:
       check=True,
       shell=True
    )
-# Open and iterate over the file
-# seqConsensusFile
-# sequences = list()
-# with open(seqConsensusFile) as seqFile:
-#    sequences = seqFile.readlines()
 
-# numSequences = len(sequences) / 2
+   ##############################################
+   # Step 2. 
+   ##############################################
+   samfile = pysam.AlignmentFile(mappedSamFastaLocalFilename, 'r')
+   reference = SeqIO.read(referenceFastaLocalFilename, 'fasta')
+    
+   # Run sam_2_fasta from datafunk
+   sam_2_fasta(samfile = samfile,
+                reference = reference,
+                output = alignedLocalFilename,
+                prefix_ref = False,
+                log_inserts = False,
+                log_all_inserts = False,
+                log_dels = False,
+                log_all_dels = False,
+                trim = True,
+                pad = True,
+                trimstart = int(trimStart),
+                trimend = int(trimEnd))
+    
+   ##############################################
+   # Step 1. Write updated result into S3
+   ##############################################
+   with open(alignedLocalFilename) as file:
+      alignedFasta = file.read()
+   
+   sample['aligned'] = alignedFasta
 
-# for i in range(numSequences):
-#    seqId = sequences[i*2]
-#    sequenceData = sequences[(i*2)+1]
+   s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
 
 
 
