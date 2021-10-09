@@ -55,7 +55,8 @@ messageListLocalFilename = "/tmp/messageList.json"
 bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
 bucket.download_file(messageListS3Key, messageListLocalFilename)
 
-messageList = json.load(messageListLocalFilename)
+with open(messageListLocalFilename) as messageListFile:
+   messageList = json.load(messageListFile)
 
 # Iterate over each item in the message list and align the sample
 for message in messageList:
