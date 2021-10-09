@@ -697,6 +697,18 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "MESSAGE_LIST_S3_KEY",
                                 Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "REF_FASTA_KEY",
+                                Value = "resources/MN908947.fa"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_START",
+                                Value = "265"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_END",
+                                Value = "29674"
                             }
                         }
                     }
