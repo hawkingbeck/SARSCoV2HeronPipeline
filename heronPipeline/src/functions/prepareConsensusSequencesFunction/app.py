@@ -30,8 +30,7 @@ def lambda_handler(event, context):
   # Get the list of messages from the input event
   ##############################################
   dateString = event['date']
-  messageList = event['sampleBatch']['messageListS3Key']
-  print(f"Message count: {len(messageList)}")
+  messageListKey = event['sampleBatch']['messageListS3Key']
 
   ##############################################
   # Step 1. Create resources
@@ -45,6 +44,8 @@ def lambda_handler(event, context):
   # Step 2. Download the messages and concat into
   #         a single file and save to EFS
   ##############################################
+  messageListLocalFilename = "/tmp/messageList.json"
+  bucket.download_file(messageListKey, messageListLocalFilename)
   sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
   sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
   outputFileUUID = str(uuid.uuid4())
@@ -55,6 +56,9 @@ def lambda_handler(event, context):
   efsOutputConsensusFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{outputFileUUID}.fasta"
   outputPlacementKeyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{outputFileUUID}.json"
   
+  messageList = json.load(messageListLocalFilename)
+  print(f"Message count: {len(messageList)}")
+
   seqList = list()
   with open(outputFastaConsensusFile, "w+") as outputFile:
     for message in messageList:
