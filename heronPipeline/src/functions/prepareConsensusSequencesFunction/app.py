@@ -31,6 +31,7 @@ def lambda_handler(event, context):
   ##############################################
   dateString = event['date']
   messageListKey = event['sampleBatch']['messageListS3Key']
+  print(f"message list key {messageListKey}")
 
   ##############################################
   # Step 1. Create resources
@@ -56,7 +57,9 @@ def lambda_handler(event, context):
   efsOutputConsensusFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{outputFileUUID}.fasta"
   outputPlacementKeyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{outputFileUUID}.json"
   
-  messageList = json.load(messageListLocalFilename)
+  with open(messageListLocalFilename) as json_file:
+    messageList = json.load(json_file)
+  
   print(f"Message count: {len(messageList)}")
 
   seqList = list()
