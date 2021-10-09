@@ -35,6 +35,8 @@ referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
+trimStart = os.getenv('TRIM_START')
+trimEnd = os.getenv('TRIM_END')
 
 batchUUID = os.path.splitext(os.path.basename(seqConsensusFile))[0].replace("sequences_", "")
 
