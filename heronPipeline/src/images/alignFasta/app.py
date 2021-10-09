@@ -68,11 +68,13 @@ for message in messageList:
    print(f'Message: {message["consensusFastaPath"]}')
    # Download the consensus fasta
    consensusFastaKey = message["consensusFastaPath"]
+   consensusFastaHash = message['seqHash']
 
    try:
       bucket.download_file(consensusFastaKey, sampleLocalFilename)
    except:
       print(f"File not found: {consensusFastaKey}")
+      sampleLocalFilename = None
 
    with open(sampleLocalFilename, 'r') as file:
       data = file.read()
@@ -128,7 +130,27 @@ for message in messageList:
 
    s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
 
+   ##############################################
+   # Step 1. Update the record in dynamoDB
+   ##############################################
+   dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
+   heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
+   sequencesTable = dynamodb.Table(heronSequencesTableName)
+   response = sequencesTable.query(
+         KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+      )
 
+   if 'Items' in response:
+      if len(response['Items']) == 1:
+         item = response['Items'][0]
+         item['processingState'] = 'aligned'
+         ret = sequencesTable.update_item(
+            Key={'seqHash': consensusFastaHash},
+            UpdateExpression="set processingState=:s",
+            ExpressionAttributeValues={
+               ':s': 'aligned'
+            }
+         )
 
 
 
