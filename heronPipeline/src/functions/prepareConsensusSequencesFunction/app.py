@@ -30,7 +30,7 @@ def lambda_handler(event, context):
   # Get the list of messages from the input event
   ##############################################
   dateString = event['date']
-  messageList = event['sampleBatch']['messageList']
+  messageList = event['sampleBatch']['messageListS3Key']
   print(f"Message count: {len(messageList)}")
 
   ##############################################
