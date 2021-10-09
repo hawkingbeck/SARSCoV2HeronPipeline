@@ -66,8 +66,7 @@ def lambda_handler(event, context):
   with open(outputFastaConsensusFile, "w+") as outputFile:
     for message in messageList:
       print(f"message: {message}")
-      # s3Key = message['consensusFastaPath']
-      s3Key = message.consensusFastaPath
+      s3Key = message["consensusFastaPath"]
       seqHash = message['seqHash']
       localFilename = f"/tmp/{seqHash}.fa"
       try:
