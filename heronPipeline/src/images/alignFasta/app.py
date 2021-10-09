@@ -63,9 +63,9 @@ with open(messageListLocalFilename) as messageListFile:
 
 # Iterate over each item in the message list and align the sample
 for message in messageList:
-   print(f"Message: {message.consensusFastaPath}")
+   print(f'Message: {message["consensusFastaPath"]}')
    # Download the consensus fasta
-   consensusFastaKey = message.consensusFastaPath
+   consensusFastaKey = message["consensusFastaPath"]
 
    try:
       bucket.download_file(consensusFastaKey, sampleLocalFilename)
