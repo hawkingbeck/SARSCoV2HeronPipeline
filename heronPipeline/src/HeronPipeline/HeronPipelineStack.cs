@@ -997,16 +997,16 @@ namespace HeronPipeline
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
-            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
-            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
+            // messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            // messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
-            var processSampleBatchChain = Chain
-              .Start(readSampleBatchCountTask)
-              .Next(messagesAvailableChoiceTask);
+            // var processSampleBatchChain = Chain
+            //   .Start(readSampleBatchCountTask)
+            //   .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
-              Definition = processSampleBatchChain
-            //   Definition = processSamplesChain
+            //   Definition = processSampleBatchChain
+              Definition = processSamplesChain
             });
 
 
