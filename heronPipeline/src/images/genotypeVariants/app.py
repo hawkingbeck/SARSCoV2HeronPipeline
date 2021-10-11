@@ -38,6 +38,7 @@ sequencesTable = dynamodb.Table(heronSequencesTableName)
 # Download the receipe file that we need for each sequence
 localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
 
+callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
 
 # Download the message file that contains the references to all the sequences that we need to process
 bucket.download_file(messageListS3Key, messageListLocalFilename)
@@ -144,9 +145,10 @@ for message in messageList:
       item['processingState'] = 'aligned'
       ret = sequencesTable.update_item(
           Key={'seqHash': seqHash},
-          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c",
+          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d",
           ExpressionAttributeValues={
             ':v': matched_recipe,
-            ':c': matched_confidence
+            ':c': matched_confidence,
+            ':d': callDate
           }
         )

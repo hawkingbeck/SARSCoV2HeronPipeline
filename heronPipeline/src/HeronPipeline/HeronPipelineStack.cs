@@ -811,7 +811,7 @@ namespace HeronPipeline
                 LaunchTarget = new EcsFargateLaunchTarget(),
                 ContainerOverrides = new ContainerOverride[] {
                     new ContainerOverride {
-                        ContainerDefinition = alignFastaContainer,
+                        ContainerDefinition = genotypeVariantsContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable{
                               Name = "DATE_PARTITION",
@@ -1064,22 +1064,22 @@ namespace HeronPipeline
             lqpPlaceTask.AddRetry(retryItem);
 
             // Process Samples Map State
-            var processSamplesMapParameters = new Dictionary<string, object>();
-            processSamplesMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            processSamplesMapParameters.Add("message.$", "$$.Map.Item.Value");
+            // var processSamplesMapParameters = new Dictionary<string, object>();
+            // processSamplesMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // processSamplesMapParameters.Add("message.$", "$$.Map.Item.Value");
 
-            var processSamplesMap = new Map(this, "processSamplesMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.sampleBatch.messageList",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = processSamplesMapParameters,
-            });
+            // var processSamplesMap = new Map(this, "processSamplesMap", new MapProps {
+            //   InputPath = "$",
+            //   ItemsPath = "$.sampleBatch.messageList",
+            //   ResultPath = JsonPath.DISCARD,
+            //   Parameters = processSamplesMapParameters,
+            // });
 
-            var processSamplesMapChain = Chain
+            // var processSamplesMapChain = Chain
             //   .Start(alignFastaTask)
-              .Start(genotypeVariantsTask);
+            //   .Start(genotypeVariantsTask);
 
-            processSamplesMap.Iterator(processSamplesMapChain);
+            // processSamplesMap.Iterator(processSamplesMapChain);
 
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
