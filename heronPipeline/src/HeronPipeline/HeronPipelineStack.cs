@@ -848,6 +848,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "TRIM_END",
                                 Value = "29674"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "RECIPE_FILE_PATH",
+                                Value = JsonPath.StringAt("$.recipeFilePath")
                             }
                         }
                     }
