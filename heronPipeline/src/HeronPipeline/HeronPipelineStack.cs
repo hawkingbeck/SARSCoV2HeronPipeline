@@ -806,7 +806,7 @@ namespace HeronPipeline
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
-                TaskDefinition = alignFastaTaskDefinition,
+                TaskDefinition = genotypeVariantsTaskDefinition,
                 AssignPublicIp = true,
                 LaunchTarget = new EcsFargateLaunchTarget(),
                 ContainerOverrides = new ContainerOverride[] {
