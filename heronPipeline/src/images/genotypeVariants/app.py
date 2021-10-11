@@ -22,8 +22,8 @@ config = Config(
 # Read the inputs that we require from the event
 # These will S3 paths that require download prior to using
 # fastaFileS3Key = event['consensusFastaPath']
-fastaFileS3Key = os.getenv['consensusFastaPath']
-genotypeRecipeS3Key = os.getenv['recipeFilePath']
+# fastaFileS3Key = os.getenv['consensusFastaPath']
+genotypeRecipeS3Key = os.getenv('RECIPE_FILE_PATH')
 heronBucketName = os.getenv("HERON_SAMPLES_BUCKET")
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
@@ -132,11 +132,8 @@ for message in messageList:
   print(matched_recipe, matched_confidence, datetime.now(), sep="\t")
 
   # Upsert the record for the sequence
-  seqHash = os.path.splitext(os.path.basename(fastaFileS3Key))[0]
-  dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
-  sequencesTable = dynamodb.Table(heronSequencesTableName)
   response = sequencesTable.query(
-        KeyConditionExpression=Key('seqHash').eq(seqHash)
+        KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
       )
 
   if 'Items' in response:
@@ -144,7 +141,7 @@ for message in messageList:
       item = response['Items'][0]
       item['processingState'] = 'aligned'
       ret = sequencesTable.update_item(
-          Key={'seqHash': seqHash},
+          Key={'seqHash': consensusFastaHash},
           UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d",
           ExpressionAttributeValues={
             ':v': matched_recipe,
