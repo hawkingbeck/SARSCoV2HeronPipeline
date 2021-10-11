@@ -41,7 +41,7 @@ def lambda_handler(event, context):
 
     attributes = queue.attributes
     sequenceCount = int(attributes['ApproximateNumberOfMessages'])
-    sequencesPerMapIteration = 40*1000
+    sequencesPerMapIteration = 40*500
     mapIterationsRequired = math.ceil(sequenceCount / sequencesPerMapIteration)
     nestedProcessConfig = [{'id': f} for f in range(40)]
     manageProcessSequencesBatchMapConfig = [{'id': f, 'process': nestedProcessConfig} for f in range(mapIterationsRequired)]

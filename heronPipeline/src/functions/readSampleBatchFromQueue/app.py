@@ -58,7 +58,7 @@ def lambda_handler(event, context):
       
       if len(messages) == 0:
         stop = True
-      if len(messageList) >= 1000:
+      if len(messageList) >= 500:
         stop = True
       
       entries = [{
