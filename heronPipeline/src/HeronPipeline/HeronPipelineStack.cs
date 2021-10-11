@@ -744,27 +744,122 @@ namespace HeronPipeline
             // });
             // alignFastaTask.AddRetry(retryItem);
 
-            var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
-              Entry = "src/functions/genotypeVariants",
-              Runtime = Runtime.PYTHON_3_7,
-              Index = "app.py",
-              Handler = "lambda_handler",
-              Timeout = Duration.Seconds(900),
-              Environment = new Dictionary<string, string> {
-                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
-                {"HERON_SEQUENCES_TABLE",sequencesTable.TableName}
-              }
-            });
-            genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            genotypeVariantsFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-            genotypeVariantsFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
+            // var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
+            //   Entry = "src/functions/genotypeVariants",
+            //   Runtime = Runtime.PYTHON_3_7,
+            //   Index = "app.py",
+            //   Handler = "lambda_handler",
+            //   Timeout = Duration.Seconds(900),
+            //   Environment = new Dictionary<string, string> {
+            //     {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+            //     {"HERON_SEQUENCES_TABLE",sequencesTable.TableName}
+            //   }
+            // });
+            // genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            // genotypeVariantsFunction.AddToRolePolicy(sqsAccessPolicyStatement);
+            // genotypeVariantsFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
-            var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
-              LambdaFunction = genotypeVariantsFunction,
-              ResultPath = JsonPath.DISCARD,
-              PayloadResponseOnly = true
+            // var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
+            //   LambdaFunction = genotypeVariantsFunction,
+            //   ResultPath = JsonPath.DISCARD,
+            //   PayloadResponseOnly = true
+            // });
+            // genotypeVariantsTask.AddRetry(retryItem);
+
+
+
+
+            var genotypeVariantsImage = ContainerImage.FromAsset("src/images/genotypeVariants");
+            var genotypeVariantsTaskDefinition = new TaskDefinition(this, "genotypeVariantsTaskDefinition", new TaskDefinitionProps{
+                Family = "genotypeVariants",
+                Cpu = "1024",
+                MemoryMiB = "2048",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            });
+            genotypeVariantsTaskDefinition.AddContainer("genotypeVariantsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = alignFastaImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "genotypeVariants",
+                    LogGroup = new LogGroup(this, "genotypeVariantsLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "genotypeVariantsLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                })
+            });
+            var genotypeVariantsContainer = genotypeVariantsTaskDefinition.FindContainer("genotypeVariantsContainer");
+            genotypeVariantsContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+            var genotypeVariantsTask = new EcsRunTask(this, "genotypeVariantsPlaceTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = alignFastaTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = alignFastaContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_CONSENSUS_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_KEY_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "MESSAGE_LIST_S3_KEY",
+                                Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "REF_FASTA_KEY",
+                                Value = "resources/MN908947.fa"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_START",
+                                Value = "265"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_END",
+                                Value = "29674"
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
             });
             genotypeVariantsTask.AddRetry(retryItem);
+
+
+
+
+
 
             var prepareSequencesFunction = new PythonFunction(this, "prepareSequencesFunction", new PythonFunctionProps{
               Entry = "src/functions/prepareSequencesFunction",
@@ -999,7 +1094,10 @@ namespace HeronPipeline
             var lqpPlaceChain = Chain
               .Start(lqpPlaceTask);
 
-            placeSequencesParallel.Branch(new Chain[] { pangolinChain, lqpPlaceChain });
+            var genotypeVariantsChain = Chain
+                .Start(genotypeVariantsTask);
+
+            placeSequencesParallel.Branch(new Chain[] { pangolinChain, lqpPlaceChain, genotypeVariantsChain });
 
 
             var processSamplesChain = Chain
