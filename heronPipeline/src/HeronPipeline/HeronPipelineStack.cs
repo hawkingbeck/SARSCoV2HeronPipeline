@@ -782,7 +782,7 @@ namespace HeronPipeline
             });
             genotypeVariantsTaskDefinition.AddContainer("genotypeVariantsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
-                Image = alignFastaImage,
+                Image = genotypeVariantsImage,
                 Logging = new AwsLogDriver(new AwsLogDriverProps
                 {
                     StreamPrefix = "genotypeVariants",
