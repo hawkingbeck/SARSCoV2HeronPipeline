@@ -11,6 +11,7 @@ FROM python:latest AS python-alpine
 RUN python -m pip install numpy
 RUN python -m pip install pandas
 RUN python -m pip install boto3
+RUN python -m pip install pyyaml
 
 COPY . .
 
