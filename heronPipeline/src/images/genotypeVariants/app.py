@@ -28,6 +28,7 @@ heronBucketName = os.getenv("HERON_SAMPLES_BUCKET")
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
 messageListLocalFilename = "/tmp/messageList.json"
+localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
 
 #create the AWS client resources we need for this execution
 s3 = boto3.resource('s3', region_name='eu-west-1')
@@ -36,12 +37,15 @@ dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
 
 # Download the receipe file that we need for each sequence
-localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
+
+
 
 callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
 
 # Download the message file that contains the references to all the sequences that we need to process
 bucket.download_file(messageListS3Key, messageListLocalFilename)
+# Download the recipe file that we need to assign variants from
+bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
 
 with open(messageListLocalFilename) as messageListFile:
    messageList = json.load(messageListFile)
