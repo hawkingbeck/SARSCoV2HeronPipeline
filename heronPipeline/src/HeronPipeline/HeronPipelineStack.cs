@@ -17,8 +17,6 @@ using Amazon.CDK.AWS.SQS;
 using Stack = Amazon.CDK.Stack;
 using Queue = Amazon.CDK.AWS.SQS.Queue;
 
-
-// /home/ec2-user/.nvm/versions/node/v16.3.0
 namespace HeronPipeline
 {
     public class HeronPipelineStack : Stack
@@ -737,38 +735,7 @@ namespace HeronPipeline
             alignFastaFunction.AddToRolePolicy(sqsAccessPolicyStatement);
             alignFastaFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
-            // var alignFastaTask = new LambdaInvoke(this, "alignFastaTask", new LambdaInvokeProps{
-            //   LambdaFunction = alignFastaFunction,
-            //   ResultPath = JsonPath.DISCARD,
-            //   PayloadResponseOnly = true
-            // });
-            // alignFastaTask.AddRetry(retryItem);
-
-            // var genotypeVariantsFunction = new PythonFunction(this, "geontypeVariantsFunction", new PythonFunctionProps{
-            //   Entry = "src/functions/genotypeVariants",
-            //   Runtime = Runtime.PYTHON_3_7,
-            //   Index = "app.py",
-            //   Handler = "lambda_handler",
-            //   Timeout = Duration.Seconds(900),
-            //   Environment = new Dictionary<string, string> {
-            //     {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
-            //     {"HERON_SEQUENCES_TABLE",sequencesTable.TableName}
-            //   }
-            // });
-            // genotypeVariantsFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            // genotypeVariantsFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-            // genotypeVariantsFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-
-            // var genotypeVariantsTask = new LambdaInvoke(this, "genotypeVariantsTask", new LambdaInvokeProps{
-            //   LambdaFunction = genotypeVariantsFunction,
-            //   ResultPath = JsonPath.DISCARD,
-            //   PayloadResponseOnly = true
-            // });
-            // genotypeVariantsTask.AddRetry(retryItem);
-
-
-
-
+            
             var genotypeVariantsImage = ContainerImage.FromAsset("src/images/genotypeVariants");
             var genotypeVariantsTaskDefinition = new TaskDefinition(this, "genotypeVariantsTaskDefinition", new TaskDefinitionProps{
                 Family = "genotypeVariants",
@@ -882,84 +849,6 @@ namespace HeronPipeline
             });
             prepareSequencesTask.AddRetry(retryItem);
             
-            // var prepareSequencesImage = ContainerImage.FromAsset("src/images/prepareSequences");
-            // var prepareSequencesTaskDefinition = new TaskDefinition(this, "prepareSequencesTaskDefinition", new TaskDefinitionProps{
-            //     Family = "prepareSequences",
-            //     Cpu = "1024",
-            //     MemoryMiB = "2048",
-            //     NetworkMode = NetworkMode.AWS_VPC,
-            //     Compatibility = Compatibility.FARGATE,
-            //     ExecutionRole = ecsExecutionRole,
-            //     TaskRole = ecsExecutionRole,
-            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
-            // });
-            // prepareSequencesTaskDefinition.AddContainer("prepareSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            // {
-            //     Image = prepareSequencesImage,
-            //     Logging = new AwsLogDriver(new AwsLogDriverProps
-            //     {
-            //         StreamPrefix = "prepareSequences",
-            //         LogGroup = new LogGroup(this, "prepareSequencesLogGroup", new LogGroupProps
-            //         {
-            //             LogGroupName = "genotypeVariantsLogGroup",
-            //             Retention = RetentionDays.ONE_WEEK,
-            //             RemovalPolicy = RemovalPolicy.DESTROY
-            //         })
-            //     })
-            // });
-            // var prepareSequencesContainer = prepareSequencesTaskDefinition.FindContainer("prepareSequencesContainer");
-            // prepareSequencesContainer.AddMountPoints(new MountPoint[] {
-            //         new MountPoint {
-            //             SourceVolume = "efsVolume",
-            //             ContainerPath = "/mnt/efs0",
-            //             ReadOnly = false,
-            //         }
-            //     });
-            // var prepareSequencesTask = new EcsRunTask(this, "prepareSequencesPlaceTask", new EcsRunTaskProps
-            // {
-            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
-            //     Cluster = cluster,
-            //     TaskDefinition = prepareSequencesTaskDefinition,
-            //     AssignPublicIp = true,
-            //     LaunchTarget = new EcsFargateLaunchTarget(),
-            //     ContainerOverrides = new ContainerOverride[] {
-            //         new ContainerOverride {
-            //             ContainerDefinition = prepareSequencesContainer,
-            //             Environment = new TaskEnvironmentVariable[] {
-            //                 new TaskEnvironmentVariable{
-            //                   Name = "DATE_PARTITION",
-            //                   Value = JsonPath.StringAt("$.date")
-            //                 },
-            //                 new TaskEnvironmentVariable{
-            //                   Name = "SEQ_CONSENSUS_BATCH_FILE",
-            //                   Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
-            //                 },
-            //                 new TaskEnvironmentVariable{
-            //                   Name = "SEQ_KEY_FILE",
-            //                   Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
-            //                 },
-            //                 new TaskEnvironmentVariable{
-            //                   Name = "HERON_SAMPLES_BUCKET",
-            //                   Value = pipelineBucket.BucketName
-            //                 },
-            //                 new TaskEnvironmentVariable{
-            //                     Name = "HERON_SEQUENCES_TABLE",
-            //                     Value = sequencesTable.TableName
-            //                 },
-            //                 new TaskEnvironmentVariable{
-            //                     Name = "MESSAGE_LIST_S3_KEY",
-            //                     Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-            //                 },
-            //             }
-            //         }
-            //     },
-            //     ResultPath = JsonPath.DISCARD
-            // });
-            // prepareSequencesTask.AddRetry(retryItem);
-
-
-
-
             var prepareConsensusSequencesFunction = new PythonFunction(this, "prepareConsensusSequencesFunction", new PythonFunctionProps{
               Entry = "src/functions/prepareConsensusSequencesFunction",
               Runtime = Runtime.PYTHON_3_7,
@@ -1139,24 +1028,6 @@ namespace HeronPipeline
             });
             lqpPlaceTask.AddRetry(retryItem);
 
-            // Process Samples Map State
-            // var processSamplesMapParameters = new Dictionary<string, object>();
-            // processSamplesMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            // processSamplesMapParameters.Add("message.$", "$$.Map.Item.Value");
-
-            // var processSamplesMap = new Map(this, "processSamplesMap", new MapProps {
-            //   InputPath = "$",
-            //   ItemsPath = "$.sampleBatch.messageList",
-            //   ResultPath = JsonPath.DISCARD,
-            //   Parameters = processSamplesMapParameters,
-            // });
-
-            // var processSamplesMapChain = Chain
-            //   .Start(alignFastaTask)
-            //   .Start(genotypeVariantsTask);
-
-            // processSamplesMap.Iterator(processSamplesMapChain);
-
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
 
@@ -1177,7 +1048,6 @@ namespace HeronPipeline
 
 
             var processSamplesChain = Chain
-            //   .Start(processSamplesMap)
               .Start(prepareConsensusSequencesTask)
               .Next(alignFastaTask)
               .Next(prepareSequencesTask)
@@ -1192,7 +1062,6 @@ namespace HeronPipeline
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
               Definition = processSampleBatchChain
-            //   Definition = processSamplesChain
             });
 
 
