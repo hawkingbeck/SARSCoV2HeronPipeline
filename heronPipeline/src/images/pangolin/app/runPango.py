@@ -100,6 +100,11 @@ if os.path.isfile(seqConsensusFile) == True:
     pangolinVersion = row['pangolin_version']
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
+    scorpioCall = row['scorpio_call']
+    scorpioSupport = row["scorpio_support"]
+    scorpioConflict = row["scorpio_conflict"]
+
+
 
     seqId = row['seqId']
     # Create query for dynamoDB
@@ -112,7 +117,7 @@ if os.path.isfile(seqConsensusFile) == True:
         print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv",
+            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn",
             ExpressionAttributeValues={
               ':l': lineage,
               ':d': callDate,
@@ -121,7 +126,10 @@ if os.path.isfile(seqConsensusFile) == True:
               ':plnv': pangolinVersion,
               ':plv': pangoLearnVersion,
               ':pv': pangoVersion,
-              ':c': conflict
+              ':c': conflict,
+              ':sc': scorpioCall,
+              ':ss': scorpioSupport,
+              ':sn': scorpioConflict
             }
           )
         updateCount += 1
