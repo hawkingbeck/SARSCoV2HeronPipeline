@@ -3,6 +3,7 @@ FROM continuumio/miniconda3
 ARG FUNCTION_DIR="/home/app/"
 
 RUN conda --version
+RUN conda --version
 
 RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.14
 WORKDIR /pangolin
