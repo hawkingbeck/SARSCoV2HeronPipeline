@@ -1134,8 +1134,8 @@ namespace HeronPipeline
               InputPath = "$",
               ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
               ResultPath = JsonPath.DISCARD,
-              Parameters = launchSampleProcessingMapParameters
-            //   MaxConcurrency = 2
+              Parameters = launchSampleProcessingMapParameters,
+              MaxConcurrency = 10
             });
 
             var stateMachineInputObject = new Dictionary<string, object> {
