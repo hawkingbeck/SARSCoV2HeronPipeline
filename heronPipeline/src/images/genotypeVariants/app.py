@@ -98,6 +98,107 @@ for message in messageList:
   for recipe in recipes.values():
     alt_match = 0
     ref_match = 0
+
+    #if a "special mutation", e.g. E484K is required, but not present, this will be flipped to False
+    special_mutations = True
+
+    # Keep track of matched variants for logging
+    log_alt_match = []
+    log_ref_match = []
+    log_wrong_alt = []
+
+    for lineage_mutation in recipe['variants']:
+        pos = int(lineage_mutation['one-based-reference-position'])-1
+        if lineage_mutation['type'] == "MNP":
+            size = len(lineage_mutation['reference-base'])
+            seq_val = sequence[pos:pos+size]
+        elif lineage_mutation['type'] == "SNP":
+            seq_val = sequence[pos]
+        else:
+            #not considering indels at present
+            continue
+
+        log_is_special = "_spec" if "special" in lineage_mutation else ""
+
+        if seq_val == lineage_mutation['variant-base']:
+            alt_match += 1
+
+            log_alt_match.append("{}{}{}{}".format(
+                lineage_mutation['reference-base'],
+                lineage_mutation['one-based-reference-position'],
+                seq_val,
+                log_is_special
+                ))
+
+        elif seq_val == lineage_mutation['reference-base']:
+            ref_match += 1
+            if "special" in lineage_mutation:
+                special_mutations = False
+
+            log_ref_match.append("{}{}{}".format(
+                lineage_mutation['reference-base'],
+                lineage_mutation['one-based-reference-position'],
+                log_is_special))
+        else:
+            if "special" in lineage_mutation:
+                special_mutations = False
+
+            log_wrong_alt.append("{}{}{}/{}{}".format(
+                lineage_mutation['reference-base'],
+                lineage_mutation['one-based-reference-position'],
+                lineage_mutation['variant-base'],
+                seq_val,
+                log_is_special))
+
+    calling_definition = recipe['calling-definition']
+    confidence = "NA"
+    if special_mutations and alt_match >= calling_definition['confirmed']['mutations-required'] and ref_match <= calling_definition['confirmed']['allowed-wildtype']:
+        confidence = "confirmed"
+    elif 'probable' in calling_definition and special_mutations and alt_match >= calling_definition['probable']['mutations-required'] and ref_match <= calling_definition['probable']['allowed-wildtype']:
+        confidence = "probable"
+
+    if confidence != "NA":
+        if matched_recipe_pango_alias == "none":
+            matched_recipe_pango_alias = recipe['belongs-to-lineage']['PANGO']
+            matched_recipe_phe_label = recipe['phe-label']
+            matched_confidence = confidence
+
+        else:
+            matched_recipe_pango_alias = "multiple"
+            matched_recipe_phe_label = "multiple"
+            matched_confidence = "multiple"
+
+
+  print(matched_recipe, matched_confidence, matched_recipe_phe_label, datetime.now(), sep="\t")
+
+  # Upsert the record for the sequence
+  response = sequencesTable.query(
+        KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+      )
+
+  if 'Items' in response:
+    if len(response['Items']) == 1:
+      item = response['Items'][0]
+      item['processingState'] = 'aligned'
+      ret = sequencesTable.update_item(
+          Key={'seqHash': consensusFastaHash},
+          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d, genotypeProfile=:p",
+          ExpressionAttributeValues={
+            ':v': matched_recipe,
+            ':c': matched_confidence,
+            ':d': callDate,
+            ':p': matched_recipe_phe_label
+          }
+        )
+
+
+
+  #----------------------------------------------
+  #----------------------------------------------
+  #----------------------------------------------
+  for recipe in recipes.values():
+    alt_match = 0
+    ref_match = 0
   
     #if a "special mutation", e.g. E484K is required, but not present, this will be flipped to False
     special_mutations = True
