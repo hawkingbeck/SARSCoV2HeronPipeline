@@ -80,6 +80,7 @@ for message in messageList:
   wuhan_reference_length = 29903
   matched_recipe = "none"
   matched_confidence = "NA"
+  matched_recipe_phe_label = "NA"
 
   with open(localFastaFilename) as fasta_file:
     header = fasta_file.readline()
