@@ -100,10 +100,17 @@ if os.path.isfile(seqConsensusFile) == True:
     pangolinVersion = row['pangolin_version']
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
+    
+    print(f"Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
-    scorpioSupport = row["scorpio_support"]
-    scorpioConflict = row["scorpio_conflict"]
+    
+    scorpioSupport = Decimal(str(row["scorpio_support"]))
+    scorpioConflict = Decimal(str(row["scorpio_conflict"]))
 
+    if np.isnan(float(scorpioSupport)):
+      scorpioSupport = Decimal(0.0)
+    if np.isnan(float(scorpioConflict)):
+      scorpioConflict = Decimal(0.0)
 
 
     seqId = row['seqId']
