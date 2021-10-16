@@ -101,7 +101,7 @@ if os.path.isfile(seqConsensusFile) == True:
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
     
-    # print(f"Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
+    print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
     
     scorpioSupport = Decimal(str(row["scorpio_support"]))
@@ -111,8 +111,10 @@ if os.path.isfile(seqConsensusFile) == True:
       scorpioSupport = Decimal(0.0)
     if np.isnan(float(scorpioConflict)):
       scorpioConflict = Decimal(0.0)
-
-
+    if not isinstance(scorpioCall, str):
+      scorpioCall = "N/A"
+      
+    print(f"Scorpio output {scorpioCall}, {scorpioSupport}, {scorpioConflict}")
     seqId = row['seqId']
     # Create query for dynamoDB
     
