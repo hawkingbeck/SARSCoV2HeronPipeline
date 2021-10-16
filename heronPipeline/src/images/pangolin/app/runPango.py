@@ -101,7 +101,7 @@ if os.path.isfile(seqConsensusFile) == True:
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
     
-    print(f"Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
+    # print(f"Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
     
     scorpioSupport = Decimal(str(row["scorpio_support"]))
