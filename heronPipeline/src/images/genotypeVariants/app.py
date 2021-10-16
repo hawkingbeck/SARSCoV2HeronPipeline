@@ -81,6 +81,9 @@ for message in messageList:
   matched_recipe = "none"
   matched_confidence = "NA"
   matched_recipe_phe_label = "NA"
+  matched_recipe_pango_alias = "none"
+
+
 
   with open(localFastaFilename) as fasta_file:
     header = fasta_file.readline()
