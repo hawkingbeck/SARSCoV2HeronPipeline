@@ -872,13 +872,14 @@ namespace HeronPipeline
             prepareConsensusSequencesTask.AddRetry(retryItem);
 
             var buildArgs = new Dictionary<string, string>(){
-                    {"no-cache", ""}
+                    {"--no-cache", "true"}
             };
 
             var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
             {
                 BuildArgs = buildArgs
             });
+            
 
             var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
                 Family = "pangolin",
