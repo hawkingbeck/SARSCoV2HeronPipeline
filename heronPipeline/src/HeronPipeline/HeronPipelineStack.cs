@@ -175,206 +175,206 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP metadata preparation
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpImage = ContainerImage.FromEcrRepository(
-                    Repository.FromRepositoryArn(this, "lqpImage", "arn:aws:ecr:eu-west-1:889562587392:low_quality_placement/low_quality_placement"),
-                    "latest");
-            var lqpDownloadMetaDataTaskDefinition = new TaskDefinition(this, "lqpDownloadMetaDataTask", new TaskDefinitionProps{
-                Family = "lqpDownloadMetaDataTask",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                EphemeralStorageGiB = 50,
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            // var lqpImage = ContainerImage.FromEcrRepository(
+            //         Repository.FromRepositoryArn(this, "lqpImage", "arn:aws:ecr:eu-west-1:889562587392:low_quality_placement/low_quality_placement"),
+            //         "latest");
+            // var lqpDownloadMetaDataTaskDefinition = new TaskDefinition(this, "lqpDownloadMetaDataTask", new TaskDefinitionProps{
+            //     Family = "lqpDownloadMetaDataTask",
+            //     Cpu = "1024",
+            //     MemoryMiB = "4096",
+            //     EphemeralStorageGiB = 50,
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
 
-            });
+            // });
 
-            lqpDownloadMetaDataTaskDefinition.AddContainer("lqpDownLoadMetaDataContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = lqpImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "lqpDownloadMetaData",
-                    LogGroup = new LogGroup(this, "lqpDownloadMetaDataLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "lqpDownloadMetaDataLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                }),
-                EntryPoint = new string[] { "sh", "/home/app/lqp-fargateDataPrep.sh" }
-            });
+            // lqpDownloadMetaDataTaskDefinition.AddContainer("lqpDownLoadMetaDataContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            // {
+            //     Image = lqpImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps
+            //     {
+            //         StreamPrefix = "lqpDownloadMetaData",
+            //         LogGroup = new LogGroup(this, "lqpDownloadMetaDataLogGroup", new LogGroupProps
+            //         {
+            //             LogGroupName = "lqpDownloadMetaDataLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     }),
+            //     EntryPoint = new string[] { "sh", "/home/app/lqp-fargateDataPrep.sh" }
+            // });
 
-            var lqpDownloadMetaDataContainer = lqpDownloadMetaDataTaskDefinition.FindContainer("lqpDownLoadMetaDataContainer");
-            lqpDownloadMetaDataContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
+            // var lqpDownloadMetaDataContainer = lqpDownloadMetaDataTaskDefinition.FindContainer("lqpDownLoadMetaDataContainer");
+            // lqpDownloadMetaDataContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
 
-            var lqpPrepareMetaDataTask = new EcsRunTask(this, "lqpPrepareMetaDataECSTask", new EcsRunTaskProps{
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = lqpDownloadMetaDataTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = lqpDownloadMetaDataContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable {
-                                Name = "LQP_DATA_ROOT",
-                                Value = "/mnt/efs0/lqpModel/metaData"
-                            },
-                            new TaskEnvironmentVariable {
-                                Name = "DATE_PARTITION",
-                                Value = JsonPath.StringAt("$.date") //"$.date"
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
+            // var lqpPrepareMetaDataTask = new EcsRunTask(this, "lqpPrepareMetaDataECSTask", new EcsRunTaskProps{
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = lqpDownloadMetaDataTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = lqpDownloadMetaDataContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "LQP_DATA_ROOT",
+            //                     Value = "/mnt/efs0/lqpModel/metaData"
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "DATE_PARTITION",
+            //                     Value = JsonPath.StringAt("$.date") //"$.date"
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP metadata processing
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpRunBaseTaskDefinition = new TaskDefinition(this, "lqpRunBaseTask", new TaskDefinitionProps{
-                Family = "lqpRunBaseTask",
-                Cpu = "4096",
-                MemoryMiB = "30720",
-                EphemeralStorageGiB = 50,
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
-            });
+            // var lqpRunBaseTaskDefinition = new TaskDefinition(this, "lqpRunBaseTask", new TaskDefinitionProps{
+            //     Family = "lqpRunBaseTask",
+            //     Cpu = "4096",
+            //     MemoryMiB = "30720",
+            //     EphemeralStorageGiB = 50,
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            // });
 
-            lqpRunBaseTaskDefinition.AddContainer("lqpRunBaseContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions{
-                Image = lqpImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps{
-                    StreamPrefix = "lqpRunBase",
-                    LogGroup = new LogGroup(this, "lqpRunBaseLogGroup", new LogGroupProps{
-                        LogGroupName = "lqpRunBaseLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                }),
-                EntryPoint = new string[] { "sh", "/home/app/lqp-fargateMpBase.sh" }
-            });
-            var lqpRunBaseContainer = lqpRunBaseTaskDefinition.FindContainer("lqpRunBaseContainer");
-            lqpRunBaseContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
+            // lqpRunBaseTaskDefinition.AddContainer("lqpRunBaseContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions{
+            //     Image = lqpImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps{
+            //         StreamPrefix = "lqpRunBase",
+            //         LogGroup = new LogGroup(this, "lqpRunBaseLogGroup", new LogGroupProps{
+            //             LogGroupName = "lqpRunBaseLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     }),
+            //     EntryPoint = new string[] { "sh", "/home/app/lqp-fargateMpBase.sh" }
+            // });
+            // var lqpRunBaseContainer = lqpRunBaseTaskDefinition.FindContainer("lqpRunBaseContainer");
+            // lqpRunBaseContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
 
-            var lqpRunBaseTask = new EcsRunTask(this, "lqpRunBaseStepFunctionTask", new EcsRunTaskProps{
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = lqpRunBaseTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = lqpRunBaseContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable {
-                                Name = "LQP_DATA_ROOT",
-                                Value = "/mnt/efs0/lqpModel/metaData"
-                            },
-                            new TaskEnvironmentVariable {
-                                Name = "DATE",
-                                Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable {
-                              Name = "LSB_JOBINDEX",
-                              Value = JsonPath.StringAt("$.partition")
-                            }
+            // var lqpRunBaseTask = new EcsRunTask(this, "lqpRunBaseStepFunctionTask", new EcsRunTaskProps{
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = lqpRunBaseTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = lqpRunBaseContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "LQP_DATA_ROOT",
+            //                     Value = "/mnt/efs0/lqpModel/metaData"
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "DATE",
+            //                     Value = JsonPath.StringAt("$.date")
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                   Name = "LSB_JOBINDEX",
+            //                   Value = JsonPath.StringAt("$.partition")
+            //                 }
                             
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            lqpRunBaseTask.AddRetry(retryItem);
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
+            // lqpRunBaseTask.AddRetry(retryItem);
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // Task definition for LQP tidy
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpTidyTaskDefinition = new TaskDefinition(this, "lqpTidyTask", new TaskDefinitionProps{
-                Family = "lqpTidyTask",
-                Cpu = "512",
-                MemoryMiB = "2048",
-                EphemeralStorageGiB = 50,
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
-            });
-            lqpTidyTaskDefinition.AddContainer("lqpTidyContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = lqpImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "lqpTidy",
-                    LogGroup = new LogGroup(this, "lqpTidyLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "lqpTidyLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                }),
-                EntryPoint = new string[] { "python", "/home/app/lqp-fargateTidy.py" }
-            });
-            var lqpTidyContainer = lqpTidyTaskDefinition.FindContainer("lqpTidyContainer");
-            lqpTidyContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
+            // var lqpTidyTaskDefinition = new TaskDefinition(this, "lqpTidyTask", new TaskDefinitionProps{
+            //     Family = "lqpTidyTask",
+            //     Cpu = "512",
+            //     MemoryMiB = "2048",
+            //     EphemeralStorageGiB = 50,
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            // });
+            // lqpTidyTaskDefinition.AddContainer("lqpTidyContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            // {
+            //     Image = lqpImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps
+            //     {
+            //         StreamPrefix = "lqpTidy",
+            //         LogGroup = new LogGroup(this, "lqpTidyLogGroup", new LogGroupProps
+            //         {
+            //             LogGroupName = "lqpTidyLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     }),
+            //     EntryPoint = new string[] { "python", "/home/app/lqp-fargateTidy.py" }
+            // });
+            // var lqpTidyContainer = lqpTidyTaskDefinition.FindContainer("lqpTidyContainer");
+            // lqpTidyContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
 
-            var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = lqpTidyTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = lqpTidyContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable {
-                                Name = "LQP_DATA_ROOT",
-                                Value = "/mnt/efs0/lqpModel/metaData"
-                            },
-                            new TaskEnvironmentVariable {
-                                Name = "DATE_PARTITION",
-                                Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable {
-                              Name = "PARTITION_COUNT",
-                              Value = "119"
-                            },
-                            new TaskEnvironmentVariable {
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
+            // var lqpTidyTask = new EcsRunTask(this, "lqpTidyStepFunctionTask", new EcsRunTaskProps {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = lqpTidyTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = lqpTidyContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "LQP_DATA_ROOT",
+            //                     Value = "/mnt/efs0/lqpModel/metaData"
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                     Name = "DATE_PARTITION",
+            //                     Value = JsonPath.StringAt("$.date")
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                   Name = "PARTITION_COUNT",
+            //                   Value = "119"
+            //                 },
+            //                 new TaskEnvironmentVariable {
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
 
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -480,38 +480,38 @@ namespace HeronPipeline
 
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
             // Mark: RunBase
-            var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
-                Entry = "src/functions/createRunBaseConfig",
-                Runtime = Runtime.PYTHON_3_7,
-                Index = "app.py",
-                Handler = "lambda_handler",
-            });
-            var lqpCreateRunBaseConfigTask = new LambdaInvoke(this, "lqpCreateRunBaseConfig", new LambdaInvokeProps{
-                LambdaFunction = createRunBaseConfigFunction,
-                ResultPath = "$.runbaseConfig",
-                PayloadResponseOnly = true
-            });
-            // Mark: checkMetaData
-            var checkLqpMetaDataIsPresentFunction = new PythonFunction(this, "checkLqpMetaDataIsPresentFunction", new PythonFunctionProps {
-                Entry = "src/functions/checkLqpMetaDataIsPresent",
-                Runtime = Runtime.PYTHON_3_7,
-                Index = "app.py",
-                Handler = "lambda_handler",
-                Environment = new Dictionary<string, string> {
-                  {"LQP_DATA_ROOT","/mnt/efs0/lqpModel/metaData"},
-                  {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName}
-                },
-                Filesystem = lambdaPipelineFileSystem,
-                Vpc = vpc
-            });
+            // var createRunBaseConfigFunction = new PythonFunction(this, "createRunBaseConfigFunction", new PythonFunctionProps{
+            //     Entry = "src/functions/createRunBaseConfig",
+            //     Runtime = Runtime.PYTHON_3_7,
+            //     Index = "app.py",
+            //     Handler = "lambda_handler",
+            // });
+            // var lqpCreateRunBaseConfigTask = new LambdaInvoke(this, "lqpCreateRunBaseConfig", new LambdaInvokeProps{
+            //     LambdaFunction = createRunBaseConfigFunction,
+            //     ResultPath = "$.runbaseConfig",
+            //     PayloadResponseOnly = true
+            // });
+            // // Mark: checkMetaData
+            // var checkLqpMetaDataIsPresentFunction = new PythonFunction(this, "checkLqpMetaDataIsPresentFunction", new PythonFunctionProps {
+            //     Entry = "src/functions/checkLqpMetaDataIsPresent",
+            //     Runtime = Runtime.PYTHON_3_7,
+            //     Index = "app.py",
+            //     Handler = "lambda_handler",
+            //     Environment = new Dictionary<string, string> {
+            //       {"LQP_DATA_ROOT","/mnt/efs0/lqpModel/metaData"},
+            //       {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName}
+            //     },
+            //     Filesystem = lambdaPipelineFileSystem,
+            //     Vpc = vpc
+            // });
 
-            checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
+            // checkLqpMetaDataIsPresentFunction.Node.AddDependency(pipelineBucket);
 
-            var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
-                LambdaFunction = checkLqpMetaDataIsPresentFunction,
-                ResultPath = "$.metaDataPresent",
-                PayloadResponseOnly = true
-            });
+            // var checkLqpMetaDataIsPresentTask = new LambdaInvoke(this, "checkLqpMetaDataIsPresentTask", new LambdaInvokeProps {
+            //     LambdaFunction = checkLqpMetaDataIsPresentFunction,
+            //     ResultPath = "$.metaDataPresent",
+            //     PayloadResponseOnly = true
+            // });
 
             // Mark: getMessageCount
             var getMessageCountFunction = new PythonFunction(this, "getMessageCountFunction", new PythonFunctionProps{
@@ -542,62 +542,62 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData RunBase Nested ++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var runBaseParameters = new Dictionary<string, object>();
-            runBaseParameters.Add("date.$", "$.date");
-            runBaseParameters.Add("partition.$", "$$.Map.Item.Value.partition");
-            var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
-                InputPath = "$",
-                ItemsPath = "$.partitions",
-                ResultPath = JsonPath.DISCARD,
-                Parameters = runBaseParameters
+            // var runBaseParameters = new Dictionary<string, object>();
+            // runBaseParameters.Add("date.$", "$.date");
+            // runBaseParameters.Add("partition.$", "$$.Map.Item.Value.partition");
+            // var lqpRunBaseMapState = new Map(this, "lqpRunBaseMapState", new MapProps{
+            //     InputPath = "$",
+            //     ItemsPath = "$.partitions",
+            //     ResultPath = JsonPath.DISCARD,
+            //     Parameters = runBaseParameters
                 
-            });
-            lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
+            // });
+            // lqpRunBaseMapState.Iterator(Chain.Start(lqpRunBaseTask));
 
-            var runBaseChain = Chain
-              .Start(lqpRunBaseMapState);
+            // var runBaseChain = Chain
+            //   .Start(lqpRunBaseMapState);
             
-            var lqpPrepareMetaDataRunbaseStateMachine = new StateMachine(this, "lqpPrepMetaDataRunBaseStateMachine", new StateMachineProps{
-                Definition = runBaseChain
-            });
+            // var lqpPrepareMetaDataRunbaseStateMachine = new StateMachine(this, "lqpPrepMetaDataRunBaseStateMachine", new StateMachineProps{
+            //     Definition = runBaseChain
+            // });
 
 
-            var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
-            {
-              IntegrationPattern = IntegrationPattern.RUN_JOB,
-              StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
-              InputPath = "$",
-              ResultPath = JsonPath.DISCARD
-            });
+            // var runLqpMetaDataRunBaseStateMachineTask = new StepFunctionsStartExecution(this, "runLqpMetaDataRunBaseStateMachineTask", new StepFunctionsStartExecutionProps 
+            // {
+            //   IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //   StateMachine = lqpPrepareMetaDataRunbaseStateMachine,
+            //   InputPath = "$",
+            //   ResultPath = JsonPath.DISCARD
+            // });
 
-            var parameters = new Dictionary<string, object>();
-            parameters.Add("date.$", "$.date");
-            parameters.Add("partitions.$", "$$.Map.Item.Value.partitions");
+            // var parameters = new Dictionary<string, object>();
+            // parameters.Add("date.$", "$.date");
+            // parameters.Add("partitions.$", "$$.Map.Item.Value.partitions");
 
-            var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.runbaseConfig.batches",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = parameters,
+            // var lqpPrepareMetaDataRunBaseMap = new Map(this, "lqpPrepareMetaDataRunBaseMap", new MapProps {
+            //   InputPath = "$",
+            //   ItemsPath = "$.runbaseConfig.batches",
+            //   ResultPath = JsonPath.DISCARD,
+            //   Parameters = parameters,
               
-            });
+            // });
 
-            lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
+            // lqpPrepareMetaDataRunBaseMap.Iterator(Chain.Start(runLqpMetaDataRunBaseStateMachineTask));
 
             
             // +++++++++++++++++++++++++++++++++++++++++++++
             // ++++ LQP Prepare MetaData Step Function +++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var lqpPrepareMetaDataChain = Chain
-                .Start(lqpPrepareMetaDataTask)
-                .Next(lqpCreateRunBaseConfigTask)
-                .Next(lqpPrepareMetaDataRunBaseMap)
-                .Next(lqpTidyTask);
+            // var lqpPrepareMetaDataChain = Chain
+            //     .Start(lqpPrepareMetaDataTask)
+            //     .Next(lqpCreateRunBaseConfigTask)
+            //     .Next(lqpPrepareMetaDataRunBaseMap)
+            //     .Next(lqpTidyTask);
 
 
-            var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
-                Definition = lqpPrepareMetaDataChain
-            });
+            // var lqpPrepareMetaDataStateMachine = new StateMachine(this, "lqpPrepMetaDataStateMachine", new StateMachineProps{
+            //     Definition = lqpPrepareMetaDataChain
+            // });
 
 
 
@@ -952,81 +952,81 @@ namespace HeronPipeline
                 Comment = "are there any messages in the sample batch"
             });
             //LQP Place Task
-            var lqpPlaceTaskDefinition = new TaskDefinition(this, "lqpPlaceTaskDefinition", new TaskDefinitionProps{
-                Family = "lqpPlace",
-                Cpu = "4096",
-                MemoryMiB = "8192",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
-            });
+            // var lqpPlaceTaskDefinition = new TaskDefinition(this, "lqpPlaceTaskDefinition", new TaskDefinitionProps{
+            //     Family = "lqpPlace",
+            //     Cpu = "4096",
+            //     MemoryMiB = "8192",
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            // });
 
-            lqpPlaceTaskDefinition.AddContainer("lqpPlaceContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = lqpImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "lqpPlace",
-                    LogGroup = new LogGroup(this, "lqpPlaceLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "lqpPlaceLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                }),
-                EntryPoint = new string[] { "python", "/home/app/lqp-fargatePlace.py" }
-            });
-            var lqpPlaceContainer = lqpPlaceTaskDefinition.FindContainer("lqpPlaceContainer");
-            lqpPlaceContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
-            var lqpPlaceTask = new EcsRunTask(this, "lqpPlaceTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = lqpPlaceTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = lqpPlaceContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_KEY_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "LQP_DATA_ROOT",
-                              Value = "/mnt/efs0/lqpModel/metaData"
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            lqpPlaceTask.AddRetry(retryItem);
+            // lqpPlaceTaskDefinition.AddContainer("lqpPlaceContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            // {
+            //     Image = lqpImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps
+            //     {
+            //         StreamPrefix = "lqpPlace",
+            //         LogGroup = new LogGroup(this, "lqpPlaceLogGroup", new LogGroupProps
+            //         {
+            //             LogGroupName = "lqpPlaceLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     }),
+            //     EntryPoint = new string[] { "python", "/home/app/lqp-fargatePlace.py" }
+            // });
+            // var lqpPlaceContainer = lqpPlaceTaskDefinition.FindContainer("lqpPlaceContainer");
+            // lqpPlaceContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
+            // var lqpPlaceTask = new EcsRunTask(this, "lqpPlaceTask", new EcsRunTaskProps
+            // {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = lqpPlaceTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = lqpPlaceContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "DATE_PARTITION",
+            //                   Value = JsonPath.StringAt("$.date")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_BATCH_FILE",
+            //                   Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_KEY_FILE",
+            //                   Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "HERON_SEQUENCES_TABLE",
+            //                     Value = sequencesTable.TableName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "LQP_DATA_ROOT",
+            //                   Value = "/mnt/efs0/lqpModel/metaData"
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
+            // lqpPlaceTask.AddRetry(retryItem);
 
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
@@ -1038,13 +1038,13 @@ namespace HeronPipeline
             var pangolinChain = Chain
                 .Start(pangolinTask);
 
-            var lqpPlaceChain = Chain
-              .Start(lqpPlaceTask);
+            // var lqpPlaceChain = Chain
+            //   .Start(lqpPlaceTask);
 
             var genotypeVariantsChain = Chain
                 .Start(genotypeVariantsTask);
 
-            placeSequencesParallel.Branch(new Chain[] { pangolinChain, lqpPlaceChain, genotypeVariantsChain });
+            placeSequencesParallel.Branch(new Chain[] { pangolinChain, genotypeVariantsChain });
 
 
             var processSamplesChain = Chain
@@ -1115,12 +1115,12 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
-            var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), true);
-            var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), false);
+            // var metaDataPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), true);
+            // var metaDataNotPresentCondition = Condition.BooleanEquals(JsonPath.StringAt("$.metaDataPresent.metaDataReady"), false);
 
-            var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
-                Comment = "Is LQP metadata available?"
-            });
+            // var metaDataReadyChoiceTask = new Choice(this, "metaDataReadyChoiceTask", new ChoiceProps{
+            //     Comment = "Is LQP metadata available?"
+            // });
             
 
             // Input parameters to the map iteration state
@@ -1228,31 +1228,31 @@ namespace HeronPipeline
 
 
             //Prepare Meta data task
-            var prepareMetaDataInputObject = new Dictionary<string, object> {
-                // {"mapIterations", JsonPath.StringAt("$.mapIterations")},
-                {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
-            };
-            var prepareMetaDataInput = TaskInput.FromObject(prepareMetaDataInputObject);
+            // var prepareMetaDataInputObject = new Dictionary<string, object> {
+            //     // {"mapIterations", JsonPath.StringAt("$.mapIterations")},
+            //     {"date", JsonPath.StringAt("$.date")},
+            //     {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+            // };
+            // var prepareMetaDataInput = TaskInput.FromObject(prepareMetaDataInputObject);
               
 
-            var startPrepareMetaDataStateMachine = new StepFunctionsStartExecution(this, "startPrepareMetaDataStateMachine", new StepFunctionsStartExecutionProps{
-              StateMachine = lqpPrepareMetaDataStateMachine,
-              IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD,
-              Input = prepareMetaDataInput
-            });
+            // var startPrepareMetaDataStateMachine = new StepFunctionsStartExecution(this, "startPrepareMetaDataStateMachine", new StepFunctionsStartExecutionProps{
+            //   StateMachine = lqpPrepareMetaDataStateMachine,
+            //   IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //   ResultPath = JsonPath.DISCARD,
+            //   Input = prepareMetaDataInput
+            // });
 
-            var prepareMetaDataChain = Chain
-                .Start(startPrepareMetaDataStateMachine)
-                .Next(processMessagesChain);
+            // var prepareMetaDataChain = Chain
+            //     // .Start(startPrepareMetaDataStateMachine)
+            //     .Start(processMessagesChain);
 
-            metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
-            metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: prepareMetaDataChain);
+            // metaDataReadyChoiceTask.When(metaDataPresentCondition, next: processMessagesChain);
+            // metaDataReadyChoiceTask.When(metaDataNotPresentCondition, next: prepareMetaDataChain);
 
             var pipelineChain = Chain
-                    .Start(checkLqpMetaDataIsPresentTask)
-                    .Next(metaDataReadyChoiceTask);
+                    .Start(processMessagesChain);
+                    // .Next(metaDataReadyChoiceTask);
 
             var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
             {
