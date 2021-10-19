@@ -871,7 +871,10 @@ namespace HeronPipeline
             });
             prepareConsensusSequencesTask.AddRetry(retryItem);
 
-            var pangolinImage = ContainerImage.FromAsset("src/images/pangolin");
+            var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps{
+                buildArgs = 
+            });
+
             var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
                 Family = "pangolin",
                 Cpu = "1024",
