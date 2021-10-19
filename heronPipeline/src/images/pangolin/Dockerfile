@@ -5,8 +5,8 @@ ARG FUNCTION_DIR="/home/app/"
 RUN conda --version
 RUN conda --version
 
-# RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.14
-RUN git clone https://github.com/cov-lineages/pangolin.git
+RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.14
+# RUN git clone https://github.com/cov-lineages/pangolin.git
 WORKDIR /pangolin
 # RUN git describe
 RUN conda env create -f environment.yml
