@@ -79,8 +79,8 @@ for message in messageList:
 
   wuhan_reference_length = 29903
   matched_recipe = "none"
-  matched_confidence = "NA"
-  matched_recipe_phe_label = "NA"
+  matched_confidence = "none"
+  matched_recipe_phe_label = "none"
   matched_recipe_pango_alias = "none"
 
 
@@ -155,13 +155,13 @@ for message in messageList:
                 log_is_special))
 
     calling_definition = recipe['calling-definition']
-    confidence = "NA"
+    confidence = "none"
     if special_mutations and alt_match >= calling_definition['confirmed']['mutations-required'] and ref_match <= calling_definition['confirmed']['allowed-wildtype']:
         confidence = "confirmed"
     elif 'probable' in calling_definition and special_mutations and alt_match >= calling_definition['probable']['mutations-required'] and ref_match <= calling_definition['probable']['allowed-wildtype']:
         confidence = "probable"
 
-    if confidence != "NA":
+    if confidence != "none":
         if matched_recipe_pango_alias == "none":
             matched_recipe_pango_alias = recipe['belongs-to-lineage']['PANGO']
             matched_recipe_phe_label = recipe['phe-label']
