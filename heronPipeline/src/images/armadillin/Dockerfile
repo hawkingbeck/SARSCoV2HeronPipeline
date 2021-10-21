@@ -20,7 +20,7 @@ WORKDIR ${FUNCTION_DIR}
 COPY app.py .
 COPY entryPoint.sh .
 RUN chmod 755 /home/app/app.py
-RUN chmod 755 /home/app/entryPoint.sh
-ENTRYPOINT sh /home/app/entryPoint.sh
+RUN chmod 755 /home/app/entrypoint.sh
+ENTRYPOINT sh /home/app/entrypoint.sh
 
 
