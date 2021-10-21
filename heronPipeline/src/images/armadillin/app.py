@@ -29,7 +29,7 @@ keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 batchUUID = os.path.splitext(os.path.basename(seqFile))[0].replace("sequences_", "")
-armadillinOutputFilename = "/tmp/armadillinOutput.tsv"
+armadillinOutputFilename = "/tmp/results.tsv"
 
 s3 = boto3.resource('s3', region_name='eu-west-1')
 bucket = s3.Bucket(bucketName)
