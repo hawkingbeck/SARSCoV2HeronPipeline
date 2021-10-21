@@ -52,9 +52,9 @@ if os.path.isfile(seqFile) == True:
    ##############################################
    # Step 3. Run Armadillin
    ##############################################
-   command = ["armadillin", "/tmp/seqFile.gz", ">", armadillinOutputFilename]
-   print(f"Running Command: {command}")
-   subprocess.run(command, shell=True)
+   # command = ["armadillin", "/tmp/seqFile.gz", ">", armadillinOutputFilename]
+   # print(f"Running Command: {command}")
+   # subprocess.run(command, shell=True)
 
 
    ##############################################
