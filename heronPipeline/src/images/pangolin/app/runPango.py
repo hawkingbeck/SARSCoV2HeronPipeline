@@ -83,7 +83,6 @@ if os.path.isfile(seqConsensusFile) == True:
   # Update pLearn calls
   # +++++++++++++++++++++++++++++++++++++++++
   for index, row in pLearnJoinedDf.iterrows():
-    # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
     seqHash = row["seqHash"]
     lineage = row["lineage"]
     print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
@@ -100,6 +99,7 @@ if os.path.isfile(seqConsensusFile) == True:
     pangolinVersion = row['pangolin_version']
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
+    pangoNote = row['note']
     
     print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
@@ -117,7 +117,7 @@ if os.path.isfile(seqConsensusFile) == True:
     print(f"Scorpio output {scorpioCall}, {scorpioSupport}, {scorpioConflict}")
     seqId = row['seqId']
     # Create query for dynamoDB
-    
+    # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
     sequencesTable = dynamodb.Table(heronSequencesTableName)
     response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
     if 'Items' in response:
@@ -126,7 +126,7 @@ if os.path.isfile(seqConsensusFile) == True:
         print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn",
+            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn, pangoNote=:n",
             ExpressionAttributeValues={
               ':l': lineage,
               ':d': callDate,
@@ -138,7 +138,8 @@ if os.path.isfile(seqConsensusFile) == True:
               ':c': conflict,
               ':sc': scorpioCall,
               ':ss': scorpioSupport,
-              ':sn': scorpioConflict
+              ':sn': scorpioConflict,
+              ':n': pangoNote
             }
           )
         updateCount += 1
