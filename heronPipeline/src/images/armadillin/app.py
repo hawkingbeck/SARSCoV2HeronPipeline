@@ -41,24 +41,24 @@ sequencesTable = dynamodb.Table(heronSequencesTableName)
 ##############################################
 print(f"Processing seqBatchFile: {seqFile}")
 if os.path.isfile(seqFile) == True:
-  command = ["gzip", "-c", seqFile, ">", "/tmp/seqFile.gz"]
-  print(f"Running Command: {command}")
-  subprocess.run(command)
+   command = ["gzip", "-c", seqFile, ">>", "/tmp/seqFile.gz"]
+   print(f"Running Command: {command}")
+   subprocess.run(command, shell=True)
 
 
-##############################################
-# Step 3. Run Armadillin
-##############################################
-command = ["armadillin", "/tmp/seqFile.gz", ">", armadillinOutputFilename]
-print(f"Running Command: {command}")
-subprocess.run(command)
+   ##############################################
+   # Step 3. Run Armadillin
+   ##############################################
+   command = ["armadillin", "/tmp/seqFile.gz", ">", armadillinOutputFilename]
+   print(f"Running Command: {command}")
+   subprocess.run(command, shell=True)
 
 
-##############################################
-# Step 4. Update the results in DynamoDB
-##############################################
-resultsDf = pd.read_csv(armadillinOutputFilename, sep='\t')
-print(f"Results: {resultsDf.head()}")
+   ##############################################
+   # Step 4. Update the results in DynamoDB
+   ##############################################
+   resultsDf = pd.read_csv(armadillinOutputFilename, sep='\t')
+   print(f"Results: {resultsDf.head()}")
 
 
 # Exit
