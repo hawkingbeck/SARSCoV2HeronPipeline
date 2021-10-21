@@ -877,7 +877,7 @@ namespace HeronPipeline
 
             var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
             {
-                BuildArgs = buildArgs
+                
             });
             
 
