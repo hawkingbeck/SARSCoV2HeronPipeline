@@ -39,29 +39,47 @@ sequencesTable = dynamodb.Table(heronSequencesTableName)
 ##############################################
 # Step 2. Prepare Inout data to compressed file
 ##############################################
+keyFileDf = pd.read_json(keyFile, orient="records")
 print(f"Processing seqBatchFile: {seqFile}")
 if os.path.isfile(seqFile) == True:
-   # command = ["gzip", "-c", seqFile, ">", "/tmp/seqFile.gz"]
-   # print(f"Running Command: {command}")
-   # with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
-   #  subprocess.Popen("ls",stdout=out,stderr=err)
-   # subprocess.run(command, shell=True)
    command = ["ls", "-all", "/tmp"]
    print(f"Running Command: {command}")
    subprocess.run(command)
-   ##############################################
-   # Step 3. Run Armadillin
-   ##############################################
-   # command = ["armadillin", "/tmp/seqFile.gz", ">", armadillinOutputFilename]
-   # print(f"Running Command: {command}")
-   # subprocess.run(command, shell=True)
-
+   
 
    ##############################################
    # Step 4. Update the results in DynamoDB
    ##############################################
    resultsDf = pd.read_csv(armadillinOutputFilename, sep='\t')
-   print(f"Results: {resultsDf.head()}")
+   resultsDf.columns = ['taxon', 'linage']
+   resultsDf['taxon'] = [f">{f}" for f in resultsDf['taxon']]
+   print(f"Results: {resultsDf.head()}, {len(resultsDf)}")
+   print(f"keyFile: {keyFileDf.head()}, {len(keyFileDf)}")
+   resultsJoinedDf = pd.merge(resultsDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
+   print(f"Joined Results: {len(resultsJoinedDf)}, {resultsJoinedDf.columns}")
+   for index, row in resultsJoinedDf.iterrows():
+      seqHash = row["seqHash"]
+      lineage = row["lineage"]
+      seqId = row['seqId']
+      # Create query for dynamoDB
+      updateCount = 0
+      sequencesTable = dynamodb.Table(heronSequencesTableName)
+      response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
+   #  if 'Items' in response:
+   #    if len(response['Items']) == 1:
+   #      item = response['Items'][0]
+   #      print(f"Updating: {seqHash}")
+   #      ret = sequencesTable.update_item(
+   #          Key={'seqHash': seqHash},
+   #          UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
+   #          ExpressionAttributeValues={
+   #            ':l': lineage,
+   #            ':d': callDate
+   #          }
+   #        )
+   #      updateCount += 1
+
+   # print(f"Updated {updateCount} out of {len(resultsJoinedDf)}")
 
 
 # Exit
