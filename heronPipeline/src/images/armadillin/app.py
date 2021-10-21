@@ -51,12 +51,14 @@ if os.path.isfile(seqFile) == True:
    # Step 4. Update the results in DynamoDB
    ##############################################
    resultsDf = pd.read_csv(armadillinOutputFilename, sep='\t')
-   resultsDf.columns = ['taxon', 'linage']
+   resultsDf.columns = ['taxon', 'lineage']
    resultsDf['taxon'] = [f">{f}" for f in resultsDf['taxon']]
-   print(f"Results: {resultsDf.head()}, {len(resultsDf)}")
-   print(f"keyFile: {keyFileDf.head()}, {len(keyFileDf)}")
+   print(f"Results: {resultsDf.head(20)}, {len(resultsDf)}")
+   print(f"keyFile: {keyFileDf.head(20)}, {len(keyFileDf)}")
    resultsJoinedDf = pd.merge(resultsDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
    print(f"Joined Results: {len(resultsJoinedDf)}, {resultsJoinedDf.columns}")
+
+   callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
    for index, row in resultsJoinedDf.iterrows():
       seqHash = row["seqHash"]
       lineage = row["lineage"]
@@ -65,21 +67,21 @@ if os.path.isfile(seqFile) == True:
       updateCount = 0
       sequencesTable = dynamodb.Table(heronSequencesTableName)
       response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-   #  if 'Items' in response:
-   #    if len(response['Items']) == 1:
-   #      item = response['Items'][0]
-   #      print(f"Updating: {seqHash}")
-   #      ret = sequencesTable.update_item(
-   #          Key={'seqHash': seqHash},
-   #          UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
-   #          ExpressionAttributeValues={
-   #            ':l': lineage,
-   #            ':d': callDate
-   #          }
-   #        )
-   #      updateCount += 1
+      if 'Items' in response:
+         if len(response['Items']) == 1:
+            item = response['Items'][0]
+            print(f"Updating: {seqHash}")
+            ret = sequencesTable.update_item(
+               Key={'seqHash': seqHash},
+               UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
+               ExpressionAttributeValues={
+               ':l': lineage,
+               ':d': callDate
+               }
+            )
+            updateCount += 1
 
-   # print(f"Updated {updateCount} out of {len(resultsJoinedDf)}")
+   print(f"Updated {updateCount} out of {len(resultsJoinedDf)}")
 
 
 # Exit
