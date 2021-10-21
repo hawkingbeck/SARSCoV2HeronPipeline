@@ -18,7 +18,9 @@ RUN pip3 install boto3
 WORKDIR ${FUNCTION_DIR}
 
 COPY app.py .
+COPY entryPoint.sh .
 RUN chmod 755 /home/app/app.py
-ENTRYPOINT python /home/app/app.py
+RUN chmod 755 /home/app/entryPoint.sh
+ENTRYPOINT sh /home/app/entryPoint.sh
 
 
