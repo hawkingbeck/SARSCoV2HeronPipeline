@@ -680,7 +680,7 @@ namespace HeronPipeline
                 })
             });
             var armadillinContainer = armadillinTaskDefinition.FindContainer("armadillinContainer");
-            pangolinContainer.AddMountPoints(new MountPoint[] {
+            armadillinContainer.AddMountPoints(new MountPoint[] {
                     new MountPoint {
                         SourceVolume = "efsVolume",
                         ContainerPath = "/mnt/efs0",
@@ -727,7 +727,7 @@ namespace HeronPipeline
                 },
                 ResultPath = JsonPath.DISCARD
             });
-            armadillinTask.AddRetry(retryItem);
+
             var armadillinTestTask = new EcsRunTask(this, "armadillinPlaceTestTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
