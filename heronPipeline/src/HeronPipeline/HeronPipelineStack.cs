@@ -696,7 +696,7 @@ namespace HeronPipeline
                 LaunchTarget = new EcsFargateLaunchTarget(),
                 ContainerOverrides = new ContainerOverride[] {
                     new ContainerOverride {
-                        ContainerDefinition = pangolinContainer,
+                        ContainerDefinition = armadillinContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable{
                               Name = "DATE_PARTITION",
@@ -728,6 +728,46 @@ namespace HeronPipeline
                 ResultPath = JsonPath.DISCARD
             });
             armadillinTask.AddRetry(retryItem);
+            var armadillinTestTask = new EcsRunTask(this, "armadillinPlaceTestTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = armadillinTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = armadillinContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_CONSENSUS_BATCH_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_KEY_FILE",
+                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
 
             
             
@@ -748,6 +788,9 @@ namespace HeronPipeline
 
             var armadillinChain = Chain
                 .Start(armadillinTask);
+
+            var armadillinTestChain = Chain
+                .Start(armadillinTestTask);
 
             var genotypeVariantsChain = Chain
                 .Start(genotypeVariantsTask);
@@ -937,7 +980,7 @@ namespace HeronPipeline
 
             var testArmadillianStateMachine = new StateMachine(this, "testArmadillianStateMachine", new StateMachineProps
             {
-                Definition = armadillinChain
+                Definition = armadillinTestChain
             });
         }
     }
