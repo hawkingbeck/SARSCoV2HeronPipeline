@@ -41,10 +41,11 @@ sequencesTable = dynamodb.Table(heronSequencesTableName)
 ##############################################
 print(f"Processing seqBatchFile: {seqFile}")
 if os.path.isfile(seqFile) == True:
-   command = ["gzip", "-c", seqFile, ">", "/tmp/seqFile.gz"]
-   print(f"Running Command: {command}")
-   subprocess.run(command, shell=True)
-
+   # command = ["gzip", "-c", seqFile, ">", "/tmp/seqFile.gz"]
+   # print(f"Running Command: {command}")
+   # with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
+   #  subprocess.Popen("ls",stdout=out,stderr=err)
+   # subprocess.run(command, shell=True)
    command = ["ls", "-all", "/tmp"]
    print(f"Running Command: {command}")
    subprocess.run(command)
