@@ -73,7 +73,7 @@ if os.path.isfile(seqFile) == True:
             print(f"Updating: {seqHash}")
             ret = sequencesTable.update_item(
                Key={'seqHash': seqHash},
-               UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
+               UpdateExpression="set armadillinLineage=:l, armadillinCallDate=:d",
                ExpressionAttributeValues={
                ':l': lineage,
                ':d': callDate
