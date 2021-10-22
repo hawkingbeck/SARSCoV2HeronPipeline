@@ -29,7 +29,7 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             var vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = 3, ///TODO: Increase this once EIP's are freed
-                Cidr = "11.0.0.0/16",
+                Cidr = "11.0.0.0/10",
                 // NatGateways = 1,
                 SubnetConfiguration = new[]{
                     new SubnetConfiguration {
