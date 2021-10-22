@@ -29,24 +29,20 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             var vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = 3, ///TODO: Increase this once EIP's are freed
-                Cidr = "12.0.0.0/16",
+                Cidr = "11.0.0.0/16",
                 NatGateways = 1,
                 SubnetConfiguration = new[]{
                     new SubnetConfiguration {
-                        CidrMask = 20,
+                        CidrMask = 24,
                         Name = "ingress",
                         SubnetType = SubnetType.PUBLIC
                     },
                     new SubnetConfiguration {
-                        CidrMask = 20,
+                        CidrMask = 24,
                         Name = "application",
                         SubnetType = SubnetType.PRIVATE
                     }},
             });
-
-            var nat = vpc.Node.FindChild("ingressSubnet1/NATGateway");
-            var igw = vpc.Node.FindChild("IGW");
-            nat.Node.AddDependency(igw);
 
             var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
                 Vpc = vpc,
