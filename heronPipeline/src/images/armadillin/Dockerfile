@@ -5,7 +5,7 @@ RUN conda --version
 ARG FUNCTION_DIR="/home/app/"
 
 RUN echo "pull in armadillin"
-RUN git clone https://github.com/theosanderson/armadillin.git
+RUN git clone https://github.com/theosanderson/armadillin.git --branch v0.20
 
 WORKDIR /armadillin
 
