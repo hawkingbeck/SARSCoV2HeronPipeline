@@ -56,9 +56,7 @@ if not os.path.exists(sampleDataRootSeqBatchesDir):
   os.makedirs(sampleDataRootSeqBatchesDir)
 
 
-outputFastaFile = f"/tmp/sequences_{iterationUUID}.fasta"
 outputFastaConsensusFile = f"/tmp/sequences_consensus_{iterationUUID}.fasta"
-efsOutputFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.fasta"
 efsOutputConsensusFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iterationUUID}.fasta"
 outputPlacementKeyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 
@@ -67,29 +65,6 @@ with open(messageListLocalFilename) as json_file:
 
 print(f"Message count: {len(messageList)}")
 
-seqList = list()
-with open(outputFastaFile, "w+") as outputFile:
-  for message in messageList:
-    s3Key = message['consensusFastaPath']
-    seqHash = message['seqHash']
-    localFilename = f"/tmp/{seqHash}.fa"
-    try:
-      bucket.download_file(s3Key, localFilename)
-
-      with open(localFilename, "r") as faFile:
-        seqData = json.load(faFile)
-      alignedSeq = seqData["aligned"]
-      alignedSeqId = alignedSeq.splitlines()[0]
-      seqObject = {'seqId': alignedSeqId, 'seqHash': seqHash}
-      seqList.append(seqObject)
-      # outputFile.write(">")
-      outputFile.writelines(alignedSeq)
-    except:
-      print(f"Could not download key: {s3Key}")
-    
-  
-  if os.path.isfile(localFilename):
-    os.remove(localFilename)
 
 seqList = list()
 with open(outputFastaConsensusFile, "w+") as outputFile:
@@ -117,11 +92,7 @@ seqDf = pd.DataFrame(seqList)
 ##############################################
 # Step 3. Upload resultant files to S3 and EFS
 ##############################################
-if os.path.isfile(outputFastaFile):
-  S3Key = f"seqToPlace/{dateString}/sequences_{iterationUUID}.fasta"
-  bucket.upload_file(outputFastaFile, S3Key)
-  copyfile(outputFastaFile, efsOutputFastaFile)
-
+if os.path.isfile(outputFastaConsensusFile):
   S3Key = f"seqToPlace/{dateString}/sequences_consensus{iterationUUID}.fasta"
   bucket.upload_file(outputFastaConsensusFile, S3Key)
   copyfile(outputFastaConsensusFile, efsOutputConsensusFastaFile)
@@ -134,5 +105,4 @@ if os.path.isfile(outputFastaFile):
   # Step 4. Remove fasta file from tmp dir to
   #         free up space
   ##############################################
-  os.remove(outputFastaFile)
   os.remove(outputFastaConsensusFile)
