@@ -504,6 +504,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                                 Name = "RECIPE_FILE_PATH",
                                 Value = JsonPath.StringAt("$.recipeFilePath")
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
                             }
                         }
                     }
@@ -778,6 +782,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                               Name = "ITERATION_UUID",
                               Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
                             }
                         }
                     }
@@ -852,6 +860,10 @@ namespace HeronPipeline
                             new TaskEnvironmentVariable{
                               Name = "ITERATION_UUID",
                               Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
                             }
                         }
                     }
