@@ -768,7 +768,7 @@ namespace HeronPipeline
                 },
                 ResultPath = JsonPath.DISCARD
             });
-
+            armadillinTask.AddRetry(retryItem);
             
             
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
