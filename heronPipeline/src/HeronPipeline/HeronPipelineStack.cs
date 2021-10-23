@@ -321,12 +321,12 @@ namespace HeronPipeline
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
             readSampleBatchFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
-            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
-              LambdaFunction = readSampleBatchFunction,
-              ResultPath = "$.sampleBatch",
-              PayloadResponseOnly = true
-            });
-            readSampleBatchCountTask.AddRetry(retryItem);
+            // var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
+            //   LambdaFunction = readSampleBatchFunction,
+            //   ResultPath = "$.sampleBatch",
+            //   PayloadResponseOnly = true
+            // });
+            // readSampleBatchCountTask.AddRetry(retryItem);
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
@@ -363,7 +363,7 @@ namespace HeronPipeline
                         ReadOnly = false,
                     }
                 });
-            var alignFastaTask = new EcsRunTask(this, "alignFastaPlaceTask", new EcsRunTaskProps
+            var alignFastaTask = new EcsRunTask(this, "alignFastaTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
@@ -375,16 +375,16 @@ namespace HeronPipeline
                         ContainerDefinition = alignFastaContainer,
                         Environment = new TaskEnvironmentVariable[] {
                             new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
                               Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_CONSENSUS_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_KEY_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                              Value = JsonPath.StringAt("$.date")   
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
@@ -927,9 +927,9 @@ namespace HeronPipeline
             
             
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
-            var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
-                Comment = "are there any messages in the sample batch"
-            });
+            // var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
+            //     Comment = "are there any messages in the sample batch"
+            // });
             
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
@@ -958,15 +958,16 @@ namespace HeronPipeline
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
-            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
-            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
+            // messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            // messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
-            var processSampleBatchChain = Chain
-              .Start(readSampleBatchCountTask)
-              .Next(messagesAvailableChoiceTask);
+            // var processSampleBatchChain = Chain
+            //   .Start(readSampleBatchCountTask)
+            //   .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
-              Definition = processSampleBatchChain
+            //   Definition = processSampleBatchChain
+              Definition = processSamplesChain
             });
 
 
