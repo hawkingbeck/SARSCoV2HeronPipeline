@@ -108,7 +108,7 @@ if os.path.isfile(seqConsensusFile) == True:
     pangolinVersion = row['pangolin_version']
     pangoLearnVersion = row['pangoLEARN_version']
     pangoVersion = row['pango_version']
-    pangoNote = row['note']
+    pangoNote = str(row['note'])
     
     print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
@@ -129,6 +129,7 @@ if os.path.isfile(seqConsensusFile) == True:
     # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
     sequencesTable = dynamodb.Table(heronSequencesTableName)
     response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
+    print(f"{str(type(lineage))}, {str(type(callDate))}, {str(type(ambiguityScore))}, {str(type(version))}, {str(type(pangolinVersion))}, {str(type(pangoLearnVersion))}, {str(type(pangoVersion))}, {str(type(conflict))}, {str(type(scorpioSupport))}, {str(type(scorpioConflict))}, {str(type(scorpioCall))}, {str(type(pangoNote))}")
     if 'Items' in response:
       if len(response['Items']) == 1:
         item = response['Items'][0]
