@@ -19,27 +19,36 @@ config = Config(
    }
 )
 
-    
-##############################################
-# Step 1. Create resources
-##############################################
 
-# Obtain the config for this run from the
+##############################################
+# Step 1. Get Env Vars
+##############################################
 dateString = os.getenv('DATE_PARTITION')
-seqFile = os.getenv('SEQ_BATCH_FILE') # Path to the EFS file that we wish to process
-seqConsensusFile = os.getenv('SEQ_CONSENSUS_BATCH_FILE') # Path to the EFS file that we wish to process
-keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence hash and id
+bucketName = os.getenv('HERON_SAMPLES_BUCKET')
+sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
+iterationUUID = os.getenv('ITERATION_UUID')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-batchUUID = os.path.splitext(os.path.basename(seqFile))[0].replace("sequences_", "")
 
-print(f"Processing seqBatchFile: {seqConsensusFile}")
+
+##############################################
+# Step 2. Create resources
+##############################################
 # Create the AWS resources: S3Bucket, dynamoDB Table, etc...
 s3 = boto3.resource('s3', region_name='eu-west-1')
 bucket = s3.Bucket(bucketName)
 dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
 
+##############################################
+###### Create the input file paths ###########
+##############################################
+sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
+seqFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.fasta"
+seqConsensusFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iterationUUID}.fasta"
+keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
+
+print(f"Processing seqBatchFile: {seqConsensusFile}")
 # Print the pango version
 
 print(f"Pangolin D Version")
