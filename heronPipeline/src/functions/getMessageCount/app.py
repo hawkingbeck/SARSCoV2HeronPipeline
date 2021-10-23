@@ -39,7 +39,7 @@ def lambda_handler(event, context):
     queue = sqs.Queue(queueName)
     queue.load()
 
-    sampleBatchSize = 200
+    sampleBatchSize = 1000
     attributes = queue.attributes
     sequenceCount = int(attributes['ApproximateNumberOfMessages'])
     sequencesPerMapIteration = 40*sampleBatchSize
