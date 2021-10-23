@@ -486,36 +486,20 @@ namespace HeronPipeline
                               Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable{
-                              Name = "SEQ_CONSENSUS_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_KEY_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                              Name = "MESSAGE_LIST_S3_KEY",
+                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
                               Value = pipelineBucket.BucketName
                             },
                             new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
                             },
                             new TaskEnvironmentVariable{
-                                Name = "MESSAGE_LIST_S3_KEY",
-                                Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "REF_FASTA_KEY",
-                                Value = "resources/MN908947.fa"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_START",
-                                Value = "265"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_END",
-                                Value = "29674"
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
                             },
                             new TaskEnvironmentVariable{
                                 Name = "RECIPE_FILE_PATH",
@@ -780,24 +764,20 @@ namespace HeronPipeline
                               Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable{
-                              Name = "SEQ_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_CONSENSUS_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_KEY_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                              Name = "MESSAGE_LIST_S3_KEY",
+                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
                               Value = pipelineBucket.BucketName
                             },
                             new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
                             }
                         }
                     }
@@ -899,24 +879,20 @@ namespace HeronPipeline
                               Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable{
-                              Name = "SEQ_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_CONSENSUS_BATCH_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsSeqConsensusFile")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_KEY_FILE",
-                              Value = JsonPath.StringAt("$.sequenceFiles.efsKeyFile")
+                              Name = "MESSAGE_LIST_S3_KEY",
+                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
                               Value = pipelineBucket.BucketName
                             },
                             new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
                             }
                         }
                     }

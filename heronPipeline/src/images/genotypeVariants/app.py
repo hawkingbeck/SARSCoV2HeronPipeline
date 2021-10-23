@@ -19,24 +19,37 @@ config = Config(
    }
 )
 
-# Read the inputs that we require from the event
-# These will S3 paths that require download prior to using
-# fastaFileS3Key = event['consensusFastaPath']
-# fastaFileS3Key = os.getenv['consensusFastaPath']
-genotypeRecipeS3Key = os.getenv('RECIPE_FILE_PATH')
-heronBucketName = os.getenv("HERON_SAMPLES_BUCKET")
+##############################################
+# Step 1. Get Env Vars
+##############################################
+dateString = os.getenv('DATE_PARTITION')
+bucketName = os.getenv('HERON_SAMPLES_BUCKET')
+sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
+iterationUUID = os.getenv('ITERATION_UUID')
+bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
-messageListLocalFilename = "/tmp/messageList.json"
-localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
+genotypeRecipeS3Key = os.getenv('RECIPE_FILE_PATH')
 
-#create the AWS client resources we need for this execution
+
+
+##############################################
+# Step 2. Create resources
+##############################################
 s3 = boto3.resource('s3', region_name='eu-west-1')
-bucket = s3.Bucket(heronBucketName)
+bucket = s3.Bucket(bucketName)
 dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
 
-# Download the receipe file that we need for each sequence
+##############################################
+###### Create the input file paths ###########
+##############################################
+sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
+seqFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.fasta"
+seqConsensusFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iterationUUID}.fasta"
+keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
+messageListS3Key = f"messageLists/{dateString}/messageList{iterationUUID}.json"
+messageListLocalFilename = "/tmp/messageList.json"
+localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
 
 
 
