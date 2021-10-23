@@ -29,7 +29,7 @@ config = Config(
 
 # Obtain the config for this run from the
 dateString = os.getenv('DATE_PARTITION')
-seqConsensusFile = os.getenv('SEQ_CONSENSUS_BATCH_FILE') # Path to the EFS file that we wish to process
+# seqConsensusFile = os.getenv('SEQ_CONSENSUS_BATCH_FILE') # Path to the EFS file that we wish to process
 keyFile = os.getenv('SEQ_KEY_FILE') #Path to the file that contains the sequence hash and id
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
@@ -37,8 +37,16 @@ heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
 trimStart = os.getenv('TRIM_START')
 trimEnd = os.getenv('TRIM_END')
+iterationUUID = os.getenv('ITERATION_UUID')
+sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
 
-batchUUID = os.path.splitext(os.path.basename(seqConsensusFile))[0].replace("sequences_", "")
+# batchUUID = os.path.splitext(os.path.basename(seqConsensusFile))[0].replace("sequences_", "")
+
+sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
+
+seqConsensusFile = f"/tmp/sequences_consensus_{iterationUUID}.fasta"
+efsOutputConsensusFastaFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iterationUUID}.fasta"
+outputPlacementKeyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 
 
 print(f"Processing seqBatchFile: {seqConsensusFile}")
