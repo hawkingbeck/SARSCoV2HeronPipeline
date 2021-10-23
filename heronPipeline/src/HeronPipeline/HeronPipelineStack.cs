@@ -588,7 +588,7 @@ namespace HeronPipeline
                     }
                 });
 
-            var prepareSequencesTask = new EcsRunTask(this, "prepareSequencesPlaceTask", new EcsRunTaskProps
+            var prepareSequencesTask = new EcsRunTask(this, "prepareSequencesTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
                 Cluster = cluster,
@@ -629,29 +629,106 @@ namespace HeronPipeline
             
             //++++++++++++++++++++++++++++++++++++++++++++++++
             //++++++++++++++++++++++++++++++++++++++++++++++++
-            var prepareConsensusSequencesFunction = new PythonFunction(this, "prepareConsensusSequencesFunction", new PythonFunctionProps{
-              Entry = "src/functions/prepareConsensusSequencesFunction",
-              Runtime = Runtime.PYTHON_3_7,
-              Index = "app.py",
-              Handler = "lambda_handler",
-              Timeout = Duration.Seconds(900),
-              Environment = new Dictionary<string, string> {
-                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
-                {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
-              },
-              Filesystem = lambdaPipelineFileSystem,
-              Vpc = vpc
+            // var prepareConsensusSequencesFunction = new PythonFunction(this, "prepareConsensusSequencesFunction", new PythonFunctionProps{
+            //   Entry = "src/functions/prepareConsensusSequencesFunction",
+            //   Runtime = Runtime.PYTHON_3_7,
+            //   Index = "app.py",
+            //   Handler = "lambda_handler",
+            //   Timeout = Duration.Seconds(900),
+            //   Environment = new Dictionary<string, string> {
+            //     {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
+            //     {"SEQ_DATA_ROOT", "/mnt/efs0/seqData"}
+            //   },
+            //   Filesystem = lambdaPipelineFileSystem,
+            //   Vpc = vpc
+            // });
+            // prepareConsensusSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
+            // prepareConsensusSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
+            // var prepareConsensusSequencesTask = new LambdaInvoke(this, "prepareConsensusSequencesTask", new LambdaInvokeProps{
+            //   LambdaFunction = prepareConsensusSequencesFunction,
+            //   ResultPath = "$.sequenceFiles",
+            //   PayloadResponseOnly = true,
+            // });
+            // prepareConsensusSequencesTask.AddRetry(retryItem);
+
+            
+            var prepareConsensusSequencesImage = ContainerImage.FromAsset("src/images/prepareConsensusSequences", new AssetImageProps
+            { 
             });
-            prepareConsensusSequencesFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            prepareConsensusSequencesFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-            var prepareConsensusSequencesTask = new LambdaInvoke(this, "prepareConsensusSequencesTask", new LambdaInvokeProps{
-              LambdaFunction = prepareConsensusSequencesFunction,
-              ResultPath = "$.sequenceFiles",
-              PayloadResponseOnly = true,
+            var prepareConsensusSequencesTaskDefinition = new TaskDefinition(this, "prepareConsensusSequencesTaskDefinition", new TaskDefinitionProps{
+                Family = "prepareConsensusSequences",
+                Cpu = "1024",
+                MemoryMiB = "4096",
+                NetworkMode = NetworkMode.AWS_VPC,
+                Compatibility = Compatibility.FARGATE,
+                ExecutionRole = ecsExecutionRole,
+                TaskRole = ecsExecutionRole,
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+            });
+
+            prepareConsensusSequencesTaskDefinition.AddContainer("prepareConsensusSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            {
+                Image = prepareConsensusSequencesImage,
+                Logging = new AwsLogDriver(new AwsLogDriverProps
+                {
+                    StreamPrefix = "prepareConsensusSequences",
+                    LogGroup = new LogGroup(this, "prepareConsensusSequencesLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = "prepareConsensusSequencesLogGroup",
+                        Retention = RetentionDays.ONE_WEEK,
+                        RemovalPolicy = RemovalPolicy.DESTROY
+                    })
+                })
+            });
+            var prepareConsensusSequencesContainer = prepareConsensusSequencesTaskDefinition.FindContainer("prepareConsensusSequencesContainer");
+            prepareConsensusSequencesContainer.AddMountPoints(new MountPoint[] {
+                    new MountPoint {
+                        SourceVolume = "efsVolume",
+                        ContainerPath = "/mnt/efs0",
+                        ReadOnly = false,
+                    }
+                });
+
+            var prepareConsensusSequencesTask = new EcsRunTask(this, "prepareConsensusSequencesTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = prepareConsensusSequencesTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = prepareConsensusSequencesContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "MESSAGE_LIST_S3_KEY",
+                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
             });
             prepareConsensusSequencesTask.AddRetry(retryItem);
 
-            
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++
             var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
             { 
             });
