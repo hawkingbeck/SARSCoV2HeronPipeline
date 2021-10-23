@@ -42,13 +42,13 @@ def lambda_handler(event, context):
     s3 = boto3.resource('s3', region_name='eu-west-1')
     bucket = s3.Bucket(bucketName)
 
-    dateString = os.getenv("DATE_PARTITION")
+    dateString = event['date'] #os.getenv("DATE_PARTITION")
 
 
     #++++++++++++++++++++++++++++++++++++++++++++
     # Create config for this execution
     #++++++++++++++++++++++++++++++++++++++++++++
-    sampleBatchSize = 200
+    sampleBatchSize = 1000
     stop = False
     messageList = list()
     messageReceiptHandles = list()
@@ -72,7 +72,8 @@ def lambda_handler(event, context):
 
     messageCount = len(messageList)
 
-    messageListFileName = f"messageList{str(uuid4())}.json"
+    iterationUUID = str(uuid4())
+    messageListFileName = f"messageList{iterationUUID}.json"
     messageListS3Key = f"messageLists/{dateString}/{messageListFileName}"
     # Save messageList to s3 as a json file
     # with open(f"tmp/{messageListFileName}", "w") as write_file:
@@ -83,6 +84,6 @@ def lambda_handler(event, context):
     s3.Object(bucketName, messageListS3Key).put(Body=json.dumps(messageList))
 
 
-    messages = {'messageCount': messageCount, 'messageListS3Key': messageListS3Key, 'queueName': queueName}
+    messages = {'messageCount': messageCount, 'messageListS3Key': messageListS3Key, 'queueName': queueName, 'iterationUUID': iterationUUID}
 
     return messages
