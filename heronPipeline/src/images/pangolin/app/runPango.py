@@ -85,7 +85,7 @@ if os.path.isfile(seqConsensusFile) == True:
   pLearnJoinedDf = pd.merge(pLearnLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
   usherJoinedDf = pd.merge(usherLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
 
-  callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
+  callDate = int(datetime.now().timestamp())
   updateCount = 0
 
   # +++++++++++++++++++++++++++++++++++++++++

@@ -53,7 +53,7 @@ localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
 
 
 
-callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
+callDate = int(datetime.now().timestamp())
 
 # Download the message file that contains the references to all the sequences that we need to process
 bucket.download_file(messageListS3Key, messageListLocalFilename)
