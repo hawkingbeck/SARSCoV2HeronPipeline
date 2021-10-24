@@ -69,7 +69,7 @@ if os.path.isfile(seqFile) == True:
    resultsJoinedDf = pd.merge(resultsDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
    print(f"Joined Results: {len(resultsJoinedDf)}, {resultsJoinedDf.columns}")
 
-   callDate = int(datetime(datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0).timestamp())
+   callDate = int(datetime.now().timestamp())
    for index, row in resultsJoinedDf.iterrows():
       seqHash = row["seqHash"]
       lineage = row["lineage"]
