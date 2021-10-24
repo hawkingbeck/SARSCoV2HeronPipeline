@@ -321,12 +321,12 @@ namespace HeronPipeline
             readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
             readSampleBatchFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
 
-            // var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
-            //   LambdaFunction = readSampleBatchFunction,
-            //   ResultPath = "$.sampleBatch",
-            //   PayloadResponseOnly = true
-            // });
-            // readSampleBatchCountTask.AddRetry(retryItem);
+            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
+              LambdaFunction = readSampleBatchFunction,
+              ResultPath = "$.sampleBatch",
+              PayloadResponseOnly = true
+            });
+            readSampleBatchCountTask.AddRetry(retryItem);
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
@@ -862,9 +862,9 @@ namespace HeronPipeline
             
             
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
-            // var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
-            //     Comment = "are there any messages in the sample batch"
-            // });
+            var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
+                Comment = "are there any messages in the sample batch"
+            });
             
             var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
             var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
@@ -893,16 +893,16 @@ namespace HeronPipeline
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
-            // messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
-            // messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
+            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
-            // var processSampleBatchChain = Chain
-            //   .Start(readSampleBatchCountTask)
-            //   .Next(messagesAvailableChoiceTask);
+            var processSampleBatchChain = Chain
+              .Start(readSampleBatchCountTask)
+              .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
-            //   Definition = processSampleBatchChain
-              Definition = processSamplesChain
+              Definition = processSampleBatchChain
+            //   Definition = processSamplesChain
             });
 
 
