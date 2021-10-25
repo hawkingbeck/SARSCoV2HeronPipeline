@@ -133,6 +133,7 @@ def main():
             if 'Failed' in ret:
               failedMessages = ret['Failed']
               failedMessageCount = len(failedMessages)
+              print(f"Failed Message Count {failedMessageCount}")
             else:
               failedMessageCount = 0
     else:
@@ -142,7 +143,7 @@ def main():
     # if messageCount > 1000:
     #     break
     
-
+  print(f"Message Count: {messageCount}")
   # Generate config for nested StepFunction map state
   mapStateSize = math.ceil(messageCount/1000)
   
