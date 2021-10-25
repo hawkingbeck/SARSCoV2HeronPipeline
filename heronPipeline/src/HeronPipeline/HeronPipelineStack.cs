@@ -363,6 +363,7 @@ namespace HeronPipeline
                         ReadOnly = false,
                     }
                 });
+            
             var alignFastaTask = new EcsRunTask(this, "alignFastaTask", new EcsRunTaskProps
             {
                 IntegrationPattern = IntegrationPattern.RUN_JOB,
@@ -416,6 +417,58 @@ namespace HeronPipeline
                 ResultPath = JsonPath.DISCARD
             });
             alignFastaTask.AddRetry(retryItem);
+            var alignFastaTestTask = new EcsRunTask(this, "alignFastaTestTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = alignFastaTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = alignFastaContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = "13c7376f-825b-4952-93eb-8e02af37efd4"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = "2021-10-25"   
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "HERON_SEQUENCES_TABLE",
+                                Value = sequencesTable.TableName
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "MESSAGE_LIST_S3_KEY",
+                                Value = "messageLists/2021-10-25/messageList13c7376f-825b-4952-93eb-8e02af37efd4.json"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "REF_FASTA_KEY",
+                                Value = "resources/MN908947.fa"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_START",
+                                Value = "265"
+                            },
+                            new TaskEnvironmentVariable{
+                                Name = "TRIM_END",
+                                Value = "29674"
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
 
 
             // +++++++++++++++++++++++++++++++++++++++++++
@@ -884,7 +937,8 @@ namespace HeronPipeline
                 .Start(armadillinTask);
 
             var armadillinTestChain = Chain
-                .Start(armadillinTestTask);
+                .Start(alignFastaTestTask)
+                .Next(armadillinTestTask);
 
             var genotypeVariantsChain = Chain
                 .Start(genotypeVariantsTask);
