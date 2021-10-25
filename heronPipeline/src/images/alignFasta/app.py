@@ -109,7 +109,7 @@ for message in messageList:
    )
 
    try:
-      bucket.upload_file(mappedSamFastaLocalFilename, "misc/samFiles/sample_mapped.sam")
+      bucket.upload_file(mappedSamFastaLocalFilename, f"misc/samFiles/{dateString}/{os.path.basename(consensusFastaKey)}.sam")
    except:
       print("Can't upload SAM file")
    ##############################################
