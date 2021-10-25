@@ -108,6 +108,10 @@ for message in messageList:
       shell=True
    )
 
+   try:
+      bucket.upload_file(mappedSamFastaLocalFilename, "misc/samFiles/sample_mapped.sam")
+   except:
+      print("Can't upload SAM file")
    ##############################################
    # Step 2. 
    ##############################################
