@@ -29,8 +29,8 @@ FROM python-image AS build-image
 #     bzip2-dev \
 #     xz-dev
 # Include global args in this stage of the build
-ARG FUNCTION_DIR
-ARG RUNTIME_VERSION
+# ARG FUNCTION_DIR
+# ARG RUNTIME_VERSION
 # Create function directory
 # RUN mkdir -p ${FUNCTION_DIR}
 
@@ -75,9 +75,9 @@ COPY . .
 # Grab a fresh copy of the Python image
 FROM python-image as run-image
 # Include global arg in this stage of the build
-ARG FUNCTION_DIR
+# ARG FUNCTION_DIR
 # Set working directory to function root directory
-WORKDIR ${FUNCTION_DIR}
+# WORKDIR ${FUNCTION_DIR}
 # Copy in the built dependencies
 COPY --from=build-image . . 
 COPY --from=build-image /usr/local/minimap2 .
