@@ -438,7 +438,7 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable{
                               Name = "DATE_PARTITION",
-                              Value = "2021-10-25"   
+                              Value = "2021-10-25"
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
@@ -458,7 +458,7 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable{
                                 Name = "TRIM_START",
-                                Value = "265"
+                                Value = "266" //Value = "265"
                             },
                             new TaskEnvironmentVariable{
                                 Name = "TRIM_END",
@@ -643,6 +643,45 @@ namespace HeronPipeline
                 ResultPath = JsonPath.DISCARD
             });
             prepareSequencesTask.AddRetry(retryItem);
+            
+            var prepareSequencesTestTask = new EcsRunTask(this, "prepareSequencesTestTask", new EcsRunTaskProps
+            {
+                IntegrationPattern = IntegrationPattern.RUN_JOB,
+                Cluster = cluster,
+                TaskDefinition = prepareSequencesTaskDefinition,
+                AssignPublicIp = true,
+                LaunchTarget = new EcsFargateLaunchTarget(),
+                ContainerOverrides = new ContainerOverride[] {
+                    new ContainerOverride {
+                        ContainerDefinition = prepareSequencesContainer,
+                        Environment = new TaskEnvironmentVariable[] {
+                            new TaskEnvironmentVariable{
+                              Name = "DATE_PARTITION",
+                              Value = JsonPath.StringAt("$.date")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "MESSAGE_LIST_S3_KEY",
+                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "HERON_SAMPLES_BUCKET",
+                              Value = pipelineBucket.BucketName
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "SEQ_DATA_ROOT",
+                              Value = "/mnt/efs0/seqData"
+                            },
+                            new TaskEnvironmentVariable{
+                              Name = "ITERATION_UUID",
+                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+                            }
+                        }
+                    }
+                },
+                ResultPath = JsonPath.DISCARD
+            });
+
+
 
             var prepareConsensusSequencesImage = ContainerImage.FromAsset("src/images/prepareConsensusSequences", new AssetImageProps
             { 
@@ -934,6 +973,7 @@ namespace HeronPipeline
 
             var armadillinTestChain = Chain
                 .Start(alignFastaTestTask)
+                .Next(prepareSequencesTestTask)
                 .Next(armadillinTestTask);
 
             var genotypeVariantsChain = Chain

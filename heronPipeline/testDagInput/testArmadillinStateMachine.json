@@ -1,0 +1,8 @@
+{
+  "bucketName": "heronpipelinestack-databucketd8691f4e-v10fjbz6tled",
+  "date": "2021-10-25",
+  "sampleBatch": {
+    "iterationUUID": "13c7376f-825b-4952-93eb-8e02af37efd4",
+    "messageListS3Key": "messageLists/2021-10-25/messageList13c7376f-825b-4952-93eb-8e02af37efd4.json"
+  }
+}
