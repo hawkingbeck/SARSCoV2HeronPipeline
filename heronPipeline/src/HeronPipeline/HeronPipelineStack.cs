@@ -891,10 +891,6 @@ namespace HeronPipeline
                               Value = JsonPath.StringAt("$.date")
                             },
                             new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
                               Value = pipelineBucket.BucketName
                             },
