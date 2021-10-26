@@ -15,7 +15,7 @@ FROM python:latest AS python-alpine
 # Stage 2 - build function and dependencies
 #################################################
 
-FROM python-alpine AS build-image
+# FROM python-alpine AS build-image
 # Install aws-lambda-cpp build dependencies
 # RUN apt-get install \
 #     build-base \
@@ -41,13 +41,12 @@ RUN python -m pip install numpy
 RUN python -m pip install pandas
 RUN python -m pip install boto3
 RUN python -m pip install cython
-RUN python -m pip install pysam
-RUN python -m pip install git+https://github.com/cov-ert/datafunk.git
+# RUN python -m pip install pysam
+RUN git clone https://github.com/cov-ert/datafunk.git
 
-# # Install Lambda Runtime Interface Client for Python
-# RUN python${RUNTIME_VERSION} -m pip install awslambdaric --target ${FUNCTION_DIR}
-
-# RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
+# RUN python -m pip install git+https://github.com/cov-ert/datafunk.git
+WORKDIR /datafunk
+RUN pip install .
 
 #################################################
 # Install the function's dependencies
