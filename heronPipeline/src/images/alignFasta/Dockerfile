@@ -2,11 +2,9 @@
 # Stage 1 - bundle base image + runtime
 #################################################
 ARG FUNCTION_DIR="/home/app/"
-ARG RUNTIME_VERSION="3.7"
-ARG DISTRO_VERSION="3.12"
 
 # Grab a fresh copy of the image and install GCC
-FROM python:latest AS python-alpine
+FROM python:latest AS python-image
 # Install GCC (Alpine uses musl but we compile and link dependencies with GCC)
 # RUN apk add --no-cache \
 #     libstdc++
@@ -15,7 +13,7 @@ FROM python:latest AS python-alpine
 # Stage 2 - build function and dependencies
 #################################################
 
-# FROM python-alpine AS build-image
+FROM python-image AS build-image
 # Install aws-lambda-cpp build dependencies
 # RUN apt-get install \
 #     build-base \
@@ -75,11 +73,11 @@ COPY . .
 #################################################
 
 # Grab a fresh copy of the Python image
-FROM python-alpine as run-image
+FROM python-image as run-image
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
 # Set working directory to function root directory
-# WORKDIR ${FUNCTION_DIR}
+WORKDIR ${FUNCTION_DIR}
 # Copy in the built dependencies
 COPY --from=build-image . . 
 COPY --from=build-image /usr/local/minimap2 .
