@@ -40,11 +40,11 @@ RUN python -m pip install pandas
 RUN python -m pip install boto3
 RUN python -m pip install cython
 # RUN python -m pip install pysam
-RUN git clone https://github.com/cov-ert/datafunk.git
-
-# RUN python -m pip install git+https://github.com/cov-ert/datafunk.git
-WORKDIR /datafunk
-RUN pip install .
+RUN python -m pip install pysam==0.16.0.1
+# RUN git clone https://github.com/cov-ert/datafunk.git
+RUN python -m pip install git+https://github.com/cov-ert/datafunk.git
+# WORKDIR /datafunk
+# RUN pip install .
 
 #################################################
 # Install the function's dependencies
