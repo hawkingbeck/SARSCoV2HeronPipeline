@@ -488,6 +488,8 @@ namespace HeronPipeline
                                                         this.cluster,
                                                         this.pipelineBucket,
                                                         this.sequencesTable);
+            goFastaAlignment.Create();
+            goFastaAlignment.CreateTestTask();
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
 
