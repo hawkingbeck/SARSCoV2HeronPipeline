@@ -23,7 +23,6 @@ namespace HeronPipeline
   {
     public EcsRunTask goFastaAlignTask;
     public EcsRunTask goFastaAlignTestTask;
-
     private Construct scope;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
@@ -198,9 +197,13 @@ namespace HeronPipeline
           ResultPath = JsonPath.DISCARD
       });
 
+      var goFastaAlignTestChain = Chain
+        .Start(goFastaAlignTestTask);
 
+      var testGoFastaAlignmentStateMachine = new StateMachine(this, "testGoFastaAlignmentStateMachine", new StateMachineProps
+          {
+              Definition = goFastaAlignTestChain
+          });
     }
   }
-
-  
 }
