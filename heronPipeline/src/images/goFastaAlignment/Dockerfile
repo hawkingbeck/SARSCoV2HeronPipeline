@@ -76,8 +76,8 @@ RUN go install github.com/cov-ert/gofasta@latest
 # WORKDIR /usr/local/gofasta
 # RUN go build
 RUN go env GOPATH
-RUN ls /root/go
-RUN gofasta -h
+RUN ls /root/go/bin
+RUN /root/go/bin/gofasta -h
 
 #################################################
 # Copy entry function
@@ -91,10 +91,11 @@ COPY . .
 # Grab a fresh copy of the Python image
 FROM python-image as run-image
 # Copy in the built dependencies
+COPY --from=build-image /root/go/bin/ .
 COPY --from=build-image . . 
 COPY --from=build-image /usr/local/minimap2 .
 COPY --from=build-image /usr/local/go .
-COPY --from=build-image /usr/local/gofasta .
+# COPY --from=build-image /usr/local/gofasta . 
 
 
 ENTRYPOINT [ "python", "app.py" ]
