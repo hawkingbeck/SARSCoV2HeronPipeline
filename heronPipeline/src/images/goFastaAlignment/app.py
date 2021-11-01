@@ -118,6 +118,19 @@ for message in messageList:
    samfile = pysam.AlignmentFile(mappedSamFastaLocalFilename, 'r')
    reference = SeqIO.read(referenceFastaLocalFilename, 'fasta')
    
+   # Run gofasta
+   # gofasta sam toMultiAlign -t ${task.cpus} \
+   #    --samfile ${sam} \
+   #    --reference ${reference_fasta} \
+   #    --pad \
+   #    -o alignment.fasta
+   goFastaCommand = f"go fasta sam toMultiAlign --samfile {samfile} --pad -o {alignedLocalFilename}"
+   subprocess.run(
+      goFastaCommand,
+      check=True,
+      shell=True
+   )
+
    # Run sam_2_fasta from datafunk
   #  sam_2_fasta(samfile = samfile,
   #               reference = reference,
