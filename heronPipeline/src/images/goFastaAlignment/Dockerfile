@@ -71,10 +71,10 @@ RUN go version
 # Install goFasta
 #################################################
 WORKDIR /usr/local
-# RUN go get github.com/cov-ert/gofasta
-RUN git clone https://github.com/cov-ert/gofasta
-WORKDIR /usr/local/gofasta
-RUN go build
+RUN go get github.com/cov-ert/gofasta
+# RUN git clone https://github.com/cov-ert/gofasta
+# WORKDIR /usr/local/gofasta
+# RUN go build
 RUN gofasta -h
 
 #################################################
