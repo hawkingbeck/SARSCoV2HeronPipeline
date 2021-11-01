@@ -124,7 +124,7 @@ for message in messageList:
    #    --reference ${reference_fasta} \
    #    --pad \
    #    -o alignment.fasta
-   goFastaCommand = f"go fasta sam toMultiAlign --samfile {samfile} --pad -o {alignedLocalFilename}"
+   goFastaCommand = f"go fasta sam toMultiAlign --samfile {mappedSamFastaLocalFilename} --pad -o {alignedLocalFilename}"
    subprocess.run(
       goFastaCommand,
       check=True,
