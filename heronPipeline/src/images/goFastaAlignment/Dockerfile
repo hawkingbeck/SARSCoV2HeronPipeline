@@ -8,6 +8,9 @@ WORKDIR /usr/local
 RUN git clone https://github.com/lh3/minimap2
 WORKDIR /usr/local/minimap2
 
+# RUN apt-get update && apt-get install make
+RUN apt install build-essential -y --no-install-recommends
+
 RUN pwd
 RUN git checkout v2.3
 RUN make && chmod 777 minimap2
