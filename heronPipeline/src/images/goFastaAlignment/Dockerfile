@@ -67,14 +67,15 @@ RUN tar -xzf go1.17.2.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 RUN /usr/local/go/bin/go version
 RUN go version
-RUN gofasta -h
 #################################################
 # Install goFasta
 #################################################
 WORKDIR /usr/local
+# RUN go get github.com/cov-ert/gofasta
 RUN git clone https://github.com/cov-ert/gofasta
 WORKDIR /usr/local/gofasta
 RUN go build
+RUN gofasta -h
 
 #################################################
 # Copy entry function
