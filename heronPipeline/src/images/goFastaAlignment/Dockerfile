@@ -80,11 +80,6 @@ RUN ls /root/go/bin
 RUN /root/go/bin/gofasta -h
 
 #################################################
-# Copy entry function
-#################################################
-COPY . .
-
-#################################################
 # Stage 3 - final runtime image
 #################################################
 
@@ -96,7 +91,7 @@ COPY --from=build-image /usr/local/minimap2 .
 COPY --from=build-image /usr/local/go .
 # COPY --from=build-image /usr/local/gofasta . 
 COPY --from=build-image . .
-
+COPY . .
 
 ENTRYPOINT [ "python", "app.py" ]
 
