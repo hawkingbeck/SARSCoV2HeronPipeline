@@ -12,9 +12,9 @@ from decimal import Decimal
 # from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
-# from datafunk.sam_2_fasta import *
+from datafunk.sam_2_fasta import *
 from Bio import SeqIO
-# import pysam
+import pysam
 
 config = Config(
    retries = {
