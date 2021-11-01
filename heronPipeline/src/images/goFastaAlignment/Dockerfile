@@ -67,7 +67,7 @@ RUN tar -xzf go1.17.2.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 RUN /usr/local/go/bin/go version
 RUN go version
-
+RUN gofasta -h
 #################################################
 # Install goFasta
 #################################################
