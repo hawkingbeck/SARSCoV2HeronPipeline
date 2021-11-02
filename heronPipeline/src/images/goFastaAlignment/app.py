@@ -152,8 +152,14 @@ for message in messageList:
    with open(alignedLocalFilename) as file:
       alignedFasta = file.read()
    
-   print(f"Previous Aligned Fasta: {pAlignedFasta[0:10]}")
-   print(f"Previous Aligned Fasta: {alignedFasta[0:10]}")
+
+   print(f"Previous Aligned Fasta: {pAlignedFasta[0:50]}")
+   print(f"Current Aligned Fasta: {alignedFasta[0:50]}")
+   if pAlignedFasta == alignedFasta:
+      print("Both aligned fasta files are the same")
+   else:
+      print("The aligned fasta files are different")
+
   #  sample['aligned'] = alignedFasta
 
   #  s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
