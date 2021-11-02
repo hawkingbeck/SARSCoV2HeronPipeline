@@ -12,6 +12,7 @@ from decimal import Decimal
 # from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
+import difflib
 # from datafunk.sam_2_fasta import *
 from Bio import SeqIO
 import pysam
@@ -159,6 +160,9 @@ for message in messageList:
       print("Both aligned fasta files are the same")
    else:
       print("The aligned fasta files are different")
+
+   output_list = [li for li in difflib.ndiff(pAlignedFasta, alignedFasta) if li[0] != ' ']
+   print(f"Differences: {output_list}")
 
   #  sample['aligned'] = alignedFasta
 
