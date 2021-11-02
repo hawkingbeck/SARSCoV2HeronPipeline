@@ -1002,7 +1002,8 @@ namespace HeronPipeline
 
             var processSamplesChain = Chain
               .Start(prepareConsensusSequencesTask)
-              .Next(alignFastaTask)
+            //   .Next(alignFastaTask)
+              .Next(goFastaAlignment.goFastaAlignTask)
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
