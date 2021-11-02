@@ -90,6 +90,7 @@ for message in messageList:
    sample = json.loads(data)
 
    consensusFasta = sample['consensus']
+   pAlignedFasta = sample['aligned']
 
    with open(consensusLocalFilename, 'w') as file:
       file.write(consensusFasta)
@@ -109,7 +110,7 @@ for message in messageList:
    )
 
    try:
-      bucket.upload_file(mappedSamFastaLocalFilename, f"misc/samFiles/{dateString}/{os.path.basename(consensusFastaKey)}.sam")
+      bucket.upload_file(mappedSamFastaLocalFilename, f"samFiles/{dateString}/{os.path.basename(consensusFastaKey)}.sam")
    except:
       print("Can't upload SAM file")
    ##############################################
@@ -148,9 +149,11 @@ for message in messageList:
   #  ##############################################
   #  # Step 1. Write updated result into S3
   #  ##############################################
-  #  with open(alignedLocalFilename) as file:
-  #     alignedFasta = file.read()
+   with open(alignedLocalFilename) as file:
+      alignedFasta = file.read()
    
+   print(f"Previous Aligned Fasta: {pAlignedFasta[0:10]}")
+   print(f"Previous Aligned Fasta: {alignedFasta[0:10]}")
   #  sample['aligned'] = alignedFasta
 
   #  s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
