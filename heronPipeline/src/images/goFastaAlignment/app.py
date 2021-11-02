@@ -91,7 +91,7 @@ for message in messageList:
    sample = json.loads(data)
 
    consensusFasta = sample['consensus']
-   pAlignedFasta = sample['aligned']
+   # pAlignedFasta = sample['aligned']
 
    with open(consensusLocalFilename, 'w') as file:
       file.write(consensusFasta)
@@ -111,7 +111,7 @@ for message in messageList:
    )
 
    try:
-      bucket.upload_file(mappedSamFastaLocalFilename, f"samFiles/{dateString}/{os.path.basename(consensusFastaKey)}.sam")
+      bucket.upload_file(mappedSamFastaLocalFilename, f"samFiles/{os.path.basename(consensusFastaKey)}.sam")
    except:
       print("Can't upload SAM file")
    ##############################################
@@ -154,41 +154,41 @@ for message in messageList:
       alignedFasta = file.read()
    
 
-   print(f"Previous Aligned Fasta: {pAlignedFasta[0:50]}")
-   print(f"Current Aligned Fasta: {alignedFasta[0:50]}")
-   if pAlignedFasta == alignedFasta:
-      print("Both aligned fasta files are the same")
-   else:
-      print("The aligned fasta files are different")
+   # print(f"Previous Aligned Fasta: {pAlignedFasta[0:50]}")
+   # print(f"Current Aligned Fasta: {alignedFasta[0:50]}")
+   # if pAlignedFasta == alignedFasta:
+   #    print("Both aligned fasta files are the same")
+   # else:
+   #    print("The aligned fasta files are different")
 
-   output_list = [li for li in difflib.ndiff(pAlignedFasta, alignedFasta) if li[0] != ' ']
-   print(f"Differences: {output_list}")
+   # output_list = [li for li in difflib.ndiff(pAlignedFasta, alignedFasta) if li[0] != ' ']
+   # print(f"Differences: {output_list}")
 
-  #  sample['aligned'] = alignedFasta
+   sample['aligned'] = alignedFasta
 
-  #  s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
+   s3.Object(bucketName, consensusFastaKey).put(Body=json.dumps(sample))
 
   #  ##############################################
   #  # Step 1. Update the record in dynamoDB
   #  ##############################################
-  #  dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
-  #  heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-  #  sequencesTable = dynamodb.Table(heronSequencesTableName)
-  #  response = sequencesTable.query(
-  #        KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
-  #     )
+   dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
+   heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
+   sequencesTable = dynamodb.Table(heronSequencesTableName)
+   response = sequencesTable.query(
+         KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+      )
 
-  #  if 'Items' in response:
-  #     if len(response['Items']) == 1:
-  #        item = response['Items'][0]
-  #        item['processingState'] = 'aligned'
-  #        ret = sequencesTable.update_item(
-  #           Key={'seqHash': consensusFastaHash},
-  #           UpdateExpression="set processingState=:s",
-  #           ExpressionAttributeValues={
-  #              ':s': 'aligned'
-  #           }
-  #        )
+   if 'Items' in response:
+      if len(response['Items']) == 1:
+         item = response['Items'][0]
+         item['processingState'] = 'aligned'
+         ret = sequencesTable.update_item(
+            Key={'seqHash': consensusFastaHash},
+            UpdateExpression="set processingState=:s",
+            ExpressionAttributeValues={
+               ':s': 'aligned'
+            }
+         )
 
 
 
