@@ -40,7 +40,7 @@ RUN python -m pip install pandas
 RUN python -m pip install boto3
 RUN python -m pip install cython
 RUN python -m pip install biopython
-RUN python -m pip install difflib
+RUN python -m pip install cdifflib
 # RUN python -m pip install pysam
 RUN python -m pip install pysam==0.16.0.1
 # RUN git clone https://github.com/cov-ert/datafunk.git

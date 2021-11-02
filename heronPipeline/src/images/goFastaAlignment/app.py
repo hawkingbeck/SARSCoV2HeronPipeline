@@ -36,8 +36,8 @@ referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 messageListS3Key = os.getenv('MESSAGE_LIST_S3_KEY')
-trimStart = os.getenv('TRIM_START')
-trimEnd = os.getenv('TRIM_END')
+trimStart = int(os.getenv('TRIM_START'))
+trimEnd = int(os.getenv('TRIM_END'))
 iterationUUID = os.getenv('ITERATION_UUID')
 sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
 
@@ -126,7 +126,7 @@ for message in messageList:
    #    --reference ${reference_fasta} \
    #    --pad \
    #    -o alignment.fasta
-   goFastaCommand = f"/root/go/bin/gofasta sam toMultiAlign --samfile {mappedSamFastaLocalFilename} --pad -o {alignedLocalFilename}"
+   goFastaCommand = f"/root/go/bin/gofasta sam toMultiAlign --samfile {mappedSamFastaLocalFilename} --trim --pad --trimstart {trimStart} --trimend {trimEnd} -o {alignedLocalFilename}"
    subprocess.run(
       goFastaCommand,
       check=True,
