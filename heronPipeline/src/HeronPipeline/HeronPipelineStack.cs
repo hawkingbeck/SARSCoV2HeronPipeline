@@ -170,74 +170,6 @@ namespace HeronPipeline
               Errors = new string[] {"States.ALL"}
             };
             
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // Task definition for adding squences to queue
-            // +++++++++++++++++++++++++++++++++++++++++++++
-
-            var addSequencesToQueueImage = ContainerImage.FromAsset("src/images/addSequencesToQueue");
-            var addSequencesToQueueTaskDefinition = new TaskDefinition(this, "addSequencesToQueueTaskDefinition", new TaskDefinitionProps{
-                Family = "addSequencesToQueue",
-                Cpu = "256",
-                MemoryMiB = "512",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole
-            });
-            addSequencesToQueueTaskDefinition.AddContainer("addSequencesToQueueContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = addSequencesToQueueImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "addSequencesToQueue",
-                    LogGroup = new LogGroup(this, "addSequencesToQueueLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "addSequencesToQueueLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var addSequencesToQueueContainer = addSequencesToQueueTaskDefinition.FindContainer("addSequencesToQueueContainer");
-
-            var addSequencesToQueueTask = new EcsRunTask(this, "addSequencesToQueueTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = addSequencesToQueueTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = addSequencesToQueueContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                                Name = "EXECUTION_MODE",
-                                Value = JsonPath.StringAt("$.executionMode")
-                             },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_PROCESSING_QUEUE",
-                                Value = reprocessingQueue.QueueUrl
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_DAILY_PROCESSING_QUEUE",
-                              Value = dailyProcessingQueue.QueueUrl
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++++++++++ Lambda Functions +++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
             var fileSystemConfig = new FileSystemConfig();
             fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
             fileSystemConfig.LocalMountPath = "/mnt/efs0";
@@ -273,26 +205,6 @@ namespace HeronPipeline
 
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
 
-            // Mark: getMessageCount
-            var getMessageCountFunction = new PythonFunction(this, "getMessageCountFunction", new PythonFunctionProps{
-                Entry = "src/functions/getMessageCount",
-                Runtime = Runtime.PYTHON_3_7,
-                Index = "app.py",
-                Handler = "lambda_handler",
-                Environment = new Dictionary<string, string> {
-                    {"EXECUTION_MODE",JsonPath.StringAt("$.executionMode")},
-                    {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
-                    {"HERON_PROCESSING_QUEUE", reprocessingQueue.QueueUrl},
-                    {"HERON_DAILY_PROCESSING_QUEUE",dailyProcessingQueue.QueueUrl}
-                }
-            });
-            getMessageCountFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-
-            var getMessageCountTask = new LambdaInvoke(this, "getMessageCountTask", new LambdaInvokeProps{
-                LambdaFunction = getMessageCountFunction,
-                ResultPath = "$.messageCount",
-                PayloadResponseOnly = true
-            });
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++ State Machines ++++++++++++++++
@@ -300,33 +212,39 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
 
         
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++ Process Sample Batch State Machine +++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
-              Entry = "src/functions/readSampleBatchFromQueue",
-              Runtime = Runtime.PYTHON_3_7,
-              Index = "app.py",
-              Handler = "lambda_handler",
-              Timeout = Duration.Seconds(900)
-            });
-            readSampleBatchFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-            readSampleBatchFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-
-            var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
-              LambdaFunction = readSampleBatchFunction,
-              ResultPath = "$.sampleBatch",
-              PayloadResponseOnly = true
-            });
-            readSampleBatchCountTask.AddRetry(retryItem);
+            
 
             // +++++++++++++++++++++++++++++++++++++++++++
+            // ++ Classes to create pipeline components ++
             // +++++++++++++++++++++++++++++++++++++++++++
+
+            var helperFunctions = new HelperFunctions(this,
+                                                        "helperFunctions",
+                                                        this.ecsExecutionRole,
+                                                        this.volume,
+                                                        this.cluster,
+                                                        this.pipelineBucket,
+                                                        this.sequencesTable,
+                                                        reprocessingQueue,
+                                                        dailyProcessingQueue,
+                                                        sqsAccessPolicyStatement,
+                                                        s3AccessPolicyStatement,
+                                                        dynamoDBAccessPolicyStatement);
+            helperFunctions.Create();
+
+            var prepareSequences = new PrepareSequences(this,
+                                                        "prepareSequences",
+                                                        this.ecsExecutionRole,
+                                                        this.volume,
+                                                        this.cluster,
+                                                        this.pipelineBucket,
+                                                        this.sequencesTable,
+                                                        reprocessingQueue,
+                                                        dailyProcessingQueue);
+            prepareSequences.CreateAddSequencesToQueue();
+            prepareSequences.CreatePrepareSequences();
+            prepareSequences.CreatePrepareConsenusSequences();
+
             var goFastaAlignment = new GoFastaAlignment(this,
                                                         "goFastaAlignment",
                                                         this.ecsExecutionRole,
@@ -364,214 +282,7 @@ namespace HeronPipeline
                                                                     this.pipelineBucket,
                                                                     this.sequencesTable);
             genotypeVariantsModel.Create();
-            // +++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++
-
-            var alignFastaFunction = new DockerImageFunction(this, "alignFastaFunction", new DockerImageFunctionProps{
-              Code = DockerImageCode.FromImageAsset("src/functions/alignFastaFunction"),
-              Timeout = Duration.Seconds(900),
-              Environment = new Dictionary<string, string> {
-                {"HERON_SAMPLES_BUCKET", pipelineBucket.BucketName},
-                {"HERON_SAMPLES_TABLE", samplesTable.TableName},
-                {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
-                {"REF_FASTA_KEY", "resources/MN908947.fa"},
-                {"TRIM_START", "265"},
-                {"TRIM_END", "29674"},
-              }
-            });
-            alignFastaFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            alignFastaFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-            alignFastaFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-
-            var prepareSequencesImage = ContainerImage.FromAsset("src/images/prepareSequences", new AssetImageProps
-            { 
-            });
-            var prepareSequencesTaskDefinition = new TaskDefinition(this, "prepareSequencesTaskDefinition", new TaskDefinitionProps{
-                Family = "prepareSequences",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
-            });
-
-            prepareSequencesTaskDefinition.AddContainer("prepareSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = prepareSequencesImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "prepareSequences",
-                    LogGroup = new LogGroup(this, "prepareSequencesLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "prepareSequencesLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var prepareSequencesContainer = prepareSequencesTaskDefinition.FindContainer("prepareSequencesContainer");
-            prepareSequencesContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
-
-            var prepareSequencesTask = new EcsRunTask(this, "prepareSequencesTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = prepareSequencesTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = prepareSequencesContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            prepareSequencesTask.AddRetry(retryItem);
-            
-            var prepareSequencesTestTask = new EcsRunTask(this, "prepareSequencesTestTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = prepareSequencesTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = prepareSequencesContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-
-
-
-            var prepareConsensusSequencesImage = ContainerImage.FromAsset("src/images/prepareConsensusSequences", new AssetImageProps
-            { 
-            });
-            var prepareConsensusSequencesTaskDefinition = new TaskDefinition(this, "prepareConsensusSequencesTaskDefinition", new TaskDefinitionProps{
-                Family = "prepareConsensusSequences",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
-            });
-
-            prepareConsensusSequencesTaskDefinition.AddContainer("prepareConsensusSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = prepareConsensusSequencesImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "prepareConsensusSequences",
-                    LogGroup = new LogGroup(this, "prepareConsensusSequencesLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "prepareConsensusSequencesLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var prepareConsensusSequencesContainer = prepareConsensusSequencesTaskDefinition.FindContainer("prepareConsensusSequencesContainer");
-            prepareConsensusSequencesContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
-
-            var prepareConsensusSequencesTask = new EcsRunTask(this, "prepareConsensusSequencesTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = prepareConsensusSequencesTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = prepareConsensusSequencesContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            prepareConsensusSequencesTask.AddRetry(retryItem);
-            
+          
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
             var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
                 Comment = "are there any messages in the sample batch"
@@ -596,17 +307,17 @@ namespace HeronPipeline
             placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
             var processSamplesChain = Chain
-              .Start(prepareConsensusSequencesTask)
+              .Start(prepareSequences.prepareConsensusSequencesTask)
             //   .Next(alignFastaTask)
               .Next(goFastaAlignment.goFastaAlignTask)
-              .Next(prepareSequencesTask)
+              .Next(prepareSequences.prepareSequencesTask)
               .Next(placeSequencesParallel);
 
             messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
             messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
             var processSampleBatchChain = Chain
-              .Start(readSampleBatchCountTask)
+              .Start(helperFunctions.readSampleBatchCountTask)
               .Next(messagesAvailableChoiceTask);
             
             var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
@@ -763,8 +474,8 @@ namespace HeronPipeline
             });
 
             var processMessagesChain = Chain
-              .Start(addSequencesToQueueTask)
-              .Next(getMessageCountTask)
+              .Start(prepareSequences.addSequencesToQueueTask)
+              .Next(helperFunctions.getMessageCountTask)
               .Next(launchSampleProcessingMap)
               .Next(exportResultsTask)
               .Next(pipelineFinishTask);
