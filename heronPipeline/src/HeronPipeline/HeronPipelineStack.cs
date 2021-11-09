@@ -103,7 +103,10 @@ namespace HeronPipeline
                                                                     infrastructure.bucket,
                                                                     infrastructure.sequencesTable);
             genotypeVariantsModel.Create();
-          
+
+            var exportResults = new ExportResults(this, "exportResults", infrastructure);
+            exportResults.Create();
+            
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
             var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
                 Comment = "are there any messages in the sample batch"
@@ -228,76 +231,13 @@ namespace HeronPipeline
               Input = stateMachineInput
             });
 
-            launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));
-
-            // Export results task
-            var exportResultsImage = ContainerImage.FromAsset("src/images/exportResults");
-            var exportResultsTaskDefinition = new TaskDefinition(this, "exportResultsTaskDefinition", new TaskDefinitionProps{
-                Family = "exportResults",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = infrastructure.ecsExecutionRole,
-                TaskRole = infrastructure.ecsExecutionRole
-            });
-            exportResultsTaskDefinition.AddContainer("exportResultsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = exportResultsImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "exportResults",
-                    LogGroup = new LogGroup(this, "exportResultsLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "exportResultsLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var exportResultsContainer = exportResultsTaskDefinition.FindContainer("exportResultsContainer");
-            var exportResultsTask = new EcsRunTask(this, "exportResultsTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = infrastructure.cluster,
-                TaskDefinition = exportResultsTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = exportResultsContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = infrastructure.bucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = infrastructure.sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SAMPLES_TABLE",
-                                Value = infrastructure.samplesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "EXECUTION_ID",
-                              Value = JsonPath.StringAt("$$.Execution.Id")
-                            }
-                        }
-                    }
-                },
-                ResultPath = "$.result"
-            });
+            launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));            
 
             var processMessagesChain = Chain
               .Start(prepareSequences.addSequencesToQueueTask)
               .Next(helperFunctions.getMessageCountTask)
               .Next(launchSampleProcessingMap)
-              .Next(exportResultsTask)
+              .Next(exportResults.exportResultsTask)
               .Next(pipelineFinishTask);
 
             var pipelineChain = Chain
