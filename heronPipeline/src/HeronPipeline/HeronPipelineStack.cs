@@ -478,6 +478,14 @@ namespace HeronPipeline
                                                         this.sequencesTable);
             goFastaAlignment.Create();
             goFastaAlignment.CreateTestTask();
+
+            var pangolinModel = new PangolinModel(this,
+                                                "pangolinTaskDefinition",
+                                                this.ecsExecutionRole,
+                                                this.volume,
+                                                this.cluster,
+                                                this.pipelineBucket,
+                                                this.sequencesTable);
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
 
@@ -767,82 +775,83 @@ namespace HeronPipeline
 
             // +++++++++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++++++++
-            var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
-            { 
-            });
-            var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
-                Family = "pangolin",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
-            });
-            pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = pangolinImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "pangolin",
-                    LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "pangolinLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var pangolinContainer = pangolinTaskDefinition.FindContainer("pangolinContainer");
-            pangolinContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
-            var pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = pangolinTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = pangolinContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            pangolinTask.AddRetry(retryItem);
+            // var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
+            // { 
+            // });
+            // var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
+            //     Family = "pangolin",
+            //     Cpu = "1024",
+            //     MemoryMiB = "4096",
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+            // });
+            // pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            // {
+            //     Image = pangolinImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps
+            //     {
+            //         StreamPrefix = "pangolin",
+            //         LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
+            //         {
+            //             LogGroupName = "pangolinLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     })
+            // });
+            // var pangolinContainer = pangolinTaskDefinition.FindContainer("pangolinContainer");
+            // pangolinContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
+            // var pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
+            // {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = pangolinTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = pangolinContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "DATE_PARTITION",
+            //                   Value = JsonPath.StringAt("$.date")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "MESSAGE_LIST_S3_KEY",
+            //                   Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_DATA_ROOT",
+            //                   Value = "/mnt/efs0/seqData"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "ITERATION_UUID",
+            //                   Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "HERON_SEQUENCES_TABLE",
+            //                     Value = sequencesTable.TableName
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
+            // pangolinTask.AddRetry(retryItem);
+            
 
 
             var armadillinImage = ContainerImage.FromAsset("src/images/armadillin", new AssetImageProps
@@ -973,7 +982,7 @@ namespace HeronPipeline
             });
 
             var pangolinChain = Chain
-                .Start(pangolinTask);
+                .Start(pangolinModel.pangolinTask);
 
             var armadillinChain = Chain
                 .Start(armadillinTask);
