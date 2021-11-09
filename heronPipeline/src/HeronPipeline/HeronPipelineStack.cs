@@ -25,8 +25,8 @@ namespace HeronPipeline
         public Role ecsExecutionRole;
         // public Amazon.CDK.AWS.ECS.Volume volume;
         public Cluster cluster;
-        public Bucket pipelineBucket;
-        public Table sequencesTable;
+        // public Bucket pipelineBucket;
+        // public Table sequencesTable;
         //Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable
 
         internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
@@ -88,49 +88,49 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             //+++++++++++++++ Storage ++++++++++++++++++
             //++++++++++++++++++++++++++++++++++++++++++
-            pipelineBucket = new Bucket(this, "dataBucket", new BucketProps{
-                Versioned = true,
-                RemovalPolicy = RemovalPolicy.DESTROY,
-                AutoDeleteObjects = true
-            });
+            // pipelineBucket = new Bucket(this, "dataBucket", new BucketProps{
+            //     Versioned = true,
+            //     RemovalPolicy = RemovalPolicy.DESTROY,
+            //     AutoDeleteObjects = true
+            // });
 
 
-            var samplesTable = new Table(this, "heronSamplesTable", new TableProps{
-                BillingMode = BillingMode.PAY_PER_REQUEST,
-                PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-                SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
-                PointInTimeRecovery = true
-            });
+            // var samplesTable = new Table(this, "heronSamplesTable", new TableProps{
+            //     BillingMode = BillingMode.PAY_PER_REQUEST,
+            //     PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+            //     SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
+            //     PointInTimeRecovery = true
+            // });
 
-            samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
-                IndexName = "lastChangedDate",
-                PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-                SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
-                ProjectionType = ProjectionType.ALL
-            });
+            // samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
+            //     IndexName = "lastChangedDate",
+            //     PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+            //     SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
+            //     ProjectionType = ProjectionType.ALL
+            // });
 
-            sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
-                BillingMode = BillingMode.PAY_PER_REQUEST,
-                PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
-                PointInTimeRecovery = true
-            });
+            // sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
+            //     BillingMode = BillingMode.PAY_PER_REQUEST,
+            //     PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
+            //     PointInTimeRecovery = true
+            // });
 
             //++++++++++++++++++++++++++++++++++++++++++
             //SQS Queues
             //++++++++++++++++++++++++++++++++++++++++++
-            var dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
-                ContentBasedDeduplication = true,
-                Fifo = true,
-                FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
-                DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
-            });
+            // var dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
+            //     ContentBasedDeduplication = true,
+            //     Fifo = true,
+            //     FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+            //     DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+            // });
 
-            var reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
-                ContentBasedDeduplication = true,
-                Fifo = true,
-                FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
-                DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
-            });
+            // var reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
+            //     ContentBasedDeduplication = true,
+            //     Fifo = true,
+            //     FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+            //     DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+            // });
 
 
             //++++++++++++++++++++++++++++++++++++++++++
@@ -182,8 +182,8 @@ namespace HeronPipeline
                 Actions = new string[] { "s3:*" }
             });
             s3AccessPolicyStatement.AddResources(new string[] {
-              pipelineBucket.BucketArn,
-              pipelineBucket.BucketArn + "/*"
+              infrastructure.bucket.BucketArn,
+              infrastructure.bucket.BucketArn + "/*"
             });
 
             var sqsAccessPolicyStatement = new PolicyStatement( new PolicyStatementProps {
@@ -191,8 +191,8 @@ namespace HeronPipeline
               Actions = new string[] { "sqs:*"},
             });
             sqsAccessPolicyStatement.AddResources(new string[] {
-              dailyProcessingQueue.QueueArn,
-              reprocessingQueue.QueueArn
+              infrastructure.dailyProcessingQueue.QueueArn,
+              infrastructure.reprocessingQueue.QueueArn
             });
 
             var dynamoDBAccessPolicyStatement = new PolicyStatement(new PolicyStatementProps{
@@ -200,8 +200,8 @@ namespace HeronPipeline
               Actions = new string[] {"dynamodb:*"}
             });
             dynamoDBAccessPolicyStatement.AddResources(new string[]{
-              samplesTable.TableArn,
-              sequencesTable.TableArn
+              infrastructure.samplesTable.TableArn,
+              infrastructure.sequencesTable.TableArn
             });
             
 
@@ -225,10 +225,10 @@ namespace HeronPipeline
                                                         this.ecsExecutionRole,
                                                         infrastructure.volume,
                                                         this.cluster,
-                                                        this.pipelineBucket,
-                                                        this.sequencesTable,
-                                                        reprocessingQueue,
-                                                        dailyProcessingQueue,
+                                                        infrastructure.bucket,
+                                                        infrastructure.sequencesTable,
+                                                        infrastructure.reprocessingQueue,
+                                                        infrastructure.dailyProcessingQueue,
                                                         sqsAccessPolicyStatement,
                                                         s3AccessPolicyStatement,
                                                         dynamoDBAccessPolicyStatement);
@@ -239,10 +239,10 @@ namespace HeronPipeline
                                                         this.ecsExecutionRole,
                                                         infrastructure.volume,
                                                         this.cluster,
-                                                        this.pipelineBucket,
-                                                        this.sequencesTable,
-                                                        reprocessingQueue,
-                                                        dailyProcessingQueue);
+                                                        infrastructure.bucket,
+                                                        infrastructure.sequencesTable,
+                                                        infrastructure.reprocessingQueue,
+                                                        infrastructure.dailyProcessingQueue);
             prepareSequences.CreateAddSequencesToQueue();
             prepareSequences.CreatePrepareSequences();
             prepareSequences.CreatePrepareConsenusSequences();
@@ -252,8 +252,8 @@ namespace HeronPipeline
                                                         this.ecsExecutionRole,
                                                         infrastructure.volume,
                                                         this.cluster,
-                                                        this.pipelineBucket,
-                                                        this.sequencesTable);
+                                                        infrastructure.bucket,
+                                                        infrastructure.sequencesTable);
             goFastaAlignment.Create();
             goFastaAlignment.CreateTestTask();
 
@@ -262,8 +262,8 @@ namespace HeronPipeline
                                                     this.ecsExecutionRole,
                                                     infrastructure.volume,
                                                     this.cluster,
-                                                    this.pipelineBucket,
-                                                    this.sequencesTable);
+                                                    infrastructure.bucket,
+                                                    infrastructure.sequencesTable);
             pangolinModel.Create();
 
             var armadillinModel = new ArmadillinModel(  this,
@@ -271,8 +271,8 @@ namespace HeronPipeline
                                                         this.ecsExecutionRole,
                                                         infrastructure.volume,
                                                         this.cluster,
-                                                        this.pipelineBucket,
-                                                        this.sequencesTable);
+                                                        infrastructure.bucket,
+                                                        infrastructure.sequencesTable);
             armadillinModel.Create();
             armadillinModel.CreateTestTask();
 
@@ -281,8 +281,8 @@ namespace HeronPipeline
                                                                     this.ecsExecutionRole,
                                                                     infrastructure.volume,
                                                                     this.cluster,
-                                                                    this.pipelineBucket,
-                                                                    this.sequencesTable);
+                                                                    infrastructure.bucket,
+                                                                    infrastructure.sequencesTable);
             genotypeVariantsModel.Create();
           
             var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
@@ -351,7 +351,7 @@ namespace HeronPipeline
                 {"queueName", JsonPath.StringAt("$.queueName")},
                 {"date", JsonPath.StringAt("$.date")},
                 {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
-                {"bucketName", pipelineBucket.BucketName}
+                {"bucketName", infrastructure.bucket.BucketName}
             };
 
             var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
@@ -455,15 +455,15 @@ namespace HeronPipeline
                             },
                             new TaskEnvironmentVariable{
                               Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
+                              Value = infrastructure.bucket.BucketName
                             },
                             new TaskEnvironmentVariable{
                                 Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
+                                Value = infrastructure.sequencesTable.TableName
                             },
                             new TaskEnvironmentVariable{
                                 Name = "HERON_SAMPLES_TABLE",
-                                Value = samplesTable.TableName
+                                Value = infrastructure.samplesTable.TableName
                             },
                             new TaskEnvironmentVariable{
                               Name = "EXECUTION_ID",

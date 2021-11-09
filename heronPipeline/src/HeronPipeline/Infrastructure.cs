@@ -24,21 +24,36 @@ namespace HeronPipeline
     public Amazon.CDK.AWS.ECS.Volume volume;
     public AccessPoint pipelineEFSAccessPoint;
     public Vpc vpc;
+    public Bucket bucket;
+    public Table samplesTable;
+    public Table sequencesTable;
+    public Queue dailyProcessingQueue;
+    public Queue reprocessingQueue;
     
     private Construct scope;
+    private SecurityGroup secGroup;
+
     
     public Infrastructure(Construct scope, string id): base(scope, id)
     {
       this.scope = scope;
     }
+
     public void Create()
+    {
+      CreateVPC();
+      CreateStorage();
+      CreateEFS();
+      CreateQueues();
+    }
+    private void CreateVPC()
     {
       vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = 3, ///TODO: Increase this once EIP's are freed
                 Cidr = "11.0.0.0/16",
             });
 
-      var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
+      secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
           Vpc = vpc,
           AllowAllOutbound = true
       });
@@ -46,7 +61,10 @@ namespace HeronPipeline
       secGroup.AddIngressRule(Peer.AnyIpv4(), Port.Tcp(2049), "EFS Port");
       secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
       secGroup.Node.AddDependency(vpc);
+    }
 
+    private void CreateEFS()
+    {
       //++++++++++++++++++++++++++++++++++++++++++
       // File System (EFS)
       //++++++++++++++++++++++++++++++++++++++++++
@@ -78,6 +96,53 @@ namespace HeronPipeline
           TransitEncryption = "ENABLED"
       };
       volume.Name = "efsVolume";
+    }
+
+    private void CreateStorage()
+    {
+      bucket = new Bucket(this, "dataBucket", new BucketProps{
+          Versioned = true,
+          RemovalPolicy = RemovalPolicy.DESTROY,
+          AutoDeleteObjects = true
+      });
+
+
+      samplesTable = new Table(this, "heronSamplesTable", new TableProps{
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+          SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
+          PointInTimeRecovery = true
+      });
+
+      samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
+          IndexName = "lastChangedDate",
+          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+          SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
+          ProjectionType = ProjectionType.ALL
+      });
+
+      sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
+          PointInTimeRecovery = true
+      });
+    }
+
+    private void CreateQueues()
+    {
+      dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
+          ContentBasedDeduplication = true,
+          Fifo = true,
+          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+      });
+
+      reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
+          ContentBasedDeduplication = true,
+          Fifo = true,
+          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+      });
     }
   }
 }
