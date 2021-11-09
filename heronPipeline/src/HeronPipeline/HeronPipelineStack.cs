@@ -327,145 +327,145 @@ namespace HeronPipeline
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
-            var alignFastaImage = ContainerImage.FromAsset("src/images/alignFasta");
-            var alignFastaTaskDefinition = new TaskDefinition(this, "alignFastaTaskDefinition", new TaskDefinitionProps{
-                Family = "alignFasta",
-                Cpu = "1024",
-                MemoryMiB = "4096",
-                NetworkMode = NetworkMode.AWS_VPC,
-                Compatibility = Compatibility.FARGATE,
-                ExecutionRole = ecsExecutionRole,
-                TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
-            });
-            alignFastaTaskDefinition.AddContainer("alignFastaContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-            {
-                Image = alignFastaImage,
-                Logging = new AwsLogDriver(new AwsLogDriverProps
-                {
-                    StreamPrefix = "alignFasta",
-                    LogGroup = new LogGroup(this, "alignFastaLogGroup", new LogGroupProps
-                    {
-                        LogGroupName = "alignFastaLogGroup",
-                        Retention = RetentionDays.ONE_WEEK,
-                        RemovalPolicy = RemovalPolicy.DESTROY
-                    })
-                })
-            });
-            var alignFastaContainer = alignFastaTaskDefinition.FindContainer("alignFastaContainer");
-            alignFastaContainer.AddMountPoints(new MountPoint[] {
-                    new MountPoint {
-                        SourceVolume = "efsVolume",
-                        ContainerPath = "/mnt/efs0",
-                        ReadOnly = false,
-                    }
-                });
+            // var alignFastaImage = ContainerImage.FromAsset("src/images/alignFasta");
+            // var alignFastaTaskDefinition = new TaskDefinition(this, "alignFastaTaskDefinition", new TaskDefinitionProps{
+            //     Family = "alignFasta",
+            //     Cpu = "1024",
+            //     MemoryMiB = "4096",
+            //     NetworkMode = NetworkMode.AWS_VPC,
+            //     Compatibility = Compatibility.FARGATE,
+            //     ExecutionRole = ecsExecutionRole,
+            //     TaskRole = ecsExecutionRole,
+            //     Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+            // });
+            // alignFastaTaskDefinition.AddContainer("alignFastaContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+            // {
+            //     Image = alignFastaImage,
+            //     Logging = new AwsLogDriver(new AwsLogDriverProps
+            //     {
+            //         StreamPrefix = "alignFasta",
+            //         LogGroup = new LogGroup(this, "alignFastaLogGroup", new LogGroupProps
+            //         {
+            //             LogGroupName = "alignFastaLogGroup",
+            //             Retention = RetentionDays.ONE_WEEK,
+            //             RemovalPolicy = RemovalPolicy.DESTROY
+            //         })
+            //     })
+            // });
+            // var alignFastaContainer = alignFastaTaskDefinition.FindContainer("alignFastaContainer");
+            // alignFastaContainer.AddMountPoints(new MountPoint[] {
+            //         new MountPoint {
+            //             SourceVolume = "efsVolume",
+            //             ContainerPath = "/mnt/efs0",
+            //             ReadOnly = false,
+            //         }
+            //     });
             
-            var alignFastaTask = new EcsRunTask(this, "alignFastaTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = alignFastaTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = alignFastaContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")   
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "MESSAGE_LIST_S3_KEY",
-                                Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "REF_FASTA_KEY",
-                                Value = "resources/MN908947.fa"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_START",
-                                Value = "265"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_END",
-                                Value = "29674"
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
-            alignFastaTask.AddRetry(retryItem);
-            var alignFastaTestTask = new EcsRunTask(this, "alignFastaTestTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = alignFastaTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = alignFastaContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = "13c7376f-825b-4952-93eb-8e02af37efd4"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = "2021-10-25"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "HERON_SEQUENCES_TABLE",
-                                Value = sequencesTable.TableName
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "MESSAGE_LIST_S3_KEY",
-                                Value = "messageLists/2021-10-25/messageList13c7376f-825b-4952-93eb-8e02af37efd4.json"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "REF_FASTA_KEY",
-                                Value = "resources/MN908947.fa"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_START",
-                                Value = "266" //Value = "265"
-                            },
-                            new TaskEnvironmentVariable{
-                                Name = "TRIM_END",
-                                Value = "29674"
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
+            // var alignFastaTask = new EcsRunTask(this, "alignFastaTask", new EcsRunTaskProps
+            // {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = alignFastaTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = alignFastaContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "ITERATION_UUID",
+            //                   Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_DATA_ROOT",
+            //                   Value = "/mnt/efs0/seqData"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "DATE_PARTITION",
+            //                   Value = JsonPath.StringAt("$.date")   
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "HERON_SEQUENCES_TABLE",
+            //                     Value = sequencesTable.TableName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "MESSAGE_LIST_S3_KEY",
+            //                     Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "REF_FASTA_KEY",
+            //                     Value = "resources/MN908947.fa"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "TRIM_START",
+            //                     Value = "265"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "TRIM_END",
+            //                     Value = "29674"
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
+            // alignFastaTask.AddRetry(retryItem);
+            // var alignFastaTestTask = new EcsRunTask(this, "alignFastaTestTask", new EcsRunTaskProps
+            // {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = alignFastaTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = alignFastaContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "ITERATION_UUID",
+            //                   Value = "13c7376f-825b-4952-93eb-8e02af37efd4"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_DATA_ROOT",
+            //                   Value = "/mnt/efs0/seqData"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "DATE_PARTITION",
+            //                   Value = "2021-10-25"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "HERON_SEQUENCES_TABLE",
+            //                     Value = sequencesTable.TableName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "MESSAGE_LIST_S3_KEY",
+            //                     Value = "messageLists/2021-10-25/messageList13c7376f-825b-4952-93eb-8e02af37efd4.json"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "REF_FASTA_KEY",
+            //                     Value = "resources/MN908947.fa"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "TRIM_START",
+            //                     Value = "266" //Value = "265"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                     Name = "TRIM_END",
+            //                     Value = "29674"
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
@@ -814,10 +814,10 @@ namespace HeronPipeline
             var armadillinChain = Chain
                 .Start(armadillinModel.armadillinTask);
 
-            var armadillinTestChain = Chain
-                .Start(alignFastaTestTask)
-                .Next(prepareSequencesTestTask)
-                .Next(armadillinModel.armadillinTestTask);
+            // var armadillinTestChain = Chain
+            //     .Start(goFastaAlignment.goFastaAlignTestTask)
+            //     .Next(prepareSequencesTestTask)
+            //     .Next(armadillinModel.armadillinTestTask);
 
             var genotypeVariantsChain = Chain
                 .Start(genotypeVariantsModel.genotypeVariantsTask);
@@ -1007,10 +1007,10 @@ namespace HeronPipeline
             });
 
 
-            var testArmadillianStateMachine = new StateMachine(this, "testArmadillianStateMachine", new StateMachineProps
-            {
-                Definition = armadillinTestChain
-            });
+            // var testArmadillianStateMachine = new StateMachine(this, "testArmadillianStateMachine", new StateMachineProps
+            // {
+            //     Definition = armadillinTestChain
+            // });
         }
     }
 
