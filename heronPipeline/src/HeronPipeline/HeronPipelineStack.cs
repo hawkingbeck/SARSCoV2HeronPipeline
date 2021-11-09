@@ -327,6 +327,20 @@ namespace HeronPipeline
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
+
+            var prepareSequences = new PrepareSequences(this,
+                                                        "prepareSequences",
+                                                        this.ecsExecutionRole,
+                                                        this.volume,
+                                                        this.cluster,
+                                                        this.pipelineBucket,
+                                                        this.sequencesTable,
+                                                        reprocessingQueue,
+                                                        dailyProcessingQueue);
+            prepareSequences.CreateAddSequencesToQueue();
+            prepareSequences.CreatePrepareSequences();
+            prepareSequences.CreatePrepareConsenusSequences();
+
             var goFastaAlignment = new GoFastaAlignment(this,
                                                         "goFastaAlignment",
                                                         this.ecsExecutionRole,
@@ -458,42 +472,42 @@ namespace HeronPipeline
             // });
             // prepareSequencesTask.AddRetry(retryItem);
             
-            var prepareSequencesTestTask = new EcsRunTask(this, "prepareSequencesTestTask", new EcsRunTaskProps
-            {
-                IntegrationPattern = IntegrationPattern.RUN_JOB,
-                Cluster = cluster,
-                TaskDefinition = prepareSequencesTaskDefinition,
-                AssignPublicIp = true,
-                LaunchTarget = new EcsFargateLaunchTarget(),
-                ContainerOverrides = new ContainerOverride[] {
-                    new ContainerOverride {
-                        ContainerDefinition = prepareSequencesContainer,
-                        Environment = new TaskEnvironmentVariable[] {
-                            new TaskEnvironmentVariable{
-                              Name = "DATE_PARTITION",
-                              Value = JsonPath.StringAt("$.date")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "MESSAGE_LIST_S3_KEY",
-                              Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "HERON_SAMPLES_BUCKET",
-                              Value = pipelineBucket.BucketName
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "SEQ_DATA_ROOT",
-                              Value = "/mnt/efs0/seqData"
-                            },
-                            new TaskEnvironmentVariable{
-                              Name = "ITERATION_UUID",
-                              Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                            }
-                        }
-                    }
-                },
-                ResultPath = JsonPath.DISCARD
-            });
+            // var prepareSequencesTestTask = new EcsRunTask(this, "prepareSequencesTestTask", new EcsRunTaskProps
+            // {
+            //     IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //     Cluster = cluster,
+            //     TaskDefinition = prepareSequencesTaskDefinition,
+            //     AssignPublicIp = true,
+            //     LaunchTarget = new EcsFargateLaunchTarget(),
+            //     ContainerOverrides = new ContainerOverride[] {
+            //         new ContainerOverride {
+            //             ContainerDefinition = prepareSequencesContainer,
+            //             Environment = new TaskEnvironmentVariable[] {
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "DATE_PARTITION",
+            //                   Value = JsonPath.StringAt("$.date")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "MESSAGE_LIST_S3_KEY",
+            //                   Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "HERON_SAMPLES_BUCKET",
+            //                   Value = pipelineBucket.BucketName
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "SEQ_DATA_ROOT",
+            //                   Value = "/mnt/efs0/seqData"
+            //                 },
+            //                 new TaskEnvironmentVariable{
+            //                   Name = "ITERATION_UUID",
+            //                   Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     ResultPath = JsonPath.DISCARD
+            // });
 
 
 
@@ -596,10 +610,10 @@ namespace HeronPipeline
             placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
             var processSamplesChain = Chain
-              .Start(prepareConsensusSequencesTask)
+              .Start(prepareSequences.prepareConsensusSequencesTask)
             //   .Next(alignFastaTask)
               .Next(goFastaAlignment.goFastaAlignTask)
-              .Next(prepareSequencesTask)
+              .Next(prepareSequences.prepareSequencesTask)
               .Next(placeSequencesParallel);
 
             messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
@@ -763,7 +777,7 @@ namespace HeronPipeline
             });
 
             var processMessagesChain = Chain
-              .Start(addSequencesToQueueTask)
+              .Start(prepareSequences.addSequencesToQueueTask)
               .Next(getMessageCountTask)
               .Next(launchSampleProcessingMap)
               .Next(exportResultsTask)
