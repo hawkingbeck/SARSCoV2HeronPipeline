@@ -223,7 +223,7 @@ namespace HeronPipeline
             var helperFunctions = new HelperFunctions(this,
                                                         "helperFunctions",
                                                         this.ecsExecutionRole,
-                                                        this.volume,
+                                                        infrastructure.volume,
                                                         this.cluster,
                                                         this.pipelineBucket,
                                                         this.sequencesTable,
@@ -237,7 +237,7 @@ namespace HeronPipeline
             var prepareSequences = new PrepareSequences(this,
                                                         "prepareSequences",
                                                         this.ecsExecutionRole,
-                                                        this.volume,
+                                                        infrastructure.volume,
                                                         this.cluster,
                                                         this.pipelineBucket,
                                                         this.sequencesTable,
@@ -250,7 +250,7 @@ namespace HeronPipeline
             var goFastaAlignment = new GoFastaAlignment(this,
                                                         "goFastaAlignment",
                                                         this.ecsExecutionRole,
-                                                        this.volume,
+                                                        infrastructure.volume,
                                                         this.cluster,
                                                         this.pipelineBucket,
                                                         this.sequencesTable);
@@ -260,7 +260,7 @@ namespace HeronPipeline
             var pangolinModel = new PangolinModel(  this,
                                                     "pangolinTaskDefinition",
                                                     this.ecsExecutionRole,
-                                                    this.volume,
+                                                    infrastructure.volume,
                                                     this.cluster,
                                                     this.pipelineBucket,
                                                     this.sequencesTable);
@@ -269,7 +269,7 @@ namespace HeronPipeline
             var armadillinModel = new ArmadillinModel(  this,
                                                         "armadillinTaskDefinition",
                                                         this.ecsExecutionRole,
-                                                        this.volume,
+                                                        infrastructure.volume,
                                                         this.cluster,
                                                         this.pipelineBucket,
                                                         this.sequencesTable);
@@ -279,7 +279,7 @@ namespace HeronPipeline
             var genotypeVariantsModel = new GenotypeVariantsModel(  this,
                                                                     "genotypeVariantsTaskDefinition",
                                                                     this.ecsExecutionRole,
-                                                                    this.volume,
+                                                                    infrastructure.volume,
                                                                     this.cluster,
                                                                     this.pipelineBucket,
                                                                     this.sequencesTable);
