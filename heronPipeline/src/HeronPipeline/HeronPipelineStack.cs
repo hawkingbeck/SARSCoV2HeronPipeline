@@ -23,7 +23,7 @@ namespace HeronPipeline
     public class HeronPipelineStack : Stack
     {
         public Role ecsExecutionRole;
-        public Amazon.CDK.AWS.ECS.Volume volume;
+        // public Amazon.CDK.AWS.ECS.Volume volume;
         public Cluster cluster;
         public Bucket pipelineBucket;
         public Table sequencesTable;
@@ -33,54 +33,56 @@ namespace HeronPipeline
         {
 
             var testObj = new TestClass(this, "testClass");
+            var infrastructure = new Infrastructure(this, "infrastructure");
+            infrastructure.Create();
             //++++++++++++++++++++++++++++++++++++++++++
             // VPC
             //++++++++++++++++++++++++++++++++++++++++++
-            var vpc = new Vpc(this, "vpc", new VpcProps{
-                MaxAzs = 3, ///TODO: Increase this once EIP's are freed
-                Cidr = "11.0.0.0/16",
-            });
+            // var vpc = new Vpc(this, "vpc", new VpcProps{
+            //     MaxAzs = 3, ///TODO: Increase this once EIP's are freed
+            //     Cidr = "11.0.0.0/16",
+            // });
 
-            var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
-                Vpc = vpc,
-                AllowAllOutbound = true
-            });
-            secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllIcmp(), "All Incoming");
-            secGroup.AddIngressRule(Peer.AnyIpv4(), Port.Tcp(2049), "EFS Port");
-            secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
-            secGroup.Node.AddDependency(vpc);
+            // var secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
+            //     Vpc = vpc,
+            //     AllowAllOutbound = true
+            // });
+            // secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllIcmp(), "All Incoming");
+            // secGroup.AddIngressRule(Peer.AnyIpv4(), Port.Tcp(2049), "EFS Port");
+            // secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
+            // secGroup.Node.AddDependency(vpc);
 
             //++++++++++++++++++++++++++++++++++++++++++
             // File System (EFS)
             //++++++++++++++++++++++++++++++++++++++++++
-            var pipelineEFS = new Amazon.CDK.AWS.EFS.FileSystem(this, "pipelineEFS", new FileSystemProps{
-                Vpc = vpc,
-                ThroughputMode = ThroughputMode.PROVISIONED,
-                ProvisionedThroughputPerSecond = Size.Mebibytes(30),
-                PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
-                RemovalPolicy = RemovalPolicy.DESTROY,
-                Encrypted = false,
-                SecurityGroup = secGroup
-            });
+            // var pipelineEFS = new Amazon.CDK.AWS.EFS.FileSystem(this, "pipelineEFS", new FileSystemProps{
+            //     Vpc = vpc,
+            //     ThroughputMode = ThroughputMode.PROVISIONED,
+            //     ProvisionedThroughputPerSecond = Size.Mebibytes(30),
+            //     PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
+            //     RemovalPolicy = RemovalPolicy.DESTROY,
+            //     Encrypted = false,
+            //     SecurityGroup = secGroup
+            // });
 
-            var pipelineEFSAccessPoint = new AccessPoint(this, "pipelineEFSAccessPoint", new AccessPointProps{
-                FileSystem = pipelineEFS,
-                PosixUser = new PosixUser { Gid = "1000", Uid = "1000" },
-                CreateAcl = new Acl { OwnerUid = "1000", OwnerGid = "1000", Permissions = "0777" },
-                Path = "/efs"
-            });
-            pipelineEFSAccessPoint.Node.AddDependency(pipelineEFS);
+            // var pipelineEFSAccessPoint = new AccessPoint(this, "pipelineEFSAccessPoint", new AccessPointProps{
+            //     FileSystem = pipelineEFS,
+            //     PosixUser = new PosixUser { Gid = "1000", Uid = "1000" },
+            //     CreateAcl = new Acl { OwnerUid = "1000", OwnerGid = "1000", Permissions = "0777" },
+            //     Path = "/efs"
+            // });
+            // pipelineEFSAccessPoint.Node.AddDependency(pipelineEFS);
 
-            volume = new Amazon.CDK.AWS.ECS.Volume();
-            volume.EfsVolumeConfiguration = new EfsVolumeConfiguration{
-                FileSystemId = pipelineEFS.FileSystemId,
-                AuthorizationConfig = new AuthorizationConfig{
-                    AccessPointId = pipelineEFSAccessPoint.AccessPointId,
-                    Iam = "ENABLED"
-                },
-                TransitEncryption = "ENABLED"
-            };
-            volume.Name = "efsVolume";
+            // volume = new Amazon.CDK.AWS.ECS.Volume();
+            // volume.EfsVolumeConfiguration = new EfsVolumeConfiguration{
+            //     FileSystemId = pipelineEFS.FileSystemId,
+            //     AuthorizationConfig = new AuthorizationConfig{
+            //         AccessPointId = pipelineEFSAccessPoint.AccessPointId,
+            //         Iam = "ENABLED"
+            //     },
+            //     TransitEncryption = "ENABLED"
+            // };
+            // volume.Name = "efsVolume";
 
 
             //++++++++++++++++++++++++++++++++++++++++++
@@ -154,7 +156,7 @@ namespace HeronPipeline
             ecsExecutionRole.AssumeRolePolicy.AddStatements(policyStatement);
 
             cluster = new Cluster(this, "heronCluster", new ClusterProps{
-                Vpc = vpc,
+                Vpc = infrastructure.vpc,
                 EnableFargateCapacityProviders = true
             });
 
@@ -171,7 +173,7 @@ namespace HeronPipeline
             };
             
             var fileSystemConfig = new FileSystemConfig();
-            fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
+            fileSystemConfig.Arn = infrastructure.pipelineEFSAccessPoint.AccessPointArn;
             fileSystemConfig.LocalMountPath = "/mnt/efs0";
 
             var s3AccessPolicyStatement = new PolicyStatement(new PolicyStatementProps
