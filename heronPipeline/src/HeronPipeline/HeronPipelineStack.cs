@@ -28,23 +28,13 @@ namespace HeronPipeline
             var testObj = new TestClass(this, "testClass");
             var infrastructure = new Infrastructure(this, "infrastructure");
             infrastructure.Create();
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++ TASK DEFINTIONS +++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
             var retryItem = new RetryProps {
               BackoffRate = 5,
               Interval = Duration.Seconds(2),
               MaxAttempts = 5,
               Errors = new string[] {"States.ALL"}
             };
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++ State Machines ++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-
+          
             // +++++++++++++++++++++++++++++++++++++++++++
             // ++ Classes to create pipeline components ++
             // +++++++++++++++++++++++++++++++++++++++++++
@@ -139,7 +129,6 @@ namespace HeronPipeline
 
             var processSamplesChain = Chain
               .Start(prepareSequences.prepareConsensusSequencesTask)
-            //   .Next(alignFastaTask)
               .Next(goFastaAlignment.goFastaAlignTask)
               .Next(prepareSequences.prepareSequencesTask)
               .Next(placeSequencesParallel);
