@@ -106,47 +106,59 @@ namespace HeronPipeline
 
             var exportResults = new ExportResults(this, "exportResults", infrastructure);
             exportResults.Create();
+
+            var stateMachines = new StateMachines(  this, 
+                                                    "stateMachines",
+                                                    infrastructure,
+                                                    pangolinModel,
+                                                    armadillinModel,
+                                                    genotypeVariantsModel,
+                                                    prepareSequences,
+                                                    goFastaAlignment,
+                                                    helperFunctions,
+                                                    exportResults);
+            stateMachines.Create();
             
-            var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
-            var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
-                Comment = "are there any messages in the sample batch"
-            });
+            // var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
+            // var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
+            //     Comment = "are there any messages in the sample batch"
+            // });
             
-            var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
-            var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+            // var messagesAvailableCondition = Condition.NumberGreaterThan(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
+            // var messagesNotAvailableCondition = Condition.NumberEquals(JsonPath.StringAt("$.sampleBatch.messageCount"), 0);
 
-            var placeSequencesParallel = new Parallel(this, "placeSequencesParallel", new ParallelProps{
-              OutputPath = JsonPath.DISCARD
-            });
+            // var placeSequencesParallel = new Parallel(this, "placeSequencesParallel", new ParallelProps{
+            //   OutputPath = JsonPath.DISCARD
+            // });
 
-            var pangolinChain = Chain
-                .Start(pangolinModel.pangolinTask);
+            // var pangolinChain = Chain
+            //     .Start(pangolinModel.pangolinTask);
 
-            var armadillinChain = Chain
-                .Start(armadillinModel.armadillinTask);
+            // var armadillinChain = Chain
+            //     .Start(armadillinModel.armadillinTask);
 
-            var genotypeVariantsChain = Chain
-                .Start(genotypeVariantsModel.genotypeVariantsTask);
+            // var genotypeVariantsChain = Chain
+            //     .Start(genotypeVariantsModel.genotypeVariantsTask);
 
-            placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
+            // placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
-            var processSamplesChain = Chain
-              .Start(prepareSequences.prepareConsensusSequencesTask)
-              .Next(goFastaAlignment.goFastaAlignTask)
-              .Next(prepareSequences.prepareSequencesTask)
-              .Next(placeSequencesParallel);
+            // var processSamplesChain = Chain
+            //   .Start(prepareSequences.prepareConsensusSequencesTask)
+            //   .Next(goFastaAlignment.goFastaAlignTask)
+            //   .Next(prepareSequences.prepareSequencesTask)
+            //   .Next(placeSequencesParallel);
 
-            messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
-            messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
+            // messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+            // messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
-            var processSampleBatchChain = Chain
-              .Start(helperFunctions.readSampleBatchCountTask)
-              .Next(messagesAvailableChoiceTask);
+            // var processSampleBatchChain = Chain
+            //   .Start(helperFunctions.readSampleBatchCountTask)
+            //   .Next(messagesAvailableChoiceTask);
             
-            var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
-              Definition = processSampleBatchChain
-            //   Definition = processSamplesChain
-            });
+            // var processSampleBatchStateMachine = new StateMachine(this, "processSampleBatchStateMachine", new StateMachineProps{
+            //   Definition = processSampleBatchChain
+            // //   Definition = processSamplesChain
+            // });
 
 
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -156,40 +168,40 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var startSampleProcessingMapParameters = new Dictionary<string, object>();
-            startSampleProcessingMapParameters.Add("date.$", "$.date");
-            startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
-            startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // var startSampleProcessingMapParameters = new Dictionary<string, object>();
+            // startSampleProcessingMapParameters.Add("date.$", "$.date");
+            // startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
+            // startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
 
-            var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.mapIterations",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = startSampleProcessingMapParameters
-            });
+            // var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
+            //   InputPath = "$",
+            //   ItemsPath = "$.mapIterations",
+            //   ResultPath = JsonPath.DISCARD,
+            //   Parameters = startSampleProcessingMapParameters
+            // });
 
-            var stateMachineInputObject2 = new Dictionary<string, object> {
-                {"queueName", JsonPath.StringAt("$.queueName")},
-                {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
-                {"bucketName", infrastructure.bucket.BucketName}
-            };
+            // var stateMachineInputObject2 = new Dictionary<string, object> {
+            //     {"queueName", JsonPath.StringAt("$.queueName")},
+            //     {"date", JsonPath.StringAt("$.date")},
+            //     {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
+            //     {"bucketName", infrastructure.bucket.BucketName}
+            // };
 
-            var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
+            // var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
 
-            var startNestedProcessSamplesStateMachine = new StepFunctionsStartExecution(this, "startNestedProcessSamplesStateMachine", new StepFunctionsStartExecutionProps{
-              StateMachine = processSampleBatchStateMachine,
-              IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD,
-              Input = stateMachineInput2
-            });
+            // var startNestedProcessSamplesStateMachine = new StepFunctionsStartExecution(this, "startNestedProcessSamplesStateMachine", new StepFunctionsStartExecutionProps{
+            //   StateMachine = processSampleBatchStateMachine,
+            //   IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //   ResultPath = JsonPath.DISCARD,
+            //   Input = stateMachineInput2
+            // });
 
-            startSampleProcessingMap.Iterator(Chain.Start(startNestedProcessSamplesStateMachine));
-            var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
+            // startSampleProcessingMap.Iterator(Chain.Start(startNestedProcessSamplesStateMachine));
+            // var startNestedSampleProcessingDefinition = Chain.Start(startSampleProcessingMap);
 
-            var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
-              Definition = startNestedSampleProcessingDefinition
-            });
+            // var startNestedSampleProcessingStateMachine = new StateMachine(this, "startNestedSampleProcessingStateMachine", new StateMachineProps{
+            //   Definition = startNestedSampleProcessingDefinition
+            // });
 
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
@@ -198,55 +210,55 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
-            var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
+            // var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
 
-            // Input parameters to the map iteration state
-            var launchSampleProcessingMapParameters = new Dictionary<string, object>();
-            launchSampleProcessingMapParameters.Add("date.$", "$.date");
-            launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
-            launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
-            launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
+            // // Input parameters to the map iteration state
+            // var launchSampleProcessingMapParameters = new Dictionary<string, object>();
+            // launchSampleProcessingMapParameters.Add("date.$", "$.date");
+            // launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
+            // launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+            // launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
 
-            var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
-              InputPath = "$",
-              ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
-              ResultPath = JsonPath.DISCARD,
-              Parameters = launchSampleProcessingMapParameters
-            //   MaxConcurrency = 10
-            });
+            // var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
+            //   InputPath = "$",
+            //   ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
+            //   ResultPath = JsonPath.DISCARD,
+            //   Parameters = launchSampleProcessingMapParameters
+            // //   MaxConcurrency = 10
+            // });
 
-            var stateMachineInputObject = new Dictionary<string, object> {
-                {"queueName", JsonPath.StringAt("$.queueName")},
-                {"mapIterations", JsonPath.StringAt("$.mapIterations")},
-                {"date", JsonPath.StringAt("$.date")},
-                {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
-            };
-            var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
+            // var stateMachineInputObject = new Dictionary<string, object> {
+            //     {"queueName", JsonPath.StringAt("$.queueName")},
+            //     {"mapIterations", JsonPath.StringAt("$.mapIterations")},
+            //     {"date", JsonPath.StringAt("$.date")},
+            //     {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+            // };
+            // var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
 
-            var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
-              StateMachine = startNestedSampleProcessingStateMachine,
-              IntegrationPattern = IntegrationPattern.RUN_JOB,
-              ResultPath = JsonPath.DISCARD,
-              Input = stateMachineInput
-            });
+            // var startNestedStateMachine = new StepFunctionsStartExecution(this, "startNestedStateMachine", new StepFunctionsStartExecutionProps{
+            //   StateMachine = startNestedSampleProcessingStateMachine,
+            //   IntegrationPattern = IntegrationPattern.RUN_JOB,
+            //   ResultPath = JsonPath.DISCARD,
+            //   Input = stateMachineInput
+            // });
 
-            launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));            
+            // launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));            
 
-            var processMessagesChain = Chain
-              .Start(prepareSequences.addSequencesToQueueTask)
-              .Next(helperFunctions.getMessageCountTask)
-              .Next(launchSampleProcessingMap)
-              .Next(exportResults.exportResultsTask)
-              .Next(pipelineFinishTask);
+            // var processMessagesChain = Chain
+            //   .Start(prepareSequences.addSequencesToQueueTask)
+            //   .Next(helperFunctions.getMessageCountTask)
+            //   .Next(launchSampleProcessingMap)
+            //   .Next(exportResults.exportResultsTask)
+            //   .Next(pipelineFinishTask);
 
-            var pipelineChain = Chain
-                    .Start(processMessagesChain);
+            // var pipelineChain = Chain
+            //         .Start(processMessagesChain);
 
-            var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
-            {
-                Definition = pipelineChain
-            });
+            // var pipelineStateMachine = new StateMachine(this, "pipelineStateMachine", new StateMachineProps
+            // {
+            //     Definition = pipelineChain
+            // });
         }
     }
 
