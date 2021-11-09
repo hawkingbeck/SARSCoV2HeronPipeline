@@ -29,7 +29,12 @@ namespace HeronPipeline
     public Table sequencesTable;
     public Queue dailyProcessingQueue;
     public Queue reprocessingQueue;
-    
+    public Role ecsExecutionRole;
+    public Cluster cluster;
+    public PolicyStatement s3AccessPolicyStatement;
+    public PolicyStatement sqsAccessPolicyStatement;
+    public PolicyStatement dynamoDBAccessPolicyStatement;
+    public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
     private SecurityGroup secGroup;
 
@@ -45,6 +50,9 @@ namespace HeronPipeline
       CreateStorage();
       CreateEFS();
       CreateQueues();
+      CreateExecutionRole();
+      CreateCluster();
+      CreateAccessPolicies();
     }
     private void CreateVPC()
     {
@@ -96,6 +104,10 @@ namespace HeronPipeline
           TransitEncryption = "ENABLED"
       };
       volume.Name = "efsVolume";
+      var fileSystemConfig = new FileSystemConfig();
+      fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
+      fileSystemConfig.LocalMountPath = "/mnt/efs0";
+      lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
     }
 
     private void CreateStorage()
@@ -142,6 +154,68 @@ namespace HeronPipeline
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
           DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+      });
+    }
+
+    private void CreateExecutionRole()
+    {
+      ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
+          Description = "Role for fargate execution",
+          AssumedBy = new ServicePrincipal("ec2.amazonaws.com"), //The service that needs to use this role
+      });
+
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonEC2FullAccess"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonSQSFullAccess"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonS3FullAccess"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonDynamoDBFullAccess"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, "ecsExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("CloudWatchEventsFullAccess"));
+
+      var policyStatement = new PolicyStatement(new PolicyStatementProps{
+          Effect = Effect.ALLOW,
+          Actions = new string[] { "sts:AssumeRole" },
+          Principals = new ServicePrincipal[] { new ServicePrincipal("ecs-tasks.amazonaws.com") }
+      });
+
+      ecsExecutionRole.AssumeRolePolicy.AddStatements(policyStatement);
+    }
+
+    private void CreateCluster()
+    {
+      cluster = new Cluster(this, "heronCluster", new ClusterProps{
+          Vpc = vpc,
+          EnableFargateCapacityProviders = true
+      });
+    }
+
+    private void CreateAccessPolicies()
+    {
+      s3AccessPolicyStatement = new PolicyStatement(new PolicyStatementProps
+      {
+          Effect = Effect.ALLOW,
+          Actions = new string[] { "s3:*" }
+      });
+      s3AccessPolicyStatement.AddResources(new string[] {
+        bucket.BucketArn,
+        bucket.BucketArn + "/*"
+      });
+
+      sqsAccessPolicyStatement = new PolicyStatement( new PolicyStatementProps {
+        Effect = Effect.ALLOW,
+        Actions = new string[] { "sqs:*"},
+      });
+      sqsAccessPolicyStatement.AddResources(new string[] {
+        dailyProcessingQueue.QueueArn,
+        reprocessingQueue.QueueArn
+      });
+
+      dynamoDBAccessPolicyStatement = new PolicyStatement(new PolicyStatementProps{
+        Effect = Effect.ALLOW,
+        Actions = new string[] {"dynamodb:*"}
+      });
+      dynamoDBAccessPolicyStatement.AddResources(new string[]{
+        samplesTable.TableArn,
+        sequencesTable.TableArn
       });
     }
   }
