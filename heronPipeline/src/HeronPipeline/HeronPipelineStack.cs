@@ -16,14 +16,32 @@ using Amazon.CDK.AWS.DynamoDB;
 using Amazon.CDK.AWS.SQS;
 using Stack = Amazon.CDK.Stack;
 using Queue = Amazon.CDK.AWS.SQS.Queue;
+<<<<<<< HEAD
+=======
+// using HeronPipeline.Go
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
 
 namespace HeronPipeline
 {
     public class HeronPipelineStack : Stack
     {
+<<<<<<< HEAD
         internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
 
+=======
+        public Role ecsExecutionRole;
+        public Amazon.CDK.AWS.ECS.Volume volume;
+        public Cluster cluster;
+        public Bucket pipelineBucket;
+        public Table sequencesTable;
+        //Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable
+
+        internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
+        {
+
+            var testObj = new TestClass(this, "testClass");
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             //++++++++++++++++++++++++++++++++++++++++++
             // VPC
             //++++++++++++++++++++++++++++++++++++++++++
@@ -74,8 +92,13 @@ namespace HeronPipeline
             });
             pipelineEFSAccessPoint.Node.AddDependency(pipelineEFS);
 
+<<<<<<< HEAD
             var volume1 = new Amazon.CDK.AWS.ECS.Volume();
             volume1.EfsVolumeConfiguration = new EfsVolumeConfiguration{
+=======
+            volume = new Amazon.CDK.AWS.ECS.Volume();
+            volume.EfsVolumeConfiguration = new EfsVolumeConfiguration{
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
                 FileSystemId = pipelineEFS.FileSystemId,
                 AuthorizationConfig = new AuthorizationConfig{
                     AccessPointId = pipelineEFSAccessPoint.AccessPointId,
@@ -83,13 +106,21 @@ namespace HeronPipeline
                 },
                 TransitEncryption = "ENABLED"
             };
+<<<<<<< HEAD
             volume1.Name = "efsVolume";
+=======
+            volume.Name = "efsVolume";
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
 
 
             //++++++++++++++++++++++++++++++++++++++++++
             //+++++++++++++++ Storage ++++++++++++++++++
             //++++++++++++++++++++++++++++++++++++++++++
+<<<<<<< HEAD
             var pipelineBucket = new Bucket(this, "dataBucket", new BucketProps{
+=======
+            pipelineBucket = new Bucket(this, "dataBucket", new BucketProps{
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
                 Versioned = true,
                 RemovalPolicy = RemovalPolicy.DESTROY,
                 AutoDeleteObjects = true
@@ -110,7 +141,11 @@ namespace HeronPipeline
                 ProjectionType = ProjectionType.ALL
             });
 
+<<<<<<< HEAD
             var sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
+=======
+            sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
                 BillingMode = BillingMode.PAY_PER_REQUEST,
                 PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
                 PointInTimeRecovery = true
@@ -137,7 +172,11 @@ namespace HeronPipeline
             //++++++++++++++++++++++++++++++++++++++++++
             //Fargate Cluster
             //++++++++++++++++++++++++++++++++++++++++++
+<<<<<<< HEAD
             var ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
+=======
+            ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
                 Description = "Role for fargate execution",
                 AssumedBy = new ServicePrincipal("ec2.amazonaws.com"), //The service that needs to use this role
             });
@@ -156,7 +195,11 @@ namespace HeronPipeline
 
             ecsExecutionRole.AssumeRolePolicy.AddStatements(policyStatement);
 
+<<<<<<< HEAD
             var cluster = new Cluster(this, "heronCluster", new ClusterProps{
+=======
+            cluster = new Cluster(this, "heronCluster", new ClusterProps{
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
                 Vpc = vpc,
                 EnableFargateCapacityProviders = true
             });
@@ -339,7 +382,11 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
+<<<<<<< HEAD
                 Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+=======
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             });
             alignFastaTaskDefinition.AddContainer("alignFastaContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -470,7 +517,21 @@ namespace HeronPipeline
                 ResultPath = JsonPath.DISCARD
             });
 
+<<<<<<< HEAD
 
+=======
+            // +++++++++++++++++++++++++++++++++++++++++++
+            // +++++++++++++++++++++++++++++++++++++++++++
+            var goFastaAlignment = new GoFastaAlignment(this,
+                                                        "goFastaAlignment",
+                                                        this.ecsExecutionRole,
+                                                        this.volume,
+                                                        this.cluster,
+                                                        this.pipelineBucket,
+                                                        this.sequencesTable);
+            goFastaAlignment.Create();
+            goFastaAlignment.CreateTestTask();
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             // +++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++
 
@@ -499,7 +560,11 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
+<<<<<<< HEAD
                 Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+=======
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             });
             genotypeVariantsTaskDefinition.AddContainer("genotypeVariantsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -580,7 +645,11 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
+<<<<<<< HEAD
                 Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+=======
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             });
 
             prepareSequencesTaskDefinition.AddContainer("prepareSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
@@ -694,7 +763,11 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
+<<<<<<< HEAD
                 Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+=======
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+>>>>>>> cf907aaf7618411ac59cb9ee42c5e0d9e3b51014
             });
 
             prepareConsensusSequencesTaskDefinition.AddContainer("prepareConsensusSequencesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
@@ -771,7 +844,7 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
             });
             pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -849,7 +922,7 @@ namespace HeronPipeline
                 Compatibility = Compatibility.FARGATE,
                 ExecutionRole = ecsExecutionRole,
                 TaskRole = ecsExecutionRole,
-                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume1 }
+                Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
             });
             armadillinTaskDefinition.AddContainer("armadillinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
             {
@@ -983,7 +1056,8 @@ namespace HeronPipeline
 
             var processSamplesChain = Chain
               .Start(prepareConsensusSequencesTask)
-              .Next(alignFastaTask)
+            //   .Next(alignFastaTask)
+              .Next(goFastaAlignment.goFastaAlignTask)
               .Next(prepareSequencesTask)
               .Next(placeSequencesParallel);
 
@@ -1167,6 +1241,14 @@ namespace HeronPipeline
             {
                 Definition = armadillinTestChain
             });
+        }
+    }
+
+    internal sealed class TestClass: Construct 
+    {
+        public TestClass(Construct scope, string id): base(scope, id)
+        {
+
         }
     }
 }
