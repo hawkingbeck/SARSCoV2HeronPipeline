@@ -170,11 +170,6 @@ namespace HeronPipeline
               Errors = new string[] {"States.ALL"}
             };
             
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++++++++++ Lambda Functions +++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
             var fileSystemConfig = new FileSystemConfig();
             fileSystemConfig.Arn = pipelineEFSAccessPoint.AccessPointArn;
             fileSystemConfig.LocalMountPath = "/mnt/efs0";
@@ -210,26 +205,6 @@ namespace HeronPipeline
 
             var lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
 
-            // Mark: getMessageCount
-            // var getMessageCountFunction = new PythonFunction(this, "getMessageCountFunction", new PythonFunctionProps{
-            //     Entry = "src/functions/getMessageCount",
-            //     Runtime = Runtime.PYTHON_3_7,
-            //     Index = "app.py",
-            //     Handler = "lambda_handler",
-            //     Environment = new Dictionary<string, string> {
-            //         {"EXECUTION_MODE",JsonPath.StringAt("$.executionMode")},
-            //         {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
-            //         {"HERON_PROCESSING_QUEUE", reprocessingQueue.QueueUrl},
-            //         {"HERON_DAILY_PROCESSING_QUEUE",dailyProcessingQueue.QueueUrl}
-            //     }
-            // });
-            // getMessageCountFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-
-            // var getMessageCountTask = new LambdaInvoke(this, "getMessageCountTask", new LambdaInvokeProps{
-            //     LambdaFunction = getMessageCountFunction,
-            //     ResultPath = "$.messageCount",
-            //     PayloadResponseOnly = true
-            // });
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++++++++++++++++++++++++++++++++++
             // +++++++++++++ State Machines ++++++++++++++++
@@ -237,30 +212,7 @@ namespace HeronPipeline
             // +++++++++++++++++++++++++++++++++++++++++++++
 
         
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // ++++ Process Sample Batch State Machine +++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // +++++++++++++++++++++++++++++++++++++++++++++
-            // var readSampleBatchFunction = new PythonFunction(this, "readSampleBatchFunction", new PythonFunctionProps{
-            //   Entry = "src/functions/readSampleBatchFromQueue",
-            //   Runtime = Runtime.PYTHON_3_7,
-            //   Index = "app.py",
-            //   Handler = "lambda_handler",
-            //   Timeout = Duration.Seconds(900)
-            // });
-            // readSampleBatchFunction.AddToRolePolicy(s3AccessPolicyStatement);
-            // readSampleBatchFunction.AddToRolePolicy(sqsAccessPolicyStatement);
-            // readSampleBatchFunction.AddToRolePolicy(dynamoDBAccessPolicyStatement);
-
-            // var readSampleBatchCountTask = new LambdaInvoke(this, "readSampleBatchCountTask", new LambdaInvokeProps{
-            //   LambdaFunction = readSampleBatchFunction,
-            //   ResultPath = "$.sampleBatch",
-            //   PayloadResponseOnly = true
-            // });
-            // readSampleBatchCountTask.AddRetry(retryItem);
+            
 
             // +++++++++++++++++++++++++++++++++++++++++++
             // ++ Classes to create pipeline components ++
