@@ -17,11 +17,11 @@ using Amazon.CDK.AWS.SQS;
 using Stack = Amazon.CDK.Stack;
 using Queue = Amazon.CDK.AWS.SQS.Queue;
 
-
-namespace HeronPipeline {
-  internal sealed class ArmadillinModel: Construct {
-    public EcsRunTask armadillinTask;
-    public EcsRunTask armadillinTestTask;
+namespace HeronPipeline
+{
+  internal sealed class PangolinModel: Construct 
+  {
+    public EcsRunTask pangolinTask;
     private Construct scope;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
@@ -29,10 +29,8 @@ namespace HeronPipeline {
     private Bucket bucket;
     private Table sequencesTable;
     private RetryProps retryItem;
-    private TaskDefinition armadillinTaskDefinition;
-    private Amazon.CDK.AWS.ECS.ContainerDefinition armadillinContainer;
 
-    public ArmadillinModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
+    public PangolinModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
       this.ecsExecutionRole = executionRole;
@@ -50,51 +48,52 @@ namespace HeronPipeline {
 
     public void Create()
     {
-      var armadillinImage = ContainerImage.FromAsset("src/images/armadillin", new AssetImageProps
+      var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
       { 
       });
-      this.armadillinTaskDefinition = new TaskDefinition(this, "armadillinTaskDefinition", new TaskDefinitionProps{
-          Family = "armadillin",
+      var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
+          Family = "pangolin",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = ecsExecutionRole,
           TaskRole = ecsExecutionRole,
-          Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+          Volumes = new Amazon.CDK.AWS.ECS.Volume[] { this.volume }
       });
-      this.armadillinTaskDefinition.AddContainer("armadillinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+      pangolinTaskDefinition.AddContainer("pangolinContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
       {
-          Image = armadillinImage,
+          Image = pangolinImage,
           Logging = new AwsLogDriver(new AwsLogDriverProps
           {
-              StreamPrefix = "armadillin",
-              LogGroup = new LogGroup(this, "armadillinLogGroup", new LogGroupProps
+              StreamPrefix = "pangolin",
+              LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
               {
-                  LogGroupName = "armadillinLogGroup2",
+                  LogGroupName = "pangolinLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
           })
       });
-      this.armadillinContainer = this.armadillinTaskDefinition.FindContainer("armadillinContainer");
-      armadillinContainer.AddMountPoints(new MountPoint[] {
+      
+      var pangolinContainer = pangolinTaskDefinition.FindContainer("pangolinContainer");
+      pangolinContainer.AddMountPoints(new MountPoint[] {
               new MountPoint {
                   SourceVolume = "efsVolume",
                   ContainerPath = "/mnt/efs0",
                   ReadOnly = false,
               }
           });
-      this.armadillinTask = new EcsRunTask(this, "armadillinPlaceTask", new EcsRunTaskProps
+      this.pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
-          TaskDefinition = this.armadillinTaskDefinition,
+          TaskDefinition = pangolinTaskDefinition,
           AssignPublicIp = true,
           LaunchTarget = new EcsFargateLaunchTarget(),
           ContainerOverrides = new ContainerOverride[] {
               new ContainerOverride {
-                  ContainerDefinition = this.armadillinContainer,
+                  ContainerDefinition = pangolinContainer,
                   Environment = new TaskEnvironmentVariable[] {
                       new TaskEnvironmentVariable{
                         Name = "DATE_PARTITION",
@@ -125,45 +124,7 @@ namespace HeronPipeline {
           },
           ResultPath = JsonPath.DISCARD
       });
-    }
-
-    public void CreateTestTask(){
-      this.armadillinTestTask = new EcsRunTask(this, "armadillinPlaceTestTask", new EcsRunTaskProps
-      {
-          IntegrationPattern = IntegrationPattern.RUN_JOB,
-          Cluster = cluster,
-          TaskDefinition = this.armadillinTaskDefinition,
-          AssignPublicIp = true,
-          LaunchTarget = new EcsFargateLaunchTarget(),
-          ContainerOverrides = new ContainerOverride[] {
-              new ContainerOverride {
-                  ContainerDefinition = armadillinContainer,
-                  Environment = new TaskEnvironmentVariable[] {
-                      new TaskEnvironmentVariable{
-                        Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "HERON_SAMPLES_BUCKET",
-                        Value = bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "SEQ_DATA_ROOT",
-                        Value = "/mnt/efs0/seqData"
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "ITERATION_UUID",
-                        Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SEQUENCES_TABLE",
-                          Value = sequencesTable.TableName
-                      }
-                  }
-              }
-          },
-          ResultPath = JsonPath.DISCARD
-      });
+      pangolinTask.AddRetry(retryItem);
     }
   }
 }
