@@ -71,7 +71,7 @@ namespace HeronPipeline {
               StreamPrefix = "armadillin",
               LogGroup = new LogGroup(this, "armadillinLogGroup", new LogGroupProps
               {
-                  LogGroupName = "armadillinLogGroup2",
+                  LogGroupName = "armadillinLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
