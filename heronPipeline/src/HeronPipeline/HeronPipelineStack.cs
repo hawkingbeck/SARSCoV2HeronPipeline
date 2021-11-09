@@ -489,7 +489,7 @@ namespace HeronPipeline
             pangolinModel.Create();
 
             var armadillinModel = new ArmadillinModel(this,
-                                                    "pangolinTaskDefinition",
+                                                    "armadillinTaskDefinition",
                                                     this.ecsExecutionRole,
                                                     this.volume,
                                                     this.cluster,
