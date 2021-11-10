@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     #++++++++++++++++++++++++++++++++++++++++++++
     # Create config for this execution
     #++++++++++++++++++++++++++++++++++++++++++++
-    sampleBatchSize = 2000
+    sampleBatchSize = 8000
     stop = False
     messageList = list()
     messageReceiptHandles = list()
