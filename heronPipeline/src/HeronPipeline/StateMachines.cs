@@ -95,11 +95,24 @@ namespace HeronPipeline
       var pangolinChain = Chain
           .Start(shouldRunPangolin);
 
-      var armadillinChain = Chain
-          .Start(armadillinModel.armadillinTask);
 
+      var shouldRunArmadillin = new Choice(this, "shouldRunArmadillin", new ChoiceProps{
+        Comment = "Check if we should run Armadillin"
+      });
+      var runArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), true);
+      shouldRunArmadillin.When(runArmadillinCondition, armadillinModel.armadillinTask);
+
+      var armadillinChain = Chain
+          .Start(shouldRunArmadillin);
+
+      var shouldRunGenotypeModel = new Choice(this, "shouldRunGenotype", new ChoiceProps{
+        Comment = "Check if we shoudl run Genotype model"
+      });
+      var runGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), true);
+      shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.genotypeVariantsTask);
+      
       var genotypeVariantsChain = Chain
-          .Start(genotypeVariantsModel.genotypeVariantsTask);
+          .Start(shouldRunGenotypeModel);
 
       placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
