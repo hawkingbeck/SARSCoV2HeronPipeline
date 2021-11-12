@@ -147,6 +147,9 @@ namespace HeronPipeline
       startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
       startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       startSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
+      startSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin.$");
+      startSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      startSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
 
       var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -160,7 +163,10 @@ namespace HeronPipeline
           {"date", JsonPath.StringAt("$.date")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
           {"bucketName", infrastructure.bucket.BucketName},
-          {"executionMode", JsonPath.StringAt("$.executionMode")}
+          {"executionMode", JsonPath.StringAt("$.executionMode")},
+          {"runPangolin", JsonPath.StringAt("$.runPangolin")},
+          {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
       };
 
       var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
@@ -179,7 +185,6 @@ namespace HeronPipeline
         Definition = startNestedSampleProcessingDefinition
       });
     }
-
     private void CreatePipelineStateMachine()
     {
       var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
@@ -191,6 +196,9 @@ namespace HeronPipeline
       launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
       launchSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
+      launchSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
+      launchSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      launchSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -205,7 +213,10 @@ namespace HeronPipeline
           {"mapIterations", JsonPath.StringAt("$.mapIterations")},
           {"date", JsonPath.StringAt("$.date")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
-          {"executionMode", JsonPath.StringAt("$.executionMode")}
+          {"executionMode", JsonPath.StringAt("$.executionMode")},
+          {"runPangolin", JsonPath.StringAt("$.runPangolin")},
+          {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
       };
       var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
