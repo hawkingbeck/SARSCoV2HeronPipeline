@@ -147,7 +147,7 @@ namespace HeronPipeline
       startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
       startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       startSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
-      startSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin.$");
+      startSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
       startSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
       startSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
 
