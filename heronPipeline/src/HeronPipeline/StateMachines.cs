@@ -63,10 +63,17 @@ namespace HeronPipeline
       CreatePipelineStateMachine();
     }
 
-
     private void CreateProcessSampleBatchStateMachine()
     {
       var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
+
+      var shouldRunFastaAlignmentChoiceTask = new Choice(this, "shouldRunFastaAlignmentTask", new ChoiceProps{
+        Comment = "Depending on the processing mode we can skip fasta the alignment step"
+      });
+      var performAlignmentStep = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "DAILY");
+      var skipAlignmentStepCondition1 = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "REPROCESSING");
+      var skipAlignmentStepCondition2 = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "ARMADILLIN-RERUN");
+
       var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
           Comment = "are there any messages in the sample batch"
       });
@@ -90,10 +97,17 @@ namespace HeronPipeline
       placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
       var processSamplesChain = Chain
+        .Start(prepareSequences.prepareSequencesTask)
+        .Next(placeSequencesParallel);
+
+      var alignFastaChain = Chain
         .Start(prepareSequences.prepareConsensusSequencesTask)
         .Next(goFastaAlignment.goFastaAlignTask)
-        .Next(prepareSequences.prepareSequencesTask)
-        .Next(placeSequencesParallel);
+        .Next(processSamplesChain);
+
+      shouldRunFastaAlignmentChoiceTask.When(performAlignmentStep, alignFastaChain);
+      shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition1, processSamplesChain);
+      shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition2, processSamplesChain);
 
       messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
       messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
