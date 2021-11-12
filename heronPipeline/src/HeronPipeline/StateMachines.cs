@@ -85,8 +85,15 @@ namespace HeronPipeline
         OutputPath = JsonPath.DISCARD
       });
 
+
+      var shouldRunPangolin = new Choice(this, "shouldRunPangolin", new ChoiceProps{
+        Comment = "Check if we should run Pangolin"
+      });
+      var runPangolinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runPangolin"), true);
+      shouldRunPangolin.When(runPangolinCondition, pangolinModel.pangolinTask);
+
       var pangolinChain = Chain
-          .Start(pangolinModel.pangolinTask);
+          .Start(shouldRunPangolin);
 
       var armadillinChain = Chain
           .Start(armadillinModel.armadillinTask);
