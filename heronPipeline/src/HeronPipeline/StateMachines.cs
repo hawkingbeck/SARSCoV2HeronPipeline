@@ -170,7 +170,8 @@ namespace HeronPipeline
           {"queueName", JsonPath.StringAt("$.queueName")},
           {"mapIterations", JsonPath.StringAt("$.mapIterations")},
           {"date", JsonPath.StringAt("$.date")},
-          {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+          {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
+          {"executionMode", JsonPath.StringAt("$.executionMode")}
       };
       var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
