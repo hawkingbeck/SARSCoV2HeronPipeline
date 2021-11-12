@@ -116,7 +116,7 @@ namespace HeronPipeline
       shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition1, processSamplesChain);
       shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition2, processSamplesChain);
 
-      messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+      messagesAvailableChoiceTask.When(messagesAvailableCondition, shouldRunFastaAlignmentChoiceTask);
       messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
       var processSampleBatchChain = Chain
