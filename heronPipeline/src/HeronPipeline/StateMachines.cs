@@ -156,6 +156,7 @@ namespace HeronPipeline
       launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
       launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
+      launchSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
