@@ -112,6 +112,7 @@ namespace HeronPipeline
       startSampleProcessingMapParameters.Add("date.$", "$.date");
       startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
       startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+      startSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
 
       var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -124,7 +125,8 @@ namespace HeronPipeline
           {"queueName", JsonPath.StringAt("$.queueName")},
           {"date", JsonPath.StringAt("$.date")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
-          {"bucketName", infrastructure.bucket.BucketName}
+          {"bucketName", infrastructure.bucket.BucketName},
+          {"executionMode", JsonPath.StringAt("$.executionMode")}
       };
 
       var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
