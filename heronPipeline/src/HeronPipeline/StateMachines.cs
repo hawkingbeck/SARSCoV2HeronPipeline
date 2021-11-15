@@ -117,7 +117,7 @@ namespace HeronPipeline
       var dontRunGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), false);
       
       shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.genotypeVariantsTask);
-      shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.skipGenotypeVariantsTask);
+      shouldRunGenotypeModel.When(dontRunGenotypeModelCondition, genotypeVariantsModel.skipGenotypeVariantsTask);
       
       var genotypeVariantsChain = Chain
           .Start(shouldRunGenotypeModel);
