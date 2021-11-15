@@ -90,7 +90,9 @@ namespace HeronPipeline
         Comment = "Check if we should run Pangolin"
       });
       var runPangolinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runPangolin"), true);
+      var dontRunPangolinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runPangolin"), false);
       shouldRunPangolin.When(runPangolinCondition, pangolinModel.pangolinTask);
+      shouldRunPangolin.When(dontRunPangolinCondition, pangolinModel.skipPangolinTask);
 
       var pangolinChain = Chain
           .Start(shouldRunPangolin);
@@ -100,7 +102,10 @@ namespace HeronPipeline
         Comment = "Check if we should run Armadillin"
       });
       var runArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), true);
+      var dontRunArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), false);
+      
       shouldRunArmadillin.When(runArmadillinCondition, armadillinModel.armadillinTask);
+      shouldRunArmadillin.When(dontRunArmadillinCondition, armadillinModel.skipArmadillinTask);
 
       var armadillinChain = Chain
           .Start(shouldRunArmadillin);
@@ -109,7 +114,10 @@ namespace HeronPipeline
         Comment = "Check if we shoudl run Genotype model"
       });
       var runGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), true);
+      var dontRunGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), false);
+      
       shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.genotypeVariantsTask);
+      shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.skipGenotypeVariantsTask);
       
       var genotypeVariantsChain = Chain
           .Start(shouldRunGenotypeModel);

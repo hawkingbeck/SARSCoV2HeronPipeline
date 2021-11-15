@@ -22,6 +22,7 @@ namespace HeronPipeline
   internal sealed class GenotypeVariantsModel: Construct 
   {
     public EcsRunTask genotypeVariantsTask;
+    public Succeed skipGenotypeVariantsTask;
     private Construct scope;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
@@ -126,6 +127,9 @@ namespace HeronPipeline
           ResultPath = JsonPath.DISCARD
       });
       this.genotypeVariantsTask.AddRetry(retryItem);
+
+      skipGenotypeVariantsTask = new Succeed(this, "skipGenotypeVariantsTask");
+
     }
   }
 }
