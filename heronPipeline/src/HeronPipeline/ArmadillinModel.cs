@@ -44,7 +44,7 @@ namespace HeronPipeline {
         BackoffRate = 5,
         Interval = Duration.Seconds(2),
         MaxAttempts = 3,
-        Errors = new string[] {"STATES.ALL"}
+        Errors = new string[] {"States.ALL"}
       };
     }
 
