@@ -43,7 +43,7 @@ def lambda_handler(event, context):
     bucket = s3.Bucket(bucketName)
 
     dateString = event['date'] #os.getenv("DATE_PARTITION")
-    sampleBatchSize = event['sampleBatchSize']
+    sampleBatchSize = int(event['sampleBatchSize'])
 
 
     #++++++++++++++++++++++++++++++++++++++++++++
