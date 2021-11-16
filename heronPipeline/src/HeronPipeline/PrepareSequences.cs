@@ -273,7 +273,11 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                         Name = "ITERATION_UUID",
                         Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      }
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "SAMPLE_BATCH_SIZE",
+                        Value = JsonPath.StringAt("$.sampleBatchSize")
+                      },
                   }
               }
           },

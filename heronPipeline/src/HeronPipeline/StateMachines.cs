@@ -151,6 +151,7 @@ namespace HeronPipeline
     private void CreateStartNestedSequenceProcessingStateMachine()
     {
       var startSampleProcessingMapParameters = new Dictionary<string, object>();
+      startSampleProcessingMapParameters.Add("sampleBatchSize.$", "$.sampleBatchSize");
       startSampleProcessingMapParameters.Add("date.$", "$.date");
       startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
       startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
@@ -168,6 +169,7 @@ namespace HeronPipeline
 
       var stateMachineInputObject2 = new Dictionary<string, object> {
           {"queueName", JsonPath.StringAt("$.queueName")},
+          {"sampleBatchSize", JsonPath.StringAt("$.sampleBatchSize")},
           {"date", JsonPath.StringAt("$.date")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
           {"bucketName", infrastructure.bucket.BucketName},
@@ -200,6 +202,7 @@ namespace HeronPipeline
       // Input parameters to the map iteration state
       var launchSampleProcessingMapParameters = new Dictionary<string, object>();
       launchSampleProcessingMapParameters.Add("date.$", "$.date");
+      launchSampleProcessingMapParameters.Add("sampleBatchSize.$", "$.sampleBatchSize");
       launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
       launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
@@ -220,6 +223,7 @@ namespace HeronPipeline
           {"queueName", JsonPath.StringAt("$.queueName")},
           {"mapIterations", JsonPath.StringAt("$.mapIterations")},
           {"date", JsonPath.StringAt("$.date")},
+          {"sampleBatchSize", JsonPath.StringAt("$.sampleBatchSize")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
           {"executionMode", JsonPath.StringAt("$.executionMode")},
           {"runPangolin", JsonPath.StringAt("$.runPangolin")},

@@ -86,6 +86,7 @@ namespace HeronPipeline
           Index = "app.py",
           Handler = "lambda_handler",
           Environment = new Dictionary<string, string> {
+              {"SAMPLE_BATCH_SIZE",JsonPath.StringAt("$.sampleBatchSize")},
               {"EXECUTION_MODE",JsonPath.StringAt("$.executionMode")},
               {"HERON_SEQUENCES_TABLE",sequencesTable.TableName},
               {"HERON_PROCESSING_QUEUE", reprocessingQueue.QueueUrl},
