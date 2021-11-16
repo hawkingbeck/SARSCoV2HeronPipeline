@@ -63,10 +63,17 @@ namespace HeronPipeline
       CreatePipelineStateMachine();
     }
 
-
     private void CreateProcessSampleBatchStateMachine()
     {
       var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
+
+      var shouldRunFastaAlignmentChoiceTask = new Choice(this, "shouldRunFastaAlignmentTask", new ChoiceProps{
+        Comment = "Depending on the processing mode we can skip fasta the alignment step"
+      });
+      var performAlignmentStep = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "DAILY");
+      var skipAlignmentStepCondition1 = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "REPROCESS");
+      var skipAlignmentStepCondition2 = Condition.StringEquals(JsonPath.StringAt("$.executionMode"), "ARMADILLIN-RERUN");
+
       var messagesAvailableChoiceTask = new Choice(this, "messagesAvailableChoiceTask", new ChoiceProps{
           Comment = "are there any messages in the sample batch"
       });
@@ -78,24 +85,59 @@ namespace HeronPipeline
         OutputPath = JsonPath.DISCARD
       });
 
+
+      var shouldRunPangolin = new Choice(this, "shouldRunPangolin", new ChoiceProps{
+        Comment = "Check if we should run Pangolin"
+      });
+      var runPangolinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runPangolin"), true);
+      var dontRunPangolinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runPangolin"), false);
+      shouldRunPangolin.When(runPangolinCondition, pangolinModel.pangolinTask);
+      shouldRunPangolin.When(dontRunPangolinCondition, pangolinModel.skipPangolinTask);
+
       var pangolinChain = Chain
-          .Start(pangolinModel.pangolinTask);
+          .Start(shouldRunPangolin);
+
+
+      var shouldRunArmadillin = new Choice(this, "shouldRunArmadillin", new ChoiceProps{
+        Comment = "Check if we should run Armadillin"
+      });
+      var runArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), true);
+      var dontRunArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), false);
+      
+      shouldRunArmadillin.When(runArmadillinCondition, armadillinModel.armadillinTask);
+      shouldRunArmadillin.When(dontRunArmadillinCondition, armadillinModel.skipArmadillinTask);
 
       var armadillinChain = Chain
-          .Start(armadillinModel.armadillinTask);
+          .Start(shouldRunArmadillin);
 
+      var shouldRunGenotypeModel = new Choice(this, "shouldRunGenotype", new ChoiceProps{
+        Comment = "Check if we shoudl run Genotype model"
+      });
+      var runGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), true);
+      var dontRunGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), false);
+      
+      shouldRunGenotypeModel.When(runGenotypeModelCondition, genotypeVariantsModel.genotypeVariantsTask);
+      shouldRunGenotypeModel.When(dontRunGenotypeModelCondition, genotypeVariantsModel.skipGenotypeVariantsTask);
+      
       var genotypeVariantsChain = Chain
-          .Start(genotypeVariantsModel.genotypeVariantsTask);
+          .Start(shouldRunGenotypeModel);
 
       placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
 
       var processSamplesChain = Chain
-        .Start(prepareSequences.prepareConsensusSequencesTask)
-        .Next(goFastaAlignment.goFastaAlignTask)
-        .Next(prepareSequences.prepareSequencesTask)
+        .Start(prepareSequences.prepareSequencesTask)
         .Next(placeSequencesParallel);
 
-      messagesAvailableChoiceTask.When(messagesAvailableCondition, processSamplesChain);
+      var alignFastaChain = Chain
+        .Start(prepareSequences.prepareConsensusSequencesTask)
+        .Next(goFastaAlignment.goFastaAlignTask)
+        .Next(processSamplesChain);
+
+      shouldRunFastaAlignmentChoiceTask.When(performAlignmentStep, alignFastaChain);
+      shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition1, processSamplesChain);
+      shouldRunFastaAlignmentChoiceTask.When(skipAlignmentStepCondition2, processSamplesChain);
+
+      messagesAvailableChoiceTask.When(messagesAvailableCondition, shouldRunFastaAlignmentChoiceTask);
       messagesAvailableChoiceTask.When(messagesNotAvailableCondition, processSamplesFinishTask);
 
       var processSampleBatchChain = Chain
@@ -109,9 +151,14 @@ namespace HeronPipeline
     private void CreateStartNestedSequenceProcessingStateMachine()
     {
       var startSampleProcessingMapParameters = new Dictionary<string, object>();
+      startSampleProcessingMapParameters.Add("sampleBatchSize.$", "$.sampleBatchSize");
       startSampleProcessingMapParameters.Add("date.$", "$.date");
       startSampleProcessingMapParameters.Add("queueName.$", "$.queueName");
       startSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
+      startSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
+      startSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
+      startSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      startSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
 
       var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -122,9 +169,14 @@ namespace HeronPipeline
 
       var stateMachineInputObject2 = new Dictionary<string, object> {
           {"queueName", JsonPath.StringAt("$.queueName")},
+          {"sampleBatchSize", JsonPath.StringAt("$.sampleBatchSize")},
           {"date", JsonPath.StringAt("$.date")},
           {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
-          {"bucketName", infrastructure.bucket.BucketName}
+          {"bucketName", infrastructure.bucket.BucketName},
+          {"executionMode", JsonPath.StringAt("$.executionMode")},
+          {"runPangolin", JsonPath.StringAt("$.runPangolin")},
+          {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
       };
 
       var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
@@ -143,7 +195,6 @@ namespace HeronPipeline
         Definition = startNestedSampleProcessingDefinition
       });
     }
-
     private void CreatePipelineStateMachine()
     {
       var pipelineFinishTask = new Succeed(this, "pipelineSucceedTask");
@@ -151,9 +202,14 @@ namespace HeronPipeline
       // Input parameters to the map iteration state
       var launchSampleProcessingMapParameters = new Dictionary<string, object>();
       launchSampleProcessingMapParameters.Add("date.$", "$.date");
+      launchSampleProcessingMapParameters.Add("sampleBatchSize.$", "$.sampleBatchSize");
       launchSampleProcessingMapParameters.Add("queueName.$", "$.messageCount.queueName");
       launchSampleProcessingMapParameters.Add("recipeFilePath.$", "$.recipeFilePath");
       launchSampleProcessingMapParameters.Add("mapIterations.$", "$$.Map.Item.Value.process");
+      launchSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
+      launchSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
+      launchSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      launchSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -167,7 +223,12 @@ namespace HeronPipeline
           {"queueName", JsonPath.StringAt("$.queueName")},
           {"mapIterations", JsonPath.StringAt("$.mapIterations")},
           {"date", JsonPath.StringAt("$.date")},
-          {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")}
+          {"sampleBatchSize", JsonPath.StringAt("$.sampleBatchSize")},
+          {"recipeFilePath", JsonPath.StringAt("$.recipeFilePath")},
+          {"executionMode", JsonPath.StringAt("$.executionMode")},
+          {"runPangolin", JsonPath.StringAt("$.runPangolin")},
+          {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
       };
       var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               

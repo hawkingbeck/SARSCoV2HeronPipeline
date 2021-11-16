@@ -4,7 +4,7 @@ ARG FUNCTION_DIR="/home/app/"
 
 RUN conda --version
 RUN conda --version
-
+RUN echo "Pulling pango for pangoLearn v1.2.93"
 RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.16
 # RUN git clone https://github.com/cov-lineages/pangolin.git
 WORKDIR /pangolin

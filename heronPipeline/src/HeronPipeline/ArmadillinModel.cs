@@ -22,6 +22,7 @@ namespace HeronPipeline {
   internal sealed class ArmadillinModel: Construct {
     public EcsRunTask armadillinTask;
     public EcsRunTask armadillinTestTask;
+    public Succeed skipArmadillinTask;
     private Construct scope;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
@@ -44,7 +45,7 @@ namespace HeronPipeline {
         BackoffRate = 5,
         Interval = Duration.Seconds(2),
         MaxAttempts = 3,
-        Errors = new string[] {"STATES.ALL"}
+        Errors = new string[] {"States.ALL"}
       };
     }
 
@@ -125,6 +126,8 @@ namespace HeronPipeline {
           },
           ResultPath = JsonPath.DISCARD
       });
+
+      skipArmadillinTask = new Succeed(this, "skipArmadillinTask");
     }
 
     public void CreateTestTask(){
@@ -165,5 +168,7 @@ namespace HeronPipeline {
           ResultPath = JsonPath.DISCARD
       });
     }
+
+    
   }
 }

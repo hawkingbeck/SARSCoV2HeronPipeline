@@ -27,6 +27,7 @@ def lambda_handler(event, context):
 
     reprocessingQueueName = os.getenv("HERON_PROCESSING_QUEUE")
     dailyProcessingQueueName = os.getenv("HERON_DAILY_PROCESSING_QUEUE")
+    sampleBatchSize = int(event['sampleBatchSize'])
     executionMode = event['executionMode']
     
     queueName = dailyProcessingQueueName
@@ -39,7 +40,7 @@ def lambda_handler(event, context):
     queue = sqs.Queue(queueName)
     queue.load()
 
-    sampleBatchSize = 8000
+    # sampleBatchSize = 2000
     attributes = queue.attributes
     sequenceCount = int(attributes['ApproximateNumberOfMessages'])
     sequencesPerMapIteration = 40*sampleBatchSize

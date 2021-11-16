@@ -56,7 +56,7 @@ namespace HeronPipeline
         BackoffRate = 5,
         Interval = Duration.Seconds(2),
         MaxAttempts = 3,
-        Errors = new string[] {"STATES.ALL"}
+        Errors = new string[] {"States.ALL"}
       };
     }
 
@@ -273,7 +273,11 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                         Name = "ITERATION_UUID",
                         Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      }
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "SAMPLE_BATCH_SIZE",
+                        Value = JsonPath.StringAt("$.sampleBatchSize")
+                      },
                   }
               }
           },

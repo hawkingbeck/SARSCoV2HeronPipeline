@@ -63,12 +63,13 @@ print(f"PangoLearn Version")
 command = ["pangolin", "-pv"]
 subprocess.run(command)
 
-if os.path.isfile(seqConsensusFile) == True:
-  command = ["pangolin", "--verbose", "--usher", seqConsensusFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
+if os.path.isfile(seqFile) == True:
+  # command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
+  command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv"]
   print(f"Running Command: {command}")
   subprocess.run(command)
 
-  command = ["pangolin", "--verbose", seqConsensusFile, "--outfile", "/tmp/outputPlearn.csv", "--alignment"]
+  command = ["pangolin", "--verbose", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
   print(f"Running Command: {command}")
   subprocess.run(command)
 
