@@ -27,7 +27,7 @@ def lambda_handler(event, context):
 
     reprocessingQueueName = os.getenv("HERON_PROCESSING_QUEUE")
     dailyProcessingQueueName = os.getenv("HERON_DAILY_PROCESSING_QUEUE")
-    sampleBatchSize = int(os.getenv("SAMPLE_BATCH_SIZE"))
+    sampleBatchSize = event['sampleBatchSize'] #int(os.getenv("SAMPLE_BATCH_SIZE"))
     # executionMode = event['executionMode']
     
     queueName = dailyProcessingQueueName
