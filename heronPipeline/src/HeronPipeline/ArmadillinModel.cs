@@ -127,6 +127,8 @@ namespace HeronPipeline {
           ResultPath = JsonPath.DISCARD
       });
 
+
+      this.armadillinTask.AddRetry(this.retryItem);
       skipArmadillinTask = new Succeed(this, "skipArmadillinTask");
     }
 
