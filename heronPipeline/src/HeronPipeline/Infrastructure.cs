@@ -150,31 +150,7 @@ namespace HeronPipeline
 
     private void CreateTestStorage()
     {
-      testBucket = new Bucket(this, "testDataBucket", new BucketProps{
-          Versioned = true,
-          RemovalPolicy = RemovalPolicy.DESTROY,
-          AutoDeleteObjects = true
-      });
-
-      testSamplesTable = new Table(this, "testHeronSamplesTable", new TableProps{
-          BillingMode = BillingMode.PAY_PER_REQUEST,
-          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-          SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
-          PointInTimeRecovery = true
-      });
-
-      testSamplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
-          IndexName = "lastChangedDate",
-          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-          SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
-          ProjectionType = ProjectionType.ALL
-      });
-
-      testSequencesTable = new Table(this, "testHeronSequencesTable", new TableProps {
-          BillingMode = BillingMode.PAY_PER_REQUEST,
-          PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
-          PointInTimeRecovery = true
-      });
+      
     }
 
     private void CreateQueues()
@@ -196,19 +172,7 @@ namespace HeronPipeline
 
     private void CreateTestQueues()
     {
-      testDailyProcessingQueue = new Queue(this, "testDailyQueue", new QueueProps {
-          ContentBasedDeduplication = true,
-          Fifo = true,
-          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
-          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
-      });
-
-      testReprocessingQueue = new Queue(this, "testReprocessingQueue", new QueueProps {
-          ContentBasedDeduplication = true,
-          Fifo = true,
-          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
-          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
-      });
+      
     }
 
     private void CreateExecutionRole()
@@ -244,10 +208,7 @@ namespace HeronPipeline
 
     private void CreateTestCluster()
     {
-      testCluster = new Cluster(this, "testHeronCluster", new ClusterProps{
-          Vpc = vpc,
-          EnableFargateCapacityProviders = true
-      });
+      
     }
 
     private void CreateAccessPolicies()
