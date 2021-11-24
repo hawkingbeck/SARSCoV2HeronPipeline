@@ -64,8 +64,12 @@ namespace HeronPipeline
     }
     private void CreateVPC()
     {
+      var numberOfAzs = 1;
+      if (this.id == "HeronPipelineStack"){
+        numberOfAzs = 3;
+      }
       vpc = new Vpc(this, "vpc", new VpcProps{
-                MaxAzs = 3, ///TODO: Increase this once EIP's are freed
+                MaxAzs = numberOfAzs, ///TODO: Increase this once EIP's are freed
                 Cidr = "11.0.0.0/16",
             });
 
