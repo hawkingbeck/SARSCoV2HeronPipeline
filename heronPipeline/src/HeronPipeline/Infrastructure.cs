@@ -196,7 +196,7 @@ namespace HeronPipeline
 
     private void CreateTestQueues()
     {
-      testDailyProcessingQueue = new Queue(this, "testDailyProcessingQueue", new QueueProps {
+      testDailyProcessingQueue = new Queue(this, "testDailyQueue", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
