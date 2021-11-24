@@ -73,7 +73,7 @@ namespace HeronPipeline
               StreamPrefix = "goFastaAlign",
               LogGroup = new LogGroup(scope, "goFastaAlignLogGroup", new LogGroupProps
               {
-                  LogGroupName = "goFastaAlignLogGroup",
+                  LogGroupName = this.id + "goFastaAlignLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })

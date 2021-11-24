@@ -54,7 +54,7 @@ namespace HeronPipeline {
               StreamPrefix = "exportResults",
               LogGroup = new LogGroup(this, "exportResultsLogGroup", new LogGroupProps
               {
-                  LogGroupName = "exportResultsLogGroup2",
+                  LogGroupName = this.id + "exportResultsLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })

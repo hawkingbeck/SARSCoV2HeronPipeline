@@ -70,7 +70,7 @@ namespace HeronPipeline
               StreamPrefix = "genotypeVariants",
               LogGroup = new LogGroup(this, "genotypeVariantsLogGroup", new LogGroupProps
               {
-                  LogGroupName = "genotypeVariantsLogGroup",
+                  LogGroupName = this.id + "genotypeVariantsLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })

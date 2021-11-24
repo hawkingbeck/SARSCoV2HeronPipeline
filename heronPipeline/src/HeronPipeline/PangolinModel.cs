@@ -72,7 +72,7 @@ namespace HeronPipeline
               StreamPrefix = "pangolin",
               LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
               {
-                  LogGroupName = "pangolinLogGroup",
+                  LogGroupName = this.id + "pangolinLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
