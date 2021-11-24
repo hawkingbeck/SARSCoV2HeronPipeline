@@ -25,12 +25,18 @@ namespace HeronPipeline
     public AccessPoint pipelineEFSAccessPoint;
     public Vpc vpc;
     public Bucket bucket;
+    public Bucket testBucket;
     public Table samplesTable;
+    public Table testSamplesTable;
     public Table sequencesTable;
+    public Table testSequencesTable;
     public Queue dailyProcessingQueue;
+    public Queue testDailyProcessingQueue;
     public Queue reprocessingQueue;
+    public Queue testReprocessingQueue;
     public Role ecsExecutionRole;
     public Cluster cluster;
+    public Cluster testCluster;
     public PolicyStatement s3AccessPolicyStatement;
     public PolicyStatement sqsAccessPolicyStatement;
     public PolicyStatement dynamoDBAccessPolicyStatement;
@@ -48,10 +54,13 @@ namespace HeronPipeline
     {
       CreateVPC();
       CreateStorage();
+      CreateTestStorage();
       CreateEFS();
       CreateQueues();
+      CreateTestQueues();
       CreateExecutionRole();
       CreateCluster();
+      CreateTestCluster();
       CreateAccessPolicies();
     }
     private void CreateVPC()
@@ -118,7 +127,6 @@ namespace HeronPipeline
           AutoDeleteObjects = true
       });
 
-
       samplesTable = new Table(this, "heronSamplesTable", new TableProps{
           BillingMode = BillingMode.PAY_PER_REQUEST,
           PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
@@ -140,6 +148,35 @@ namespace HeronPipeline
       });
     }
 
+    private void CreateTestStorage()
+    {
+      testBucket = new Bucket(this, "testDataBucket", new BucketProps{
+          Versioned = true,
+          RemovalPolicy = RemovalPolicy.DESTROY,
+          AutoDeleteObjects = true
+      });
+
+      testSamplesTable = new Table(this, "testHeronSamplesTable", new TableProps{
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+          SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
+          PointInTimeRecovery = true
+      });
+
+      testSamplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
+          IndexName = "lastChangedDate",
+          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
+          SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
+          ProjectionType = ProjectionType.ALL
+      });
+
+      testSequencesTable = new Table(this, "testHeronSequencesTable", new TableProps {
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
+          PointInTimeRecovery = true
+      });
+    }
+
     private void CreateQueues()
     {
       dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
@@ -150,6 +187,23 @@ namespace HeronPipeline
       });
 
       reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
+          ContentBasedDeduplication = true,
+          Fifo = true,
+          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+      });
+    }
+
+    private void CreateTestQueues()
+    {
+      testDailyProcessingQueue = new Queue(this, "testDailyProcessingQueue", new QueueProps {
+          ContentBasedDeduplication = true,
+          Fifo = true,
+          FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
+          DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
+      });
+
+      testReprocessingQueue = new Queue(this, "testReprocessingQueue", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
@@ -183,6 +237,14 @@ namespace HeronPipeline
     private void CreateCluster()
     {
       cluster = new Cluster(this, "heronCluster", new ClusterProps{
+          Vpc = vpc,
+          EnableFargateCapacityProviders = true
+      });
+    }
+
+    private void CreateTestCluster()
+    {
+      testCluster = new Cluster(this, "testHeronCluster", new ClusterProps{
           Vpc = vpc,
           EnableFargateCapacityProviders = true
       });
