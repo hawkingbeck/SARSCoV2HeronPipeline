@@ -24,6 +24,7 @@ namespace HeronPipeline
     public EcsRunTask goFastaAlignTask;
     public EcsRunTask goFastaAlignTestTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -36,6 +37,7 @@ namespace HeronPipeline
     public GoFastaAlignment(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;

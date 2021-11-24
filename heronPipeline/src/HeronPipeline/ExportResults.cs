@@ -24,12 +24,14 @@ namespace HeronPipeline {
     public EcsRunTask exportResultsTask;
 
     private Construct scope;
+    private string id;
     
     private Infrastructure infrastructure;
     
     public ExportResults(Construct scope, string id, Infrastructure infrastructure): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.infrastructure = infrastructure;
     }
     public void Create()

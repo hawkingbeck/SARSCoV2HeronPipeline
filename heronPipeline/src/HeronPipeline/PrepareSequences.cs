@@ -25,6 +25,7 @@ namespace HeronPipeline
     public EcsRunTask prepareSequencesTask;
     public EcsRunTask prepareConsensusSequencesTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -45,6 +46,7 @@ namespace HeronPipeline
                               Queue dailyProcessingQueue): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -80,7 +82,7 @@ namespace HeronPipeline
               StreamPrefix = "addSequencesToQueue",
               LogGroup = new LogGroup(this, "addSequencesToQueueLogGroup", new LogGroupProps
               {
-                  LogGroupName = "addSequencesToQueueLogGroup2",
+                  LogGroupName = this.id + "_addSequencesToQueueLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -147,7 +149,7 @@ namespace HeronPipeline
               StreamPrefix = "prepareSequences",
               LogGroup = new LogGroup(this, "prepareSequencesLogGroup", new LogGroupProps
               {
-                  LogGroupName = "prepareSequencesLogGroup2",
+                  LogGroupName = this.id + "prepareSequencesLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -227,7 +229,7 @@ namespace HeronPipeline
               StreamPrefix = "prepareConsensusSequences",
               LogGroup = new LogGroup(this, "prepareConsensusSequencesLogGroup", new LogGroupProps
               {
-                  LogGroupName = "prepareConsensusSequencesLogGroup2",
+                  LogGroupName = this.id + "prepareConsensusSequencesLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })

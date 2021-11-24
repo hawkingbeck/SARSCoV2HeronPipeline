@@ -42,12 +42,14 @@ namespace HeronPipeline
     public PolicyStatement dynamoDBAccessPolicyStatement;
     public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
+    private string id;
     private SecurityGroup secGroup;
 
     
     public Infrastructure(Construct scope, string id): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
     }
 
     public void Create()
