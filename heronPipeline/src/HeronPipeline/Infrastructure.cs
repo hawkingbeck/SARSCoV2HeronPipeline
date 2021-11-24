@@ -54,13 +54,10 @@ namespace HeronPipeline
     {
       CreateVPC();
       CreateStorage();
-      CreateTestStorage();
       CreateEFS();
       CreateQueues();
-      CreateTestQueues();
       CreateExecutionRole();
       CreateCluster();
-      CreateTestCluster();
       CreateAccessPolicies();
     }
     private void CreateVPC()
@@ -79,7 +76,6 @@ namespace HeronPipeline
       secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
       secGroup.Node.AddDependency(vpc);
     }
-
     private void CreateEFS()
     {
       //++++++++++++++++++++++++++++++++++++++++++
@@ -118,7 +114,6 @@ namespace HeronPipeline
       fileSystemConfig.LocalMountPath = "/mnt/efs0";
       lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
     }
-
     private void CreateStorage()
     {
       bucket = new Bucket(this, "dataBucket", new BucketProps{
@@ -147,12 +142,6 @@ namespace HeronPipeline
           PointInTimeRecovery = true
       });
     }
-
-    private void CreateTestStorage()
-    {
-      
-    }
-
     private void CreateQueues()
     {
       dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
@@ -169,12 +158,6 @@ namespace HeronPipeline
           DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
       });
     }
-
-    private void CreateTestQueues()
-    {
-      
-    }
-
     private void CreateExecutionRole()
     {
       ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
@@ -205,12 +188,6 @@ namespace HeronPipeline
           EnableFargateCapacityProviders = true
       });
     }
-
-    private void CreateTestCluster()
-    {
-      
-    }
-
     private void CreateAccessPolicies()
     {
       s3AccessPolicyStatement = new PolicyStatement(new PolicyStatementProps
