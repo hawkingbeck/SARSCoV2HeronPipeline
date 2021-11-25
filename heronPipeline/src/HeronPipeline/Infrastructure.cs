@@ -65,7 +65,7 @@ namespace HeronPipeline
     private void CreateVPC()
     {
       var numberOfAzs = 1;
-      if (this.id == "HeronPipelineStack"){
+      if (this.id == "HeronProdStack_infra_"){
         numberOfAzs = 3;
       }
       vpc = new Vpc(this, "vpc", new VpcProps{
