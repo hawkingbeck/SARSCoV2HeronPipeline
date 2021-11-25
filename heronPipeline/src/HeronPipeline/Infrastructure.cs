@@ -72,7 +72,7 @@ namespace HeronPipeline
       }else if (this.id == "HeronTestStack_infra_"){
         numberOfAzs = 1;
         CidrString = "13.0.0.0/16";
-      } else if (this.id == "MutationDevStack_infra_"){
+      } else if (this.id == "HeronDevStack_infra_"){
         numberOfAzs = 1;
         CidrString = "14.0.0.0/16";
       }
