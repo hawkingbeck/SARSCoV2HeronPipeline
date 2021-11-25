@@ -28,36 +28,36 @@ namespace HeronPipeline
             var idToSupply = id + "_";
 
             var testObj = new TestClass(this, "testClass");
-            var infrastructure = new Infrastructure(this, idToSupply);
+            var infrastructure = new Infrastructure(this, idToSupply+"infra_");
             infrastructure.Create();
             
 
-            var helperFunctions = new HelperFunctions(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue, infrastructure.sqsAccessPolicyStatement, infrastructure.s3AccessPolicyStatement, infrastructure.dynamoDBAccessPolicyStatement);
+            var helperFunctions = new HelperFunctions(this, idToSupply+"helper_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue, infrastructure.sqsAccessPolicyStatement, infrastructure.s3AccessPolicyStatement, infrastructure.dynamoDBAccessPolicyStatement);
             helperFunctions.Create();
 
-            var prepareSequences = new PrepareSequences(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue);
+            var prepareSequences = new PrepareSequences(this, idToSupply+"prep_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue);
             prepareSequences.CreateAddSequencesToQueue();
             prepareSequences.CreatePrepareSequences();
             prepareSequences.CreatePrepareConsenusSequences();
 
-            var goFastaAlignment = new GoFastaAlignment(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var goFastaAlignment = new GoFastaAlignment(this, idToSupply+"align_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             goFastaAlignment.Create();
             goFastaAlignment.CreateTestTask();
 
-            var pangolinModel = new PangolinModel(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var pangolinModel = new PangolinModel(this, idToSupply+"pango_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             pangolinModel.Create();
 
-            var armadillinModel = new ArmadillinModel(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var armadillinModel = new ArmadillinModel(this, idToSupply+"armadillin_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             armadillinModel.Create();
             armadillinModel.CreateTestTask();
 
-            var genotypeVariantsModel = new GenotypeVariantsModel(this, idToSupply, infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var genotypeVariantsModel = new GenotypeVariantsModel(this, idToSupply+"genotype_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             genotypeVariantsModel.Create();
 
-            var exportResults = new ExportResults(this, idToSupply, infrastructure);
+            var exportResults = new ExportResults(this, idToSupply+"export_", infrastructure);
             exportResults.Create();
 
-            var stateMachines = new StateMachines(this, idToSupply, infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults);
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults);
             stateMachines.Create();
         }
     }
