@@ -65,12 +65,20 @@ namespace HeronPipeline
     private void CreateVPC()
     {
       var numberOfAzs = 1;
+      var CidrString = "";
       if (this.id == "HeronProdStack_infra_"){
         numberOfAzs = 3;
+        CidrString = "12.0.0.0/16";
+      }else if (this.id == "HeronTestStack_infra_"){
+        numberOfAzs = 1;
+        CidrString = "13.0.0.0/16";
+      } else if (this.id == "MutationDevStack_infra_"){
+        numberOfAzs = 1;
+        CidrString = "14.0.0.0/16";
       }
       vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = numberOfAzs, ///TODO: Increase this once EIP's are freed
-                Cidr = "11.0.0.0/16",
+                Cidr = CidrString,
             });
 
       secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
