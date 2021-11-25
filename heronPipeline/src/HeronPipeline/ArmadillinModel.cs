@@ -56,7 +56,7 @@ namespace HeronPipeline {
       var armadillinImage = ContainerImage.FromAsset("src/images/armadillin", new AssetImageProps
       { 
       });
-      this.armadillinTaskDefinition = new TaskDefinition(this, "armadillinTaskDefinition", new TaskDefinitionProps{
+      this.armadillinTaskDefinition = new TaskDefinition(this, "armadillin", new TaskDefinitionProps{
           Family = "armadillin",
           Cpu = "1024",
           MemoryMiB = "4096",

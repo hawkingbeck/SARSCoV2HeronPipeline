@@ -150,14 +150,14 @@ namespace HeronPipeline
     }
     private void CreateQueues()
     {
-      dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
+      dailyProcessingQueue = new Queue(this, "daily", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
           DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
       });
 
-      reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
+      reprocessingQueue = new Queue(this, "reprocessing", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
