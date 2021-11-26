@@ -42,14 +42,12 @@ namespace HeronPipeline
 
             var goFastaAlignment = new GoFastaAlignment(this, idToSupply+"align_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             goFastaAlignment.Create();
-            goFastaAlignment.CreateTestTask();
 
             var pangolinModel = new PangolinModel(this, idToSupply+"pango_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             pangolinModel.Create();
 
             var armadillinModel = new ArmadillinModel(this, idToSupply+"armadillin_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             armadillinModel.Create();
-            armadillinModel.CreateTestTask();
 
             var genotypeVariantsModel = new GenotypeVariantsModel(this, idToSupply+"genotype_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             genotypeVariantsModel.Create();

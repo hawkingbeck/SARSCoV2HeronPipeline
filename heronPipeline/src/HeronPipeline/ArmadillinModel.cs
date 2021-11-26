@@ -21,7 +21,6 @@ using Queue = Amazon.CDK.AWS.SQS.Queue;
 namespace HeronPipeline {
   internal sealed class ArmadillinModel: Construct {
     public EcsRunTask armadillinTask;
-    public EcsRunTask armadillinTestTask;
     public Succeed skipArmadillinTask;
     private Construct scope;
     private string id;
@@ -56,8 +55,8 @@ namespace HeronPipeline {
       var armadillinImage = ContainerImage.FromAsset("src/images/armadillin", new AssetImageProps
       { 
       });
-      this.armadillinTaskDefinition = new TaskDefinition(this, "armadillin", new TaskDefinitionProps{
-          Family = "armadillin",
+      this.armadillinTaskDefinition = new TaskDefinition(this, this.id + "_armadillin", new TaskDefinitionProps{
+          Family = this.id + "_armadillin",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -88,7 +87,7 @@ namespace HeronPipeline {
                   ReadOnly = false,
               }
           });
-      this.armadillinTask = new EcsRunTask(this, "armadillinPlaceTask", new EcsRunTaskProps
+      this.armadillinTask = new EcsRunTask(this, this.id + "_armadillinPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
@@ -133,46 +132,5 @@ namespace HeronPipeline {
       this.armadillinTask.AddRetry(this.retryItem);
       skipArmadillinTask = new Succeed(this, "skipArmadillinTask");
     }
-
-    public void CreateTestTask(){
-      this.armadillinTestTask = new EcsRunTask(this, "armadillinPlaceTestTask", new EcsRunTaskProps
-      {
-          IntegrationPattern = IntegrationPattern.RUN_JOB,
-          Cluster = cluster,
-          TaskDefinition = this.armadillinTaskDefinition,
-          AssignPublicIp = true,
-          LaunchTarget = new EcsFargateLaunchTarget(),
-          ContainerOverrides = new ContainerOverride[] {
-              new ContainerOverride {
-                  ContainerDefinition = armadillinContainer,
-                  Environment = new TaskEnvironmentVariable[] {
-                      new TaskEnvironmentVariable{
-                        Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "HERON_SAMPLES_BUCKET",
-                        Value = bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "SEQ_DATA_ROOT",
-                        Value = "/mnt/efs0/seqData"
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "ITERATION_UUID",
-                        Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SEQUENCES_TABLE",
-                          Value = sequencesTable.TableName
-                      }
-                  }
-              }
-          },
-          ResultPath = JsonPath.DISCARD
-      });
-    }
-
-    
   }
 }

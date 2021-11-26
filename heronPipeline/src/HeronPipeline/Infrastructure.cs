@@ -174,7 +174,7 @@ namespace HeronPipeline
     }
     private void CreateExecutionRole()
     {
-      ecsExecutionRole = new Role(this, this.id + "fargateExecutionRole", new RoleProps{
+      ecsExecutionRole = new Role(this, this.id + "_fargateExecutionRole", new RoleProps{
           Description = "Role for fargate execution",
           AssumedBy = new ServicePrincipal("ec2.amazonaws.com"), //The service that needs to use this role
       });

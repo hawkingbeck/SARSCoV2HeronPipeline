@@ -52,8 +52,8 @@ namespace HeronPipeline
     public void Create()
     {
       var genotypeVariantsImage = ContainerImage.FromAsset("src/images/genotypeVariants");
-      var genotypeVariantsTaskDefinition = new TaskDefinition(this, "genotypeVariantsTaskDefinition", new TaskDefinitionProps{
-          Family = "genotypeVariants",
+      var genotypeVariantsTaskDefinition = new TaskDefinition(this, this.id + "_genotypeVariantsTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_genotypeVariants",
           Cpu = "1024",
           MemoryMiB = "2048",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -84,7 +84,7 @@ namespace HeronPipeline
                   ReadOnly = false,
               }
           });
-      this.genotypeVariantsTask = new EcsRunTask(this, "genotypeVariantsPlaceTask", new EcsRunTaskProps
+      this.genotypeVariantsTask = new EcsRunTask(this, this.id + "_genotypeVariantsPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,

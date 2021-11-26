@@ -54,7 +54,7 @@ namespace HeronPipeline
       var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
       { 
       });
-      var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
+      var pangolinTaskDefinition = new TaskDefinition(this, this.id + "_pangolinTaskDefinition", new TaskDefinitionProps{
           Family = "pangolin",
           Cpu = "1024",
           MemoryMiB = "4096",
@@ -87,7 +87,7 @@ namespace HeronPipeline
                   ReadOnly = false,
               }
           });
-      this.pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
+      this.pangolinTask = new EcsRunTask(this, this.id + "_pangolinPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,

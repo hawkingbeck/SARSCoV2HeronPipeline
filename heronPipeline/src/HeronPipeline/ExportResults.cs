@@ -37,8 +37,8 @@ namespace HeronPipeline {
     public void Create()
     {
       var exportResultsImage = ContainerImage.FromAsset("src/images/exportResults");
-      var exportResultsTaskDefinition = new TaskDefinition(this, "exportResultsTaskDefinition", new TaskDefinitionProps{
-          Family = "exportResults",
+      var exportResultsTaskDefinition = new TaskDefinition(this, this.id + "_exportResultsTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_exportResults",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -61,7 +61,7 @@ namespace HeronPipeline {
           })
       });
       var exportResultsContainer = exportResultsTaskDefinition.FindContainer("exportResultsContainer");
-      exportResultsTask = new EcsRunTask(this, "exportResultsTask", new EcsRunTaskProps
+      exportResultsTask = new EcsRunTask(this, this.id + "_exportResultsTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = infrastructure.cluster,
