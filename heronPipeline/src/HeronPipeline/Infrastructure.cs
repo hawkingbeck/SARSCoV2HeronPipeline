@@ -174,7 +174,7 @@ namespace HeronPipeline
     }
     private void CreateExecutionRole()
     {
-      ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
+      ecsExecutionRole = new Role(this, this.id + "fargateExecutionRole", new RoleProps{
           Description = "Role for fargate execution",
           AssumedBy = new ServicePrincipal("ec2.amazonaws.com"), //The service that needs to use this role
       });
@@ -183,8 +183,9 @@ namespace HeronPipeline
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonSQSFullAccess"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonS3FullAccess"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonDynamoDBFullAccess"));
-      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, "ecsExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, this.id + "ecsExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("CloudWatchEventsFullAccess"));
+
 
       var policyStatement = new PolicyStatement(new PolicyStatementProps{
           Effect = Effect.ALLOW,
