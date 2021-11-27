@@ -52,6 +52,7 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 ##############################################
 keyFileDf = pd.read_json(keyFile, orient="records")
 print(f"Processing seqBatchFile: {seqFile}")
+updateCount = 0
 if (os.path.isfile(seqFile) == True) & (os.path.isfile(armadillinOutputFilename) == True):
    command = ["ls", "-all", "/tmp"]
    print(f"Running Command: {command}")
@@ -75,7 +76,6 @@ if (os.path.isfile(seqFile) == True) & (os.path.isfile(armadillinOutputFilename)
       lineage = row["lineage"]
       seqId = row['seqId']
       # Create query for dynamoDB
-      updateCount = 0
       sequencesTable = dynamodb.Table(heronSequencesTableName)
       response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
       if 'Items' in response:
