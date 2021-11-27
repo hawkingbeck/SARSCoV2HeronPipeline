@@ -66,7 +66,7 @@ namespace HeronPipeline
     {
       var addSequencesToQueueImage = ContainerImage.FromAsset("src/images/addSequencesToQueue");
       var addSequencesToQueueTaskDefinition = new TaskDefinition(this, this.id + "_addSequencesToQueueTaskDefinition", new TaskDefinitionProps{
-          Family = "addSequencesToQueue",
+          Family = this.id + "_addSequencesToQueue",
           Cpu = "256",
           MemoryMiB = "512",
           NetworkMode = NetworkMode.AWS_VPC,
