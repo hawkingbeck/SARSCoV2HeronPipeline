@@ -54,7 +54,7 @@ namespace HeronPipeline
     public void Create(){
       var alignFastaImage = ContainerImage.FromAsset("src/images/goFastaAlignment");
       alignFastaTaskDefinition = new TaskDefinition(scope, this.id + "_goFastaTaskDefinition", new TaskDefinitionProps{
-          Family = "goFasta",
+          Family = this.id + "_goFasta",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,

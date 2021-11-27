@@ -39,7 +39,7 @@ namespace HeronPipeline {
       var exportResultsImage = ContainerImage.FromAsset("src/images/exportResults");
       var exportResultsTaskDefinition = new TaskDefinition(this, this.id + "_exportResultsTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_exportResults",
-          Cpu = "1024",
+          Cpu = "2048",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
