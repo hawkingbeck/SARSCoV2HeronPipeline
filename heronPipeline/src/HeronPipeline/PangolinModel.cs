@@ -24,6 +24,7 @@ namespace HeronPipeline
     public EcsRunTask pangolinTask;
     public Succeed skipPangolinTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -34,6 +35,7 @@ namespace HeronPipeline
     public PangolinModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -52,10 +54,10 @@ namespace HeronPipeline
       var pangolinImage = ContainerImage.FromAsset("src/images/pangolin", new AssetImageProps
       { 
       });
-      var pangolinTaskDefinition = new TaskDefinition(this, "pangolinTaskDefinition", new TaskDefinitionProps{
-          Family = "pangolin",
-          Cpu = "1024",
-          MemoryMiB = "4096",
+      var pangolinTaskDefinition = new TaskDefinition(this, this.id + "_pangolinTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_pangolin",
+          Cpu = "2048",
+          MemoryMiB = "8192",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = ecsExecutionRole,
@@ -70,7 +72,7 @@ namespace HeronPipeline
               StreamPrefix = "pangolin",
               LogGroup = new LogGroup(this, "pangolinLogGroup", new LogGroupProps
               {
-                  LogGroupName = "pangolinLogGroup",
+                  LogGroupName = this.id + "pangolinLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -85,7 +87,7 @@ namespace HeronPipeline
                   ReadOnly = false,
               }
           });
-      this.pangolinTask = new EcsRunTask(this, "pangolinPlaceTask", new EcsRunTaskProps
+      this.pangolinTask = new EcsRunTask(this, this.id + "_pangolinPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,

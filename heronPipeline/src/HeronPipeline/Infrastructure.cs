@@ -25,23 +25,31 @@ namespace HeronPipeline
     public AccessPoint pipelineEFSAccessPoint;
     public Vpc vpc;
     public Bucket bucket;
+    public Bucket testBucket;
     public Table samplesTable;
+    public Table testSamplesTable;
     public Table sequencesTable;
+    public Table testSequencesTable;
     public Queue dailyProcessingQueue;
+    public Queue testDailyProcessingQueue;
     public Queue reprocessingQueue;
+    public Queue testReprocessingQueue;
     public Role ecsExecutionRole;
     public Cluster cluster;
+    public Cluster testCluster;
     public PolicyStatement s3AccessPolicyStatement;
     public PolicyStatement sqsAccessPolicyStatement;
     public PolicyStatement dynamoDBAccessPolicyStatement;
     public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
+    private string id;
     private SecurityGroup secGroup;
 
     
     public Infrastructure(Construct scope, string id): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
     }
 
     public void Create()
@@ -56,9 +64,21 @@ namespace HeronPipeline
     }
     private void CreateVPC()
     {
+      var numberOfAzs = 1;
+      var CidrString = "";
+      if (this.id == "HeronProdStack_infra_"){
+        numberOfAzs = 3;
+        CidrString = "12.0.0.0/16";
+      }else if (this.id == "HeronTestStack_infra_"){
+        numberOfAzs = 1;
+        CidrString = "13.0.0.0/16";
+      } else if (this.id == "HeronDevStack_infra_"){
+        numberOfAzs = 1;
+        CidrString = "14.0.0.0/16";
+      }
       vpc = new Vpc(this, "vpc", new VpcProps{
-                MaxAzs = 3, ///TODO: Increase this once EIP's are freed
-                Cidr = "11.0.0.0/16",
+                MaxAzs = numberOfAzs, ///TODO: Increase this once EIP's are freed
+                Cidr = CidrString,
             });
 
       secGroup = new SecurityGroup(this, "vpcSecurityGroup", new SecurityGroupProps{
@@ -70,7 +90,6 @@ namespace HeronPipeline
       secGroup.AddIngressRule(Peer.AnyIpv4(), Port.AllTraffic(), "All Traffic");
       secGroup.Node.AddDependency(vpc);
     }
-
     private void CreateEFS()
     {
       //++++++++++++++++++++++++++++++++++++++++++
@@ -109,7 +128,6 @@ namespace HeronPipeline
       fileSystemConfig.LocalMountPath = "/mnt/efs0";
       lambdaPipelineFileSystem = new Amazon.CDK.AWS.Lambda.FileSystem(fileSystemConfig);
     }
-
     private void CreateStorage()
     {
       bucket = new Bucket(this, "dataBucket", new BucketProps{
@@ -117,7 +135,6 @@ namespace HeronPipeline
           RemovalPolicy = RemovalPolicy.DESTROY,
           AutoDeleteObjects = true
       });
-
 
       samplesTable = new Table(this, "heronSamplesTable", new TableProps{
           BillingMode = BillingMode.PAY_PER_REQUEST,
@@ -139,27 +156,25 @@ namespace HeronPipeline
           PointInTimeRecovery = true
       });
     }
-
     private void CreateQueues()
     {
-      dailyProcessingQueue = new Queue(this, "dailyProcessingQueue", new QueueProps {
+      dailyProcessingQueue = new Queue(this, "daily", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
           DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
       });
 
-      reprocessingQueue = new Queue(this, "reprocessingQueue", new QueueProps {
+      reprocessingQueue = new Queue(this, "reprocessing", new QueueProps {
           ContentBasedDeduplication = true,
           Fifo = true,
           FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
           DeduplicationScope = DeduplicationScope.MESSAGE_GROUP
       });
     }
-
     private void CreateExecutionRole()
     {
-      ecsExecutionRole = new Role(this, "fargateExecutionRole", new RoleProps{
+      ecsExecutionRole = new Role(this, this.id + "_fargateExecutionRole", new RoleProps{
           Description = "Role for fargate execution",
           AssumedBy = new ServicePrincipal("ec2.amazonaws.com"), //The service that needs to use this role
       });
@@ -168,8 +183,9 @@ namespace HeronPipeline
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonSQSFullAccess"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonS3FullAccess"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("AmazonDynamoDBFullAccess"));
-      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, "ecsExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
+      ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, this.id + "ecsExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
       ecsExecutionRole.AddManagedPolicy(ManagedPolicy.FromAwsManagedPolicyName("CloudWatchEventsFullAccess"));
+
 
       var policyStatement = new PolicyStatement(new PolicyStatementProps{
           Effect = Effect.ALLOW,
@@ -187,7 +203,6 @@ namespace HeronPipeline
           EnableFargateCapacityProviders = true
       });
     }
-
     private void CreateAccessPolicies()
     {
       s3AccessPolicyStatement = new PolicyStatement(new PolicyStatementProps

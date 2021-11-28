@@ -25,6 +25,7 @@ namespace HeronPipeline
     public EcsRunTask prepareSequencesTask;
     public EcsRunTask prepareConsensusSequencesTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -45,6 +46,7 @@ namespace HeronPipeline
                               Queue dailyProcessingQueue): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -63,8 +65,8 @@ namespace HeronPipeline
     public void CreateAddSequencesToQueue()
     {
       var addSequencesToQueueImage = ContainerImage.FromAsset("src/images/addSequencesToQueue");
-      var addSequencesToQueueTaskDefinition = new TaskDefinition(this, "addSequencesToQueueTaskDefinition", new TaskDefinitionProps{
-          Family = "addSequencesToQueue",
+      var addSequencesToQueueTaskDefinition = new TaskDefinition(this, this.id + "_addSequencesToQueueTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_addSequencesToQueue",
           Cpu = "256",
           MemoryMiB = "512",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -80,7 +82,7 @@ namespace HeronPipeline
               StreamPrefix = "addSequencesToQueue",
               LogGroup = new LogGroup(this, "addSequencesToQueueLogGroup", new LogGroupProps
               {
-                  LogGroupName = "addSequencesToQueueLogGroup2",
+                  LogGroupName = this.id + "_addSequencesToQueueLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -89,7 +91,7 @@ namespace HeronPipeline
 
       var addSequencesToQueueContainer = addSequencesToQueueTaskDefinition.FindContainer("addSequencesToQueueContainer");
 
-      this.addSequencesToQueueTask = new EcsRunTask(this, "addSequencesToQueueTask", new EcsRunTaskProps
+      this.addSequencesToQueueTask = new EcsRunTask(this, this.id + "_addSequencesToQueueTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
@@ -128,8 +130,8 @@ namespace HeronPipeline
       var prepareSequencesImage = ContainerImage.FromAsset("src/images/prepareSequences", new AssetImageProps
       { 
       });
-      var prepareSequencesTaskDefinition = new TaskDefinition(this, "prepareSequencesTaskDefinition", new TaskDefinitionProps{
-          Family = "prepareSequences",
+      var prepareSequencesTaskDefinition = new TaskDefinition(this, this.id + "_prepareSequencesTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_prepareSequences",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -147,7 +149,7 @@ namespace HeronPipeline
               StreamPrefix = "prepareSequences",
               LogGroup = new LogGroup(this, "prepareSequencesLogGroup", new LogGroupProps
               {
-                  LogGroupName = "prepareSequencesLogGroup2",
+                  LogGroupName = this.id + "prepareSequencesLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -162,7 +164,7 @@ namespace HeronPipeline
               }
           });
 
-      this.prepareSequencesTask = new EcsRunTask(this, "prepareSequencesTask", new EcsRunTaskProps
+      this.prepareSequencesTask = new EcsRunTask(this, this.id + "_prepareSequencesTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
@@ -208,8 +210,8 @@ namespace HeronPipeline
       { 
       });
 
-      var prepareConsensusSequencesTaskDefinition = new TaskDefinition(this, "prepareConsensusSequencesTaskDefinition", new TaskDefinitionProps{
-          Family = "prepareConsensusSequences",
+      var prepareConsensusSequencesTaskDefinition = new TaskDefinition(this, this.id + "_prepareConsensusSequencesTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_prepareConsensusSequences",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -227,7 +229,7 @@ namespace HeronPipeline
               StreamPrefix = "prepareConsensusSequences",
               LogGroup = new LogGroup(this, "prepareConsensusSequencesLogGroup", new LogGroupProps
               {
-                  LogGroupName = "prepareConsensusSequencesLogGroup2",
+                  LogGroupName = this.id + "prepareConsensusSequencesLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -243,7 +245,7 @@ namespace HeronPipeline
               }
           });
 
-      this.prepareConsensusSequencesTask = new EcsRunTask(this, "prepareConsensusSequencesTask", new EcsRunTaskProps
+      this.prepareConsensusSequencesTask = new EcsRunTask(this, this.id + "_prepareConsensusSequencesTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,

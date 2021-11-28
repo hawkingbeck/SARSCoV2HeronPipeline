@@ -24,6 +24,7 @@ namespace HeronPipeline
     public EcsRunTask genotypeVariantsTask;
     public Succeed skipGenotypeVariantsTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -34,6 +35,7 @@ namespace HeronPipeline
     public GenotypeVariantsModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -50,8 +52,8 @@ namespace HeronPipeline
     public void Create()
     {
       var genotypeVariantsImage = ContainerImage.FromAsset("src/images/genotypeVariants");
-      var genotypeVariantsTaskDefinition = new TaskDefinition(this, "genotypeVariantsTaskDefinition", new TaskDefinitionProps{
-          Family = "genotypeVariants",
+      var genotypeVariantsTaskDefinition = new TaskDefinition(this, this.id + "_genotypeVariantsTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_genotypeVariants",
           Cpu = "1024",
           MemoryMiB = "2048",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -68,7 +70,7 @@ namespace HeronPipeline
               StreamPrefix = "genotypeVariants",
               LogGroup = new LogGroup(this, "genotypeVariantsLogGroup", new LogGroupProps
               {
-                  LogGroupName = "genotypeVariantsLogGroup",
+                  LogGroupName = this.id + "genotypeVariantsLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -82,7 +84,7 @@ namespace HeronPipeline
                   ReadOnly = false,
               }
           });
-      this.genotypeVariantsTask = new EcsRunTask(this, "genotypeVariantsPlaceTask", new EcsRunTaskProps
+      this.genotypeVariantsTask = new EcsRunTask(this, this.id + "_genotypeVariantsPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,

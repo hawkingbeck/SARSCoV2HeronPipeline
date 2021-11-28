@@ -22,8 +22,8 @@ namespace HeronPipeline
   internal sealed class GoFastaAlignment : Construct
   {
     public EcsRunTask goFastaAlignTask;
-    public EcsRunTask goFastaAlignTestTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -36,6 +36,7 @@ namespace HeronPipeline
     public GoFastaAlignment(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -52,8 +53,8 @@ namespace HeronPipeline
 
     public void Create(){
       var alignFastaImage = ContainerImage.FromAsset("src/images/goFastaAlignment");
-      alignFastaTaskDefinition = new TaskDefinition(scope, "goFastaTaskDefinition", new TaskDefinitionProps{
-          Family = "goFasta",
+      alignFastaTaskDefinition = new TaskDefinition(scope, this.id + "_goFastaTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_goFasta",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -71,7 +72,7 @@ namespace HeronPipeline
               StreamPrefix = "goFastaAlign",
               LogGroup = new LogGroup(scope, "goFastaAlignLogGroup", new LogGroupProps
               {
-                  LogGroupName = "goFastaAlignLogGroup",
+                  LogGroupName = this.id + "goFastaAlignLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -87,7 +88,7 @@ namespace HeronPipeline
               }
           });
             
-      goFastaAlignTask = new EcsRunTask(scope, "goFastaAlignTask", new EcsRunTaskProps
+      goFastaAlignTask = new EcsRunTask(scope, this.id + "_goFastaAlignTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
@@ -141,69 +142,6 @@ namespace HeronPipeline
       });
 
       goFastaAlignTask.AddRetry(retryItem);
-    }
-
-    public void CreateTestTask(){
-      goFastaAlignTestTask = new EcsRunTask(scope, "goFastaAlignTestTask", new EcsRunTaskProps
-      {
-          IntegrationPattern = IntegrationPattern.RUN_JOB,
-          Cluster = cluster,
-          TaskDefinition = alignFastaTaskDefinition,
-          AssignPublicIp = true,
-          LaunchTarget = new EcsFargateLaunchTarget(),
-          ContainerOverrides = new ContainerOverride[] {
-              new ContainerOverride {
-                  ContainerDefinition = alignFastaContainer,
-                  Environment = new TaskEnvironmentVariable[] {
-                      new TaskEnvironmentVariable{
-                        Name = "ITERATION_UUID",
-                        Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "SEQ_DATA_ROOT",
-                        Value = "/mnt/efs0/seqData"
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")   
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "HERON_SAMPLES_BUCKET",
-                        Value = bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SEQUENCES_TABLE",
-                          Value = sequencesTable.TableName
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "MESSAGE_LIST_S3_KEY",
-                          Value = JsonPath.StringAt("$.sampleBatch.messageListS3Key")
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "REF_FASTA_KEY",
-                          Value = "resources/MN908947.fa"
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "TRIM_START",
-                          Value = "265"
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "TRIM_END",
-                          Value = "29674"
-                      }
-                  }
-              }
-          },
-          ResultPath = JsonPath.DISCARD
-      });
-
-      var goFastaAlignTestChain = Chain
-        .Start(goFastaAlignTestTask);
-
-      var testGoFastaAlignmentStateMachine = new StateMachine(this, "testGoFastaAlignmentStateMachine", new StateMachineProps
-          {
-              Definition = goFastaAlignTestChain
-          });
     }
   }
 }

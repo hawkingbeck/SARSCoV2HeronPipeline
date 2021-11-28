@@ -24,6 +24,7 @@ namespace HeronPipeline
     public LambdaInvoke readSampleBatchCountTask;
     public LambdaInvoke getMessageCountTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -54,6 +55,7 @@ namespace HeronPipeline
                             ): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;

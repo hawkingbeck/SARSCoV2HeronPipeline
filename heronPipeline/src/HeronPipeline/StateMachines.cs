@@ -21,6 +21,7 @@ namespace HeronPipeline
 {
   internal sealed class StateMachines: Construct 
   {
+    private string id;
     private Infrastructure infrastructure;
     private PangolinModel pangolinModel;
     private ArmadillinModel armadillinModel;
@@ -46,6 +47,7 @@ namespace HeronPipeline
                           ExportResults exportResults
                           ): base(scope, id)
     {
+      this.id = id;
       this.infrastructure = infrastructure;
       this.pangolinModel = pangolinModel;
       this.armadillinModel = armadillinModel;

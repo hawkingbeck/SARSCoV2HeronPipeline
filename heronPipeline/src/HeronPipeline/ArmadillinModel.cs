@@ -21,9 +21,9 @@ using Queue = Amazon.CDK.AWS.SQS.Queue;
 namespace HeronPipeline {
   internal sealed class ArmadillinModel: Construct {
     public EcsRunTask armadillinTask;
-    public EcsRunTask armadillinTestTask;
     public Succeed skipArmadillinTask;
     private Construct scope;
+    private string id;
     private Role ecsExecutionRole;
     private Amazon.CDK.AWS.ECS.Volume volume;
     private Cluster cluster;
@@ -36,6 +36,7 @@ namespace HeronPipeline {
     public ArmadillinModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
     {
       this.scope = scope;
+      this.id = id;
       this.ecsExecutionRole = executionRole;
       this.volume = volume;
       this.cluster = cluster;
@@ -54,8 +55,8 @@ namespace HeronPipeline {
       var armadillinImage = ContainerImage.FromAsset("src/images/armadillin", new AssetImageProps
       { 
       });
-      this.armadillinTaskDefinition = new TaskDefinition(this, "armadillinTaskDefinition", new TaskDefinitionProps{
-          Family = "armadillin",
+      this.armadillinTaskDefinition = new TaskDefinition(this, this.id + "_armadillin", new TaskDefinitionProps{
+          Family = this.id + "_armadillin",
           Cpu = "1024",
           MemoryMiB = "4096",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -72,7 +73,7 @@ namespace HeronPipeline {
               StreamPrefix = "armadillin",
               LogGroup = new LogGroup(this, "armadillinLogGroup", new LogGroupProps
               {
-                  LogGroupName = "armadillinLogGroup",
+                  LogGroupName = this.id + "armadillinLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
@@ -86,7 +87,7 @@ namespace HeronPipeline {
                   ReadOnly = false,
               }
           });
-      this.armadillinTask = new EcsRunTask(this, "armadillinPlaceTask", new EcsRunTaskProps
+      this.armadillinTask = new EcsRunTask(this, this.id + "_armadillinPlaceTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = cluster,
@@ -131,46 +132,5 @@ namespace HeronPipeline {
       this.armadillinTask.AddRetry(this.retryItem);
       skipArmadillinTask = new Succeed(this, "skipArmadillinTask");
     }
-
-    public void CreateTestTask(){
-      this.armadillinTestTask = new EcsRunTask(this, "armadillinPlaceTestTask", new EcsRunTaskProps
-      {
-          IntegrationPattern = IntegrationPattern.RUN_JOB,
-          Cluster = cluster,
-          TaskDefinition = this.armadillinTaskDefinition,
-          AssignPublicIp = true,
-          LaunchTarget = new EcsFargateLaunchTarget(),
-          ContainerOverrides = new ContainerOverride[] {
-              new ContainerOverride {
-                  ContainerDefinition = armadillinContainer,
-                  Environment = new TaskEnvironmentVariable[] {
-                      new TaskEnvironmentVariable{
-                        Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "HERON_SAMPLES_BUCKET",
-                        Value = bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "SEQ_DATA_ROOT",
-                        Value = "/mnt/efs0/seqData"
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "ITERATION_UUID",
-                        Value = JsonPath.StringAt("$.sampleBatch.iterationUUID")
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SEQUENCES_TABLE",
-                          Value = sequencesTable.TableName
-                      }
-                  }
-              }
-          },
-          ResultPath = JsonPath.DISCARD
-      });
-    }
-
-    
   }
 }

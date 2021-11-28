@@ -25,36 +25,37 @@ namespace HeronPipeline
         internal HeronPipelineStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
 
-            var testObj = new TestClass(this, "testClass");
-            var infrastructure = new Infrastructure(this, "infrastructure");
-            infrastructure.Create();
+            var idToSupply = id + "_";
 
-            var helperFunctions = new HelperFunctions(this, "helperFunctions", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue, infrastructure.sqsAccessPolicyStatement, infrastructure.s3AccessPolicyStatement, infrastructure.dynamoDBAccessPolicyStatement);
+            var testObj = new TestClass(this, "testClass");
+            var infrastructure = new Infrastructure(this, idToSupply+"infra_");
+            infrastructure.Create();
+            
+
+            var helperFunctions = new HelperFunctions(this, idToSupply+"helper_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue, infrastructure.sqsAccessPolicyStatement, infrastructure.s3AccessPolicyStatement, infrastructure.dynamoDBAccessPolicyStatement);
             helperFunctions.Create();
 
-            var prepareSequences = new PrepareSequences(this, "prepareSequences", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue);
+            var prepareSequences = new PrepareSequences(this, idToSupply+"prep_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue);
             prepareSequences.CreateAddSequencesToQueue();
             prepareSequences.CreatePrepareSequences();
             prepareSequences.CreatePrepareConsenusSequences();
 
-            var goFastaAlignment = new GoFastaAlignment(this, "goFastaAlignment", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var goFastaAlignment = new GoFastaAlignment(this, idToSupply+"align_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             goFastaAlignment.Create();
-            goFastaAlignment.CreateTestTask();
 
-            var pangolinModel = new PangolinModel(this, "pangolinTaskDefinition", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var pangolinModel = new PangolinModel(this, idToSupply+"pango_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             pangolinModel.Create();
 
-            var armadillinModel = new ArmadillinModel(this, "armadillinTaskDefinition", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var armadillinModel = new ArmadillinModel(this, idToSupply+"armadillin_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             armadillinModel.Create();
-            armadillinModel.CreateTestTask();
 
-            var genotypeVariantsModel = new GenotypeVariantsModel(this, "genotypeVariantsTaskDefinition", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var genotypeVariantsModel = new GenotypeVariantsModel(this, idToSupply+"genotype_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             genotypeVariantsModel.Create();
 
-            var exportResults = new ExportResults(this, "exportResults", infrastructure);
+            var exportResults = new ExportResults(this, idToSupply+"export_", infrastructure);
             exportResults.Create();
 
-            var stateMachines = new StateMachines(this, "stateMachines", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults);
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults);
             stateMachines.Create();
         }
     }
