@@ -36,6 +36,7 @@ class TestGenotypeVariants(unittest.TestCase):
         with open(exp_sample_tsv, 'r', newline='') as fh_in:
             reader = csv.DictReader(fh_in, delimiter="\t")
             for row in reader:
+                print("Starting next row")
                 # Skip commented out rows
                 if row["coguk_id"].startswith("#"):
                     continue
@@ -47,7 +48,7 @@ class TestGenotypeVariants(unittest.TestCase):
                                   row["tag"] +
                                   ".mapped.fa")
 
-
+                print(f"Processing fasta: {fasta_basename}")
                 fasta_path  = os.path.join(CURR_DIR, "assets", "fasta", "align", fasta_basename)
 
                 # python genotype-variants.py [fasta] phe_recipes.yml --verbose
@@ -60,7 +61,7 @@ class TestGenotypeVariants(unittest.TestCase):
                 # text:  capture stout as text
                 proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
                 if (proc.stderr.strip()):
-                    print (proc.stderr)
+                    print (f"Error: {proc.stderr}")
                 self.assertIsNotNone(proc.stdout)
                 self.assertTrue(len(proc.stdout.split("\t")) == 4, "Sample {} {} {} {} wrong number of output={}.\nCMD: {}".format(
                                     row["coguk_id"], row["run"], row["lane"], row["tag"],
@@ -68,6 +69,7 @@ class TestGenotypeVariants(unittest.TestCase):
                                     " ".join(cmd)
                                 ))
                 act_voc_profile, act_voc_vui, act_confidence, act_timestamp = proc.stdout.strip().split("\t")
+                print(f"{fasta_basename}: {act_voc_profile}, {act_voc_vui}, {act_confidence}, {act_timestamp}")
 
                 exp_voc_profile = row["voc_profile"]
                 exp_voc_vui = row["voc"]
@@ -96,7 +98,7 @@ class TestGenotypeVariants(unittest.TestCase):
                         act_confidence,
                         " ".join(cmd)
                     ))
-
+                print(f"{fasta_basename} is good")
                 try:
                     datetime.datetime.strptime(act_timestamp, EXPECTED_GENOTYPES_TIMESTAMP_FORMAT)
                 except:

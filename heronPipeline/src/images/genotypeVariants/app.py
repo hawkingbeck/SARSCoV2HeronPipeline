@@ -96,21 +96,21 @@ for message in messageList:
   vocProfile, vocVui, confidence, timestamp = proc.stdout.strip().split("\t")
   print(f"{vocProfile}, {vocVui}, {confidence}, {timestamp}")
   # Upsert the record for the sequence
-  # response = sequencesTable.query(
-  #       KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
-  #     )
+  response = sequencesTable.query(
+        KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+      )
 
-  # if 'Items' in response:
-  #   if len(response['Items']) == 1:
-  #     item = response['Items'][0]
-  #     item['processingState'] = 'aligned'
-  #     ret = sequencesTable.update_item(
-  #         Key={'seqHash': consensusFastaHash},
-  #         UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d, genotypeProfile=:p",
-  #         ExpressionAttributeValues={
-  #           ':v': matched_recipe,
-  #           ':c': matched_confidence,
-  #           ':d': callDate,
-  #           ':p': matched_recipe_phe_label
-  #         }
-  #       )
+  if 'Items' in response:
+    if len(response['Items']) == 1:
+      item = response['Items'][0]
+      item['processingState'] = 'aligned'
+      ret = sequencesTable.update_item(
+          Key={'seqHash': consensusFastaHash},
+          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d, genotypeProfile=:p",
+          ExpressionAttributeValues={
+            ':v': vocProfile,
+            ':c': confidence,
+            ':d': callDate,
+            ':p': vocVui
+          }
+        )
