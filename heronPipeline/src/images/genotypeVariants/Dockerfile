@@ -13,6 +13,8 @@ RUN python -m pip install pandas
 RUN python -m pip install boto3
 RUN python -m pip install pyyaml
 
-COPY . .
+COPY app.py .
+COPY genotype-variants.py .
+COPY phe-recipes.yml .
 
 ENTRYPOINT [ "python", "app.py" ]
