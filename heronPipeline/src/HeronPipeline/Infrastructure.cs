@@ -25,18 +25,12 @@ namespace HeronPipeline
     public AccessPoint pipelineEFSAccessPoint;
     public Vpc vpc;
     public Bucket bucket;
-    public Bucket testBucket;
     public Table samplesTable;
-    public Table testSamplesTable;
     public Table sequencesTable;
-    public Table testSequencesTable;
     public Queue dailyProcessingQueue;
-    public Queue testDailyProcessingQueue;
     public Queue reprocessingQueue;
-    public Queue testReprocessingQueue;
     public Role ecsExecutionRole;
     public Cluster cluster;
-    public Cluster testCluster;
     public PolicyStatement s3AccessPolicyStatement;
     public PolicyStatement sqsAccessPolicyStatement;
     public PolicyStatement dynamoDBAccessPolicyStatement;

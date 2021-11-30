@@ -31,8 +31,8 @@ namespace HeronPipeline
     private Bucket bucket;
     private Table sequencesTable;
     private RetryProps retryItem;
-    private TaskDefinition alignFastaTaskDefinition;
-    private Amazon.CDK.AWS.ECS.ContainerDefinition alignFastaContainer;
+    // private TaskDefinition alignFastaTaskDefinition;
+    // private Amazon.CDK.AWS.ECS.ContainerDefinition alignFastaContainer;
     private Queue reprocessingQueue;
     private Queue dailyProcessingQueue;
     private PolicyStatement sqsAccessPolicyStatement;
