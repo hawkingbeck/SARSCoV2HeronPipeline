@@ -94,7 +94,11 @@ for message in messageList:
   cmd = ["python", "genotype-variants.py", localFastaFilename, "phe-recipes.yml", "--verbose"]
   proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
   vocProfile, vocVui, confidence, timestamp = proc.stdout.strip().split("\t")
+  
   print(f"{vocProfile}, {vocVui}, {confidence}, {timestamp}")
+
+  if str(vocProfile) == 'nan':
+    vocProfile = "none"
   # Upsert the record for the sequence
   response = sequencesTable.query(
         KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
