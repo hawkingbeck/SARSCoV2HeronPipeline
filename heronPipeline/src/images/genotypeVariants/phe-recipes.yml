@@ -2871,6 +2871,7 @@ pentagon-refining:
   who-label: Omicron
   alternate-names:
   - B.1.1.529
+  - VUI-21NOV-01
   belongs-to-lineage:
     PANGO: B.1.1.529
     nextstrain:
@@ -2948,26 +2949,16 @@ pentagon-refining:
     reference-base: G
     type: SNP
     variant-base: A
-  - amino-acid-change: S371P
-    codon-change: TCC-CCC
+  - amino-acid-change: S371L
+    codon-change: TCC-CTC
     gene: S
     one-based-reference-position: 22673
     predicted-effect: non-synonymous
     protein: surface glycoprotein
     protein-codon-position: 371
-    reference-base: T
-    type: SNP
-    variant-base: C
-  - amino-acid-change: S371F
-    codon-change: TCC-TTC
-    gene: S
-    one-based-reference-position: 22674
-    predicted-effect: non-synonymous
-    protein: surface glycoprotein
-    protein-codon-position: 371
-    reference-base: C
-    type: SNP
-    variant-base: T
+    reference-base: TCC
+    type: MNP
+    variant-base: CTC
   - amino-acid-change: S373P
     codon-change: TCA-CCA
     gene: S
@@ -3167,7 +3158,7 @@ pentagon-refining:
     type: deletion
     variant-base: A
   - gene: S
-    one-based-reference-position: 21968
+    one-based-reference-position: 21986
     protein: surface glycoprotein
     reference-base: GGTGTTTATT
     type: deletion
