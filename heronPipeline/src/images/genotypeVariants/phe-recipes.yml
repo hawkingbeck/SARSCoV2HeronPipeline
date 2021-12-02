@@ -2867,11 +2867,11 @@ kelp-lesser:
 
 pentagon-refining:
   unique-id: pentagon-refining
-  phe-label: VUI-21NOV-01
+  phe-label: VOC-21NOV-01
   who-label: Omicron
   alternate-names:
   - B.1.1.529
-  - VUI-21NOV-01
+  - VOC-21NOV-01
   belongs-to-lineage:
     PANGO: B.1.1.529
     nextstrain:
