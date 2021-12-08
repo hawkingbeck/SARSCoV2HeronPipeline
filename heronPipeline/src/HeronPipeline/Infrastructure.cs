@@ -133,7 +133,7 @@ namespace HeronPipeline
       samplesTable = new Table(this, "heronSamplesTable", new TableProps{
           BillingMode = BillingMode.PAY_PER_REQUEST,
           PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-          SortKey = new Attribute { Name = "runMetaData", Type = AttributeType.NUMBER},
+          SortKey = new Attribute { Name = "runMetaData", Type = AttributeType.STRING},
           PointInTimeRecovery = true
       });
 
