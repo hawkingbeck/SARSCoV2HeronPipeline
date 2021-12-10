@@ -4,8 +4,8 @@ ARG FUNCTION_DIR="/home/app/"
 
 RUN conda --version
 RUN conda --version
-RUN echo "pulling for pangoLEARN data release 2021-11-18"
-RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.16
+RUN echo "Updating to Pangolin v3.1.17"
+RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.17
 # RUN git clone https://github.com/cov-lineages/pangolin.git
 WORKDIR /pangolin
 # RUN git describe
