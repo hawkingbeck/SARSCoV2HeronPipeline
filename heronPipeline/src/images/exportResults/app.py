@@ -88,7 +88,7 @@ def main():
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Remove any duplicated cogUkId's
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  deDupResults = joinedDf.sort_values(['cogUkId', 'pctCoveredBases', 'runCompleteDate']).drop_duplicates('cogUkId',keep='last')
+  # deDupResults = joinedDf.sort_values(['cogUkId', 'pctCoveredBases', 'lastChangedDate']).drop_duplicates('cogUkId',keep='last')
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Upload to S3
@@ -96,7 +96,7 @@ def main():
   fileName = f"{str(uuid.uuid4())}.csv"
   fileName = f"{executionId}.csv"
   
-  deDupResults.to_csv(f"/tmp/{fileName}", index=False)
+  joinedDf.to_csv(f"/tmp/{fileName}", index=False)
   bucket.upload_file(f"/tmp/{fileName}", f"results/{dateString}/{fileName}")
 
 if __name__ == '__main__':

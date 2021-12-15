@@ -133,15 +133,8 @@ namespace HeronPipeline
       samplesTable = new Table(this, "heronSamplesTable", new TableProps{
           BillingMode = BillingMode.PAY_PER_REQUEST,
           PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-          SortKey = new Attribute { Name = "runCompleteDate", Type = AttributeType.NUMBER},
+          SortKey = new Attribute { Name = "runMetaData", Type = AttributeType.STRING},
           PointInTimeRecovery = true
-      });
-
-      samplesTable.AddGlobalSecondaryIndex(new GlobalSecondaryIndexProps {
-          IndexName = "lastChangedDate",
-          PartitionKey = new Attribute { Name = "cogUkId", Type = AttributeType.STRING},
-          SortKey = new Attribute { Name = "lastChangedDate", Type = AttributeType.NUMBER},
-          ProjectionType = ProjectionType.ALL
       });
 
       sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
