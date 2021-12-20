@@ -39,9 +39,9 @@ RUN mkdir -p ${FUNCTION_DIR}
 COPY requirements.txt .
 
 # Install Lambda Runtime Interface Client for Python
-RUN python${RUNTIME_VERSION} -m pip install awslambdaric --target ${FUNCTION_DIR}
+# RUN python${RUNTIME_VERSION} -m pip install awslambdaric --target ${FUNCTION_DIR}
 
-RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
+# RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
 
 #################################################
 # Copy handler function
