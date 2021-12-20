@@ -131,7 +131,7 @@ namespace HeronPipeline
         Comment = "Check to see if we should run Mutations Model"
       });
       var runMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), true);
-      var dontRunMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), true);
+      var dontRunMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), false);
 
       shouldRunMutationsModel.When(runMutationsCondition, mutationsModel.mutationsTask);
       shouldRunMutationsModel.When(dontRunMutationsCondition, mutationsModel.skipMutationsTask);
