@@ -44,7 +44,7 @@ MODE_NUC_INDEL = "nuc_indels"
 ###         Function Defintions for mutations            ###
 ### ---------------------------------------------------- ###
 
-def call_aa_mutations(metadata_tsv, output_tsv, sam, reference_fasta, reference_genbank, threads):
+def call_aa_mutations(seqHash, output_tsv, sam, reference_fasta, reference_genbank, threads):
 
     # From https://github.com/cov-ert/gofasta/blob/master/cmd/variants.go:
     # The output is a csv-format file with one line per query sequence, and two columns: 'query' and
@@ -63,9 +63,7 @@ def call_aa_mutations(metadata_tsv, output_tsv, sam, reference_fasta, reference_
 
     proc = subprocess.run(cmd, check=True)
 
-    meta_df = pd.read_csv(metadata_tsv, sep="\t",
-                          keep_default_na=False, na_values=[], dtype=str)
-
+  
     raw_aa_mut_df = pd.read_csv('gofasta_sam_variants.out.csv', sep=",",
                                 keep_default_na=False, na_values=[], dtype=str)
 
@@ -78,7 +76,9 @@ def call_aa_mutations(metadata_tsv, output_tsv, sam, reference_fasta, reference_
     raw_aa_mut_df = raw_aa_mut_df.dropna()
 
     if raw_aa_mut_df.shape[0] > 0:
-        aa_mut_df = pd.concat([meta_df, raw_aa_mut_df[["variants"]]], axis=1)
+        # aa_mut_df = pd.concat([meta_df, raw_aa_mut_df[["variants"]]], axis=1)
+        aa_mut_df = raw_aa_mut_df[["variants"]].copy()
+        aa_mut_df['seqHash'] = seqHash
         split_mut_ser = aa_mut_df["variants"].str.split("|", expand=True).stack()
         split_mut_ser = split_mut_ser.reset_index(drop=True, level=1)  # to line up with df's index
         split_mut_ser.name = "aa_mutation"
@@ -87,7 +87,7 @@ def call_aa_mutations(metadata_tsv, output_tsv, sam, reference_fasta, reference_
         aa_mut_df = aa_mut_df.drop(columns=["variants"]).reset_index(drop=True)
 
     else:
-        aa_mut_df = pd.DataFrame(columns=meta_df.columns.tolist() + ["aa_mutation"])
+        aa_mut_df = pd.DataFrame(columns=["seqHash"] + ["aa_mutation"])
 
     
     aa_mut_df.to_csv(output_tsv, sep="\t", header=True, index=False)
@@ -213,6 +213,8 @@ iterationUUID = os.getenv('ITERATION_UUID')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 referenceGbPrefix = os.getenv('REF_GB_KEY')
+genesTsvS3Key = os.getenv('GENES_TSV_KEY')
+geneOverlapTsvS3Key = os.getenv('GENES_OVERLAP_TSV_KEY')
 threads = 2 #os.getenv('THREADS')
 
 # Step 2. Create resources
@@ -231,6 +233,8 @@ samLocalFilename = "/tmp/sample.aligned.sam"
 alignedFastaLocalFilename = "/tmp/sample.aligned.fasta"
 outputAAMutTsvLocalFilename = "/tmp/sample.aa_mut.fa"
 outputNucMutTsvLocalFilename = "/tmp/sample.nuc_mut.fa"
+genesTsvLocalFilename = "/tmp/genes.tsv"
+geneOverlapTsvLocalFilename = "/tmp/gene_overlap.tsv"
 
 # Step 4. Create iteration input paths
 sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
@@ -256,6 +260,7 @@ for message in messageList:
   consensusFastaKey = message["consensusFastaPath"]
   consensusFastaHash = message['seqHash']
   samFileS3Key = f"samFiles/{consensusFastaHash}.fasta.sam"
+  
   sequenceLocalFilename = f"/tmp/seq_{consensusFastaHash}_.json"
   
   mode = "aa_mutations"
@@ -264,7 +269,8 @@ for message in messageList:
   bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
   bucket.download_file(consensusFastaKey, sequenceLocalFilename)
   bucket.download_file(samFileS3Key, samLocalFilename)
-  #   bucket.download_file(metadataTsvS3, metadataLocalFilename)
+  bucket.download_file(genesTsvS3Key, genesTsvLocalFilename)
+  bucket.download_file(geneOverlapTsvS3Key, geneOverlapTsvLocalFilename)
   
 
   with open(sequenceLocalFilename) as fh_fasta_json_in:
@@ -274,15 +280,13 @@ for message in messageList:
   with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
     fh_aligned_fasta_out.write(alignedFastaStr)
       
-  call_aa_mutations(metadata_tsv=metadataLocalFilename,
-                    output_tsv=outputAAMutTsvLocalFilename,
+  call_aa_mutations(output_tsv=outputAAMutTsvLocalFilename,
                     sam=samLocalFilename,
                     reference_fasta=referenceFastaLocalFilename,
                     reference_genbank=referenceGbLocalFilename,
                     threads=threads)
     
-  call_nuc_mutations(metadata_tsv=metadataLocalFilename,
-                    output_tsv=outputNucMutTsvLocalFilename,
+  call_nuc_mutations(output_tsv=outputNucMutTsvLocalFilename,
                     reference_fasta=referenceFastaLocalFilename,
                     aligned_fasta=alignedFastaLocalFilename)
 
