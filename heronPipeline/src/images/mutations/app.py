@@ -213,6 +213,7 @@ iterationUUID = os.getenv('ITERATION_UUID')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 referenceGbPrefix = os.getenv('REF_GB_KEY')
+threads = 2 #os.getenv('THREADS')
 
 # Step 2. Create resources
 s3 = boto3.resource('s3', region_name='eu-west-1')
@@ -241,6 +242,7 @@ messageListLocalFilename = "/tmp/messageList.json"
 
 
 
+
 bucket.download_file(messageListS3Key, messageListLocalFilename)
 
 
@@ -250,30 +252,43 @@ with open(messageListLocalFilename) as messageListFile:
 
 for message in messageList:
   print(f'Message: {message["consensusFastaPath"]}')
-
-
-
-
-# def handler(event, context): 
-
-    ##############################################
-    # Step 1. Create resources
-    ##############################################
-    # Get from event input
-
-    # logger.info(f"Event: {event}")
-
-    # consensusFastaKey = event['message']['consensusFastaPath']
-    # seqHash = event['message']['seqHash']
-    
-    
-    # Get from environment variables
-    # bucketName = os.getenv('HERON_SAMPLES_BUCKET')
-    # referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
-    # referenceGbPrefix = os.getenv('REF_GB_KEY')
   
-    # threads = os.getenv('THREADS')
+  consensusFastaKey = message["consensusFastaPath"]
+  consensusFastaHash = message['seqHash']
+  samFileS3Key = f"samFiles/{consensusFastaHash}.fasta.sam"
+  sequenceLocalFilename = f"/tmp/seq_{consensusFastaHash}_.json"
+  
+  mode = "aa_mutations"
+  # Load or die
+  bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+  bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
+  bucket.download_file(consensusFastaKey, sequenceLocalFilename)
+  bucket.download_file(samFileS3Key, samLocalFilename)
+  #   bucket.download_file(metadataTsvS3, metadataLocalFilename)
+  
 
+  with open(sequenceLocalFilename) as fh_fasta_json_in:
+      fastaDict = json.load(fh_fasta_json_in)
+  alignedFastaStr = fastaDict['aligned']
+
+  with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
+    fh_aligned_fasta_out.write(alignedFastaStr)
+      
+  call_aa_mutations(metadata_tsv=metadataLocalFilename,
+                    output_tsv=outputAAMutTsvLocalFilename,
+                    sam=samLocalFilename,
+                    reference_fasta=referenceFastaLocalFilename,
+                    reference_genbank=referenceGbLocalFilename,
+                    threads=threads)
+    
+  call_nuc_mutations(metadata_tsv=metadataLocalFilename,
+                    output_tsv=outputNucMutTsvLocalFilename,
+                    reference_fasta=referenceFastaLocalFilename,
+                    aligned_fasta=alignedFastaLocalFilename)
+
+  ##############################################
+  # Step 1. Create resources
+  ##############################################
     # metadataTsvS3 = event['message']['metadataTsv']
     # fastaJSONS3 = event['message']['consensusFastaPath']
     # samS3 = event['message']['samPath']
@@ -281,56 +296,6 @@ for message in messageList:
     # outputAAMutTsvS3 = event['message']['outputAAMutTsv']
     # outputNucMutTsvS3 = event['message']['outputNucMutTsv']
 
-    
-    # s3 = boto3.resource('s3', region_name='eu-west-1')
-    # bucket = s3.Bucket(bucketName)
-    # metadataLocalFilename = "/tmp/metdatata.tsv"
-    # fastaJsonLocalFilename = "/tmp/consensus.fa"
-    # referenceFastaLocalFilename = "/tmp/ref.fa"
-    # referenceGbLocalFilename = "/tmp/ref.gb"
-    # samLocalFilename = "/tmp/sample.aligned.sam"
-    # alignedFastaLocalFilename = "/tmp/sample.aligned.fasta"
-    # outputAAMutTsvLocalFilename = "/tmp/sample.aa_mut.fa"
-    # outputNucMutTsvLocalFilename = "/tmp/sample.nuc_mut.fa"
-    
-    # logger.info(f"bucketName: {bucketName}")
-    # logger.info(f"referenceFastaPrefix: {referenceFastaPrefix}")
-    # for my_bucket_object in bucket.objects.all():
-    #   logger.info(f"bucket object: {my_bucket_object}")
-    # try:
-    #   bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
-    #   bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
-    #   bucket.download_file(fastaJSONS3, fastaJsonLocalFilename)
-
-    #   bucket.download_file(metadataTsvS3, metadataLocalFilename)
-    #   bucket.download_file(samS3, samLocalFilename)
-
-    # except Exception as e:
-    #   logger.exception(e)
-    #   return {'fileNotFound': True}
-
-    # with open(fastaJsonLocalFilename) as fh_fasta_json_in:
-    #   fastaDict = json.load(fh_fasta_json_in)
-
-    # alignedFastaStr = fastaDict['aligned']
-
-    # with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
-    #   fh_aligned_fasta_out.write(alignedFastaStr)
-      
-    # call_aa_mutations(metadata_tsv=metadataLocalFilename,
-    #                   output_tsv=outputAAMutTsvLocalFilename,
-    #                   sam=samLocalFilename,
-    #                   reference_fasta=referenceFastaLocalFilename,
-    #                   reference_genbank=referenceGbLocalFilename,
-    #                   threads=threads)
-    
-    # call_nuc_mutations(metadata_tsv=metadataLocalFilename,
-    #                   output_tsv=outputNucMutTsvLocalFilename,
-    #                   reference_fasta=referenceFastaLocalFilename,
-    #                   aligned_fasta=alignedFastaLocalFilename
-    #                   )
-
-   
     
     ##############################################
     # Write updated result into S3
