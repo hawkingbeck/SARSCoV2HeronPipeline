@@ -26,6 +26,7 @@ namespace HeronPipeline
     private PangolinModel pangolinModel;
     private ArmadillinModel armadillinModel;
     private GenotypeVariantsModel genotypeVariantsModel;
+    private MutationsModel mutationsModel;
     private PrepareSequences prepareSequences;
     private GoFastaAlignment goFastaAlignment;
     private HelperFunctions helperFunctions;
@@ -41,6 +42,7 @@ namespace HeronPipeline
                           PangolinModel pangolinModel,
                           ArmadillinModel armadillinModel,
                           GenotypeVariantsModel genotypeVariantsModel,
+                          MutationsModel mutationsModel,
                           PrepareSequences prepareSequences,
                           GoFastaAlignment goFastaAlignment,
                           HelperFunctions helperFunctions,
@@ -52,6 +54,7 @@ namespace HeronPipeline
       this.pangolinModel = pangolinModel;
       this.armadillinModel = armadillinModel;
       this.genotypeVariantsModel = genotypeVariantsModel;
+      this.mutationsModel = mutationsModel;
       this.prepareSequences = prepareSequences;
       this.goFastaAlignment = goFastaAlignment;
       this.helperFunctions = helperFunctions;
@@ -124,7 +127,19 @@ namespace HeronPipeline
       var genotypeVariantsChain = Chain
           .Start(shouldRunGenotypeModel);
 
-      placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
+      var shouldRunMutationsModel = new Choice(this, "shouldRunMutations", new ChoiceProps{
+        Comment = "Check to see if we should run Mutations Model"
+      });
+      var runMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), true);
+      var dontRunMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), true);
+
+      shouldRunMutationsModel.When(runMutationsCondition, mutationsModel.mutationsTask);
+      shouldRunMutationsModel.When(dontRunMutationsCondition, mutationsModel.skipMutationsTask);
+
+      var mutationsModelChain = Chain
+        .Start(shouldRunMutationsModel);
+
+      placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain, mutationsModelChain });
 
       var processSamplesChain = Chain
         .Start(prepareSequences.prepareSequencesTask)
