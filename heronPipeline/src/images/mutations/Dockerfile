@@ -45,7 +45,8 @@ RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCT
 
 #################################################
 # Copy handler function
-COPY app/* ${FUNCTION_DIR}
+# COPY app/* ${FUNCTION_DIR}
+COPY app.py ${FUNCTION_DIR}
 #################################################
 
 #################################################
@@ -80,8 +81,7 @@ RUN chmod 755 /usr/local/bin/gofasta
 # RUN chmod 755 /usr/local/bin/aws-lambda-rie /entry_script.sh
 # ENTRYPOINT [ "/entry_script.sh" ]
 
-
-
-
 # Stage 4: Entry point
 # ENTRYPOINT ["python3", "mutations_import.py" ]
+
+ENTRYPOINT [ "python3", "app.py" ]
