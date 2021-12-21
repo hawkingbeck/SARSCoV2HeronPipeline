@@ -35,6 +35,7 @@ namespace HeronPipeline
 
     private StateMachine processSampleBatchStateMachine;
     private StateMachine startNestedSampleProcessingStateMachine;
+    private StateMachine mutationsTestStateMachine;
 
     public StateMachines( Construct scope, 
                           string id, 
@@ -66,8 +67,19 @@ namespace HeronPipeline
       CreateProcessSampleBatchStateMachine();
       CreateStartNestedSequenceProcessingStateMachine();
       CreatePipelineStateMachine();
+      CreateMutationsTestStateMachine();
     }
 
+    private void CreateMutationsTestStateMachine(){
+      var mutationsChain = Chain 
+        .Start(mutationsModel.mutationsTask);
+
+      mutationsTestStateMachine = new StateMachine(this, "mutationsTestStateMachine", new StateMachineProps{
+        Definition = mutationsChain
+      });
+
+
+    }
     private void CreateProcessSampleBatchStateMachine()
     {
       var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
