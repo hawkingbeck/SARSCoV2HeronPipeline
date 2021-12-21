@@ -147,7 +147,7 @@ namespace HeronPipeline
 
     private void CreateTest(){
       var mutationsImage = ContainerImage.FromAsset("src/images/mutations");
-      var mutationsTaskDefinition = new TaskDefinition(this, this.id + "_mutationsTaskDefinition", new TaskDefinitionProps{
+      var mutationsTaskDefinition = new TaskDefinition(this, this.id + "_mutationsTestTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_mutations",
           Cpu = "1024",
           MemoryMiB = "2048",
@@ -162,10 +162,10 @@ namespace HeronPipeline
           Image = mutationsImage,
           Logging = new AwsLogDriver(new AwsLogDriverProps
           {
-              StreamPrefix = "mutationsVariants",
-              LogGroup = new LogGroup(this, "mutationsLogGroup", new LogGroupProps
+              StreamPrefix = "mutationsTestVariants",
+              LogGroup = new LogGroup(this, "mutationsTestLogGroup", new LogGroupProps
               {
-                  LogGroupName = this.id + "mutationsLogGroup",
+                  LogGroupName = this.id + "mutationsTestLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
