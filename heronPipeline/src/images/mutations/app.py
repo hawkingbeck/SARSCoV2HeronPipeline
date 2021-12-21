@@ -93,7 +93,7 @@ def call_aa_mutations(seqHash, output_tsv, sam, reference_fasta, reference_genba
     aa_mut_df.to_csv(output_tsv, sep="\t", header=True, index=False)
 
 
-def call_nuc_indels(metadata_tsv, sam, output_prefix):
+def call_nuc_indels(seqHash, sam, output_prefix):
 
     # From https://github.com/cov-ert/gofasta/blob/master/cmd/indels.go,
     # gofasta sam indels outputs a TSV for insertions and TSV for deletions.
@@ -109,8 +109,8 @@ def call_nuc_indels(metadata_tsv, sam, output_prefix):
 
     proc = subprocess.run(cmd, check=True)
 
-    meta_df = pd.read_csv(metadata_tsv, sep="\t",
-                          keep_default_na=False, na_values=[], dtype=str)
+    # meta_df = pd.read_csv(metadata_tsv, sep="\t",
+    #                       keep_default_na=False, na_values=[], dtype=str)
 
     raw_nuc_insert_df = pd.read_csv('gofasta_sam_indels.out.insertions.tsv', sep="\t",
                                     keep_default_na=False, na_values=[], dtype=str)
@@ -123,13 +123,15 @@ def call_nuc_indels(metadata_tsv, sam, output_prefix):
     # workaround for cartesian product in pandas < v1.2
 
     if raw_nuc_insert_df.shape[0] > 0:
-        nuc_insert_df = (meta_df.assign(key=1)
-                                .merge(
-                                    raw_nuc_insert_df[["ref_start", "insertion"]].assign(key=1),
-                                    how="outer", on="key")
-                                .drop("key", axis=1))
+        nuc_insert_df = raw_nuc_insert_df[["ref_start", "insertion"]]
+        # nuc_insert_df = (meta_df.assign(key=1)
+        #                         .merge(
+        #                             raw_nuc_insert_df[["ref_start", "insertion"]].assign(key=1),
+        #                             how="outer", on="key")
+        #                         .drop("key", axis=1))
+        nuc_insert_df['seqHash'] = seqHash
     else:
-        nuc_insert_df = pd.DataFrame(columns=meta_df.columns.tolist() + ["ref_start", "insertion"])
+        nuc_insert_df = pd.DataFrame(columns=["seqHash"] + ["ref_start", "insertion"])
 
     nuc_insert_df.to_csv(insert_tsv, sep="\t", header=True, index=False)
 
@@ -142,18 +144,21 @@ def call_nuc_indels(metadata_tsv, sam, output_prefix):
     del_tsv = output_prefix + ".deletions.tsv"
 
     if raw_nuc_del_df.shape[0] > 0:
-        nuc_del_df = (meta_df.assign(key=1)
-                                .merge(
-                                    raw_nuc_del_df[["ref_start", "length"]].assign(key=1),
-                                    how="outer", on="key")
-                                .drop("key", axis=1))
+        nuc_del_df = raw_nuc_del_df[["ref_start", "length"]]
+        # nuc_del_df = (meta_df.assign(key=1)
+        #                         .merge(
+        #                             raw_nuc_del_df[["ref_start", "length"]].assign(key=1),
+        #                             how="outer", on="key")
+        #                         .drop("key", axis=1))
+        nuc_del_df['seqHash'] = seqHash
     else:
-        nuc_del_df = pd.DataFrame(columns=meta_df.columns.tolist() + ["ref_start", "length"])
+        # nuc_del_df = pd.DataFrame(columns=meta_df.columns.tolist() + ["ref_start", "length"])
+        nuc_del_df = pd.DataFrame(columns=["seqHash"] + ["ref_start", "length"])
 
     nuc_del_df.to_csv(del_tsv, sep="\t", header=True, index=False)
 
 
-def call_nuc_mutations(metadata_tsv, reference_fasta, aligned_fasta, output_tsv):
+def call_nuc_mutations(seqHash, reference_fasta, aligned_fasta, output_tsv):
 
     # https://github.com/cov-ert/gofasta/blob/master/cmd/snps.go
     # The output is a csv-format file with one line per query sequence, and two columns:
@@ -164,9 +169,6 @@ def call_nuc_mutations(metadata_tsv, reference_fasta, aligned_fasta, output_tsv)
            "-o", "gofasta.snps.csv"]
 
     proc = subprocess.run(cmd, check=True)
-
-    meta_df = pd.read_csv(metadata_tsv, sep="\t",
-                          keep_default_na=False, na_values=[], dtype=str)
 
     raw_nuc_mut_df = pd.read_csv('gofasta.snps.csv', sep=",",
                                 keep_default_na=False, na_values=[], dtype=str)
@@ -182,11 +184,13 @@ def call_nuc_mutations(metadata_tsv, reference_fasta, aligned_fasta, output_tsv)
     # https://stackoverflow.com/questions/13269890/cartesian-product-in-pandas
     # workaround for cartesian product in pandas < v1.2
     if raw_nuc_mut_df.shape[0] > 0:
-        nuc_mut_df = (meta_df.assign(key=1)
-                             .merge(
-                                raw_nuc_mut_df[["SNPs"]].assign(key=1),
-                                how="outer", on="key")
-                             .drop("key", axis=1))
+        nuc_mut_df = raw_nuc_mut_df[["SNPs"]]
+        nuc_mut_df['seqHash'] = seqHash
+        # nuc_mut_df = (meta_df.assign(key=1)
+        #                      .merge(
+        #                         raw_nuc_mut_df[["SNPs"]].assign(key=1),
+        #                         how="outer", on="key")
+        #                      .drop("key", axis=1))
         
         split_mut_ser = nuc_mut_df["SNPs"].str.split("|", expand=True).stack()
         split_mut_ser = split_mut_ser.reset_index(drop=True, level=1)  # to line up with df's index
@@ -197,7 +201,7 @@ def call_nuc_mutations(metadata_tsv, reference_fasta, aligned_fasta, output_tsv)
         nuc_mut_df = nuc_mut_df.drop(columns=["SNPs"]).reset_index(drop=True)
 
     else:
-        nuc_mut_df = pd.DataFrame(columns=meta_df.columns.tolist() + ["SNP"])
+        nuc_mut_df = pd.DataFrame(columns=["seqHash"] + ["SNP"])
 
         
     nuc_mut_df.to_csv(output_tsv, sep="\t", header=True, index=False)
@@ -280,13 +284,15 @@ for message in messageList:
   with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
     fh_aligned_fasta_out.write(alignedFastaStr)
       
-  call_aa_mutations(output_tsv=outputAAMutTsvLocalFilename,
+  call_aa_mutations(consensusFastaHash,
+                    output_tsv=outputAAMutTsvLocalFilename,
                     sam=samLocalFilename,
                     reference_fasta=referenceFastaLocalFilename,
                     reference_genbank=referenceGbLocalFilename,
                     threads=threads)
     
-  call_nuc_mutations(output_tsv=outputNucMutTsvLocalFilename,
+  call_nuc_mutations(consensusFastaHash,
+                    output_tsv=outputNucMutTsvLocalFilename,
                     reference_fasta=referenceFastaLocalFilename,
                     aligned_fasta=alignedFastaLocalFilename)
 
