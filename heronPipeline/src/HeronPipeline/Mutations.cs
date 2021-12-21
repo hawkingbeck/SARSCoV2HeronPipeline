@@ -132,6 +132,14 @@ namespace HeronPipeline
                           Name = "REF_GB_KEY",
                           Value = "resources/MN908947.gb"
                       },
+                      new TaskEnvironmentVariable{
+                          Name = "GENES_TSV_KEY",
+                          Value = "resources/genes.tsv"
+                      },
+                      new TaskEnvironmentVariable{
+                          Name = "GENES_OVERLAP_TSV_KEY",
+                          Value = "resources/gene_overlaps.tsv"
+                      }
                   }
               }
           },
@@ -222,6 +230,14 @@ namespace HeronPipeline
                           Name = "REF_GB_KEY",
                           Value = "resources/MN908947.gb"
                       },
+                      new TaskEnvironmentVariable{
+                          Name = "GENES_TSV_KEY",
+                          Value = "resources/genes.tsv"
+                      },
+                      new TaskEnvironmentVariable{
+                          Name = "GENES_OVERLAP_TSV_KEY",
+                          Value = "resources/gene_overlaps.tsv"
+                      }
                   }
               }
           },
