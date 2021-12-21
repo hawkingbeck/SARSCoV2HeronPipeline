@@ -72,7 +72,7 @@ namespace HeronPipeline
 
     private void CreateMutationsTestStateMachine(){
       var mutationsChain = Chain 
-        .Start(mutationsModel.mutationsTask);
+        .Start(mutationsModel.mutationsTestTask);
 
       mutationsTestStateMachine = new StateMachine(this, "mutationsTestStateMachine", new StateMachineProps{
         Definition = mutationsChain
