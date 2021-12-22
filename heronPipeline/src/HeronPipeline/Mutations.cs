@@ -139,6 +139,10 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                           Name = "GENES_OVERLAP_TSV_KEY",
                           Value = "resources/gene_overlaps.tsv"
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "GO_FASTA_THREADS",
+                        Value = JsonPath.StringAt("$.goFastaThreads")
                       }
                   }
               }
@@ -237,6 +241,10 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                           Name = "GENES_OVERLAP_TSV_KEY",
                           Value = "resources/gene_overlaps.tsv"
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "GO_FASTA_THREADS",
+                        Value = JsonPath.StringAt("$.goFastaThreads")
                       }
                   }
               }
