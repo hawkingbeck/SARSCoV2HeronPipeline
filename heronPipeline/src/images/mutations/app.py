@@ -183,16 +183,19 @@ for message in messageList:
       mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), row["protein_mutation.gene"], str(row["protein_mutation.pos"])]) 
       print(f"Row: {row}")
       print(f"protein_mutation.alt: {row['protein_mutation.alt']}")
-      response = mutTable.put_item(
-        Item={"mutationId": mut_id,
-              "seqHash": consensusFastaHash,
-              "genome_mutation.pos":  row["genome_mutation.pos"],
-              "genome_mutation.ref":  row["genome_mutation.ref"],
-              "genome_mutation.alt":  row["genome_mutation.alt"],
-              "protein_mutation.gene":  row["protein_mutation.gene"],
-              "protein_mutation.pos":  row["protein_mutation.pos"],
-              "protein_mutation.ref":  row["protein_mutation.ref"],
-              "protein_mutation.alt":  row["protein_mutation.alt"]
+      response = mutTable.update_item(
+        Key={'mutationId': mut_id},
+        UpdateExpression="set seqHash=:sq, callDate=:cd, genome_mutation.pos=:gmp, genome_mutation.ref=:gmr, genome_mutation.alt=:gma, protein_mutation.gene=:pmg, protein_mutation.pos=:pmp, protein_mutation.ref=:pmr, protein_mutation.alt=:pma",
+        ExpressionAttributeValues={
+          ':sq': consensusFastaHash,
+          ':cd': callDate,
+          ':gmp': row["genome_mutation.pos"],
+          ':gmr': row["genome_mutation.ref"],
+          ':gma': row["genome_mutation.alt"],
+          ':pmg': row["protein_mutation.gene"],
+          ':pmp': row["protein_mutation.pos"],
+          ':pmr': row["protein_mutation.ref"],
+          ':pma': row["protein_mutation.alt"]
         })
       logger.debug(f"mut put response: {response}")
 
