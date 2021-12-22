@@ -189,13 +189,13 @@ for message in messageList:
         ExpressionAttributeValues={
           ':sq': consensusFastaHash,
           ':cd': callDate,
-          ':gmp': row["genome_mutation.pos"],
-          ':gmr': row["genome_mutation.ref"],
-          ':gma': row["genome_mutation.alt"],
-          ':pmg': row["protein_mutation.gene"],
-          ':pmp': row["protein_mutation.pos"],
-          ':pmr': row["protein_mutation.ref"],
-          ':pma': row["protein_mutation.alt"]
+          ':gmp': str(row["genome_mutation.pos"]),
+          ':gmr': str(row["genome_mutation.ref"]),
+          ':gma': str(row["genome_mutation.alt"]),
+          ':pmg': str(row["protein_mutation.gene"]),
+          ':pmp': str(row["protein_mutation.pos"]),
+          ':pmr': str(row["protein_mutation.ref"]),
+          ':pma': str(row["protein_mutation.alt"])
         })
       logger.debug(f"mut put response: {response}")
 
