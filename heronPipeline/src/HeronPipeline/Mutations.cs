@@ -133,6 +133,10 @@ namespace HeronPipeline
                           Value = "resources/MN908947.gb"
                       },
                       new TaskEnvironmentVariable{
+                          Name = "REF_AA_KEY",
+                          Value = "resources/MN908947.aa.fa"
+                      },
+                      new TaskEnvironmentVariable{
                           Name = "GENES_TSV_KEY",
                           Value = "resources/genes.tsv"
                       },
@@ -230,6 +234,10 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                           Name = "REF_GB_KEY",
                           Value = "resources/MN908947.gb"
+                      },
+                      new TaskEnvironmentVariable{
+                          Name = "REF_AA_KEY",
+                          Value = "resources/MN908947.aa.fa"
                       },
                       new TaskEnvironmentVariable{
                           Name = "GENES_TSV_KEY",

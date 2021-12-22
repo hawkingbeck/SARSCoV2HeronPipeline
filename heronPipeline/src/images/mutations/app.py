@@ -54,6 +54,7 @@ iterationUUID = os.getenv('ITERATION_UUID')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 referenceGbPrefix = os.getenv('REF_GB_KEY')
+refAAFastaS3 = os.getenv("REF_AA_KEY")
 genesTsvS3Key = os.getenv('GENES_TSV_KEY')
 geneOverlapTsvS3Key = os.getenv('GENES_OVERLAP_TSV_KEY')
 threads = os.getenv('GO_FASTA_THREADS')
@@ -70,6 +71,7 @@ metadataLocalFilename = "/tmp/metdatata.tsv"
 fastaJsonLocalFilename = "/tmp/consensus.fa"
 referenceFastaLocalFilename = "/tmp/ref.fa"
 referenceGbLocalFilename = "/tmp/ref.gb"
+refAAFastaLocalFilename = "/tmp/ref_aa.fa"
 samLocalFilename = "/tmp/sample.aligned.sam"
 alignedFastaLocalFilename = "/tmp/sample.aligned.fasta"
 outputAAMutTsvLocalFilename = "/tmp/sample.aa_mut.fa"
@@ -82,6 +84,7 @@ outputNucInsTsvLocalFilename = outputNucIndelLocalFilenamePrefix + ".insertions.
 outputSnpAALinkTsvLocalFilename = "/tmp/snp_aa_link.tsv"
 outputDelNucAALinkTsvLocalFilename = "/tmp/del_nuc_aa_link.tsv"
 outputInsNucAALinkTsvLocalFilename = "/tmp/ins_nuc_aa_link.tsv"
+
 
 
 # Step 4. Create iteration input paths
@@ -115,6 +118,7 @@ for message in messageList:
   # Load or die
   bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
   bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
+  bucket.download_file(refAAFastaS3, refAAFastaLocalFilename)
   bucket.download_file(consensusFastaKey, sequenceLocalFilename)
   bucket.download_file(samFileS3Key, samLocalFilename)
   bucket.download_file(genesTsvS3Key, genesTsvLocalFilename)
@@ -143,6 +147,17 @@ for message in messageList:
   mutations.call_nuc_indels(consensusFastaHash, 
                     sam=samLocalFilename, 
                     output_prefix=outputNucIndelLocalFilenamePrefix)
+
+
+  link_mut_out_df = translate_mutations.translate_snps(
+                    genes_tsv=genesTsvLocalFilename, 
+                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                    ref_aa_fasta_filename=refAAFastaLocalFilename,
+                    nuc_mut_tsv=outputNucMutTsvLocalFilename, 
+                    aa_mut_tsv=outputAAMutTsvLocalFilename,
+                    snp_aa_link_tsv=outputSnpAALinkTsvLocalFilename, 
+                    gene_overlap_tsv=geneOverlapTsvLocalFilename)
+
 
     ##############################################
     # Step 1. Update the record in dynamoDB
