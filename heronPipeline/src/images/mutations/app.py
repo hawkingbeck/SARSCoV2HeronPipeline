@@ -197,7 +197,7 @@ for message in messageList:
           ':pmr': str(row["protein_mutation.ref"]),
           ':pma': str(row["protein_mutation.alt"])
         })
-      logger.debug(f"mut put response: {response}")
+      # logger.debug(f"mut put response: {response}")
 
   response = sequencesTable.query(
       KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
