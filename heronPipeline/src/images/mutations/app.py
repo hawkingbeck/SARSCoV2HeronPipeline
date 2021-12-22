@@ -149,7 +149,7 @@ for message in messageList:
                     output_prefix=outputNucIndelLocalFilenamePrefix)
 
 
-  link_mut_out_df = translate_mutations.translate_snps(
+  linkMutOutDf = translate_mutations.translate_snps(
                     genes_tsv=genesTsvLocalFilename, 
                     ref_nuc_fasta_filename=referenceFastaLocalFilename,
                     ref_aa_fasta_filename=refAAFastaLocalFilename,
@@ -158,6 +158,19 @@ for message in messageList:
                     snp_aa_link_tsv=outputSnpAALinkTsvLocalFilename, 
                     gene_overlap_tsv=geneOverlapTsvLocalFilename)
 
+  linkDelOutDf = translate_mutations.translate_deletions(                        
+                    genes_tsv=genesTsvLocalFilename, 
+                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                    ref_aa_fasta_filename=refAAFastaLocalFilename,
+                    nuc_del_tsv=outputNucDelTsvLocalFilename, 
+                    del_nuc_aa_link_tsv=outputDelNucAALinkTsvLocalFilename)
+
+  linkInsOutDf = translate_mutations.translate_insertions(
+                    genes_tsv=genesTsvLocalFilename, 
+                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                    ref_aa_fasta_filename=refAAFastaLocalFilename,
+                    nuc_ins_tsv=outputNucInsTsvLocalFilename, 
+                    ins_nuc_aa_link_tsv=outputInsNucAALinkTsvLocalFilename)
 
     ##############################################
     # Step 1. Update the record in dynamoDB
