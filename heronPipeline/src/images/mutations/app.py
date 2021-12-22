@@ -180,7 +180,8 @@ for message in messageList:
   logger.info(f"Updating mut seqHash {consensusFastaHash}")
   for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
     for i, row in df.iterrows():
-      mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), row["protein_mutation.gene"], str(row["protein_mutation.pos"])]) 
+      
+      mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
       print(f"Row: {row}")
 
       gmp = row["genome_mutation.pos"]
