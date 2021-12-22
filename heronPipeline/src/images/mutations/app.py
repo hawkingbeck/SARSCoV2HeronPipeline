@@ -65,7 +65,7 @@ s3 = boto3.resource('s3', region_name='eu-west-1')
 bucket = s3.Bucket(bucketName)
 dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
-mutTable = dynamodb.Table(mutations)
+mutationsTable = dynamodb.Table(mutationsTableName)
 callDate = int(datetime.now().timestamp())
 
 # Step 3. Create local paths
@@ -190,10 +190,8 @@ for message in messageList:
       pmp = row["protein_mutation.pos"]
       pmr = row["protein_mutation.ref"]
       pma = row["protein_mutation.alt"]
-
-      print(f"protein_mutation.alt: {pma}, type: {type(pma)}")
-
-      response = mutTable.update_item(
+      
+      response = mutationsTable.update_item(
         Key={'mutationId': mut_id},
         UpdateExpression="set seqHash=:sq, callDate=:cd, genome_mutation.pos=:gmp, genome_mutation.ref=:gmr, genome_mutation.alt=:gma, protein_mutation.gene=:pmg, protein_mutation.pos=:pmp, protein_mutation.ref=:pmr, protein_mutation.alt=:pma",
         ExpressionAttributeValues={
