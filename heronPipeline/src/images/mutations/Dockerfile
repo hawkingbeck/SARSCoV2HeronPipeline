@@ -47,6 +47,8 @@ RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCT
 # Copy handler function
 # COPY app/* ${FUNCTION_DIR}
 COPY app.py ${FUNCTION_DIR}
+COPY mutations.py ${FUNCTION_DIR}
+COPY translate_mutations.py ${FUNCTION_DIR}
 #################################################
 
 #################################################
