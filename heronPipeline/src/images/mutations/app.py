@@ -76,6 +76,13 @@ outputAAMutTsvLocalFilename = "/tmp/sample.aa_mut.fa"
 outputNucMutTsvLocalFilename = "/tmp/sample.nuc_mut.fa"
 genesTsvLocalFilename = "/tmp/genes.tsv"
 geneOverlapTsvLocalFilename = "/tmp/gene_overlap.tsv"
+outputNucIndelLocalFilenamePrefix = "/tmp/sample.nuc_indel"
+outputNucDelTsvLocalFilename = outputNucIndelLocalFilenamePrefix + ".deletions.tsv"
+outputNucInsTsvLocalFilename = outputNucIndelLocalFilenamePrefix + ".insertions.tsv"
+outputSnpAALinkTsvLocalFilename = "/tmp/snp_aa_link.tsv"
+outputDelNucAALinkTsvLocalFilename = "/tmp/del_nuc_aa_link.tsv"
+outputInsNucAALinkTsvLocalFilename = "/tmp/ins_nuc_aa_link.tsv"
+
 
 # Step 4. Create iteration input paths
 sampleDataRootSeqBatchesDir = f"{sampleDataRoot}/{dateString}/seqBatchFiles"
@@ -133,7 +140,9 @@ for message in messageList:
                     reference_fasta=referenceFastaLocalFilename,
                     aligned_fasta=alignedFastaLocalFilename)
 
-  
+  mutations.call_nuc_indels(consensusFastaHash, 
+                    sam=samLocalFilename, 
+                    output_prefix=outputNucIndelLocalFilenamePrefix)
 
     ##############################################
     # Step 1. Update the record in dynamoDB
