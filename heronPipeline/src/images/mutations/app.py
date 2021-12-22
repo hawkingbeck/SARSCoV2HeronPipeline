@@ -181,6 +181,8 @@ for message in messageList:
   for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
     for i, row in df.iterrows():
       mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), row["protein_mutation.gene"], str(row["protein_mutation.pos"])]) 
+      print(f"Row: {row}")
+      print(f"protein_mutation.alt: {row['protein_mutation.alt']}")
       response = mutTable.put_item(
         Item={"mutationId": mut_id,
               "seqHash": consensusFastaHash,
