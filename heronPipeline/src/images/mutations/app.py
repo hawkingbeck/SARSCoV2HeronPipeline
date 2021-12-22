@@ -191,6 +191,8 @@ for message in messageList:
       pmp = row["protein_mutation.pos"]
       pmr = row["protein_mutation.ref"]
       pma = row["protein_mutation.alt"]
+      
+      print(f"{gmp} {type(gmp)}, {gmr} {type(gmr)}, {gma} {type(gma)}, {pmg}, {pmp}, {pmr}, {pma}")
 
       response = mutationsTable.update_item(
         Key={'mutationId': mutId},
