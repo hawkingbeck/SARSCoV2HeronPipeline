@@ -181,8 +181,8 @@ for message in messageList:
   for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
     for i, row in df.iterrows():
       
-      mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
-      print(f"Row: {row}")
+      mutId = "_".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
+      print(f"Mutation ID: {mutId}")
 
       gmp = row["genome_mutation.pos"]
       gmr = row["genome_mutation.ref"]
@@ -193,7 +193,7 @@ for message in messageList:
       pma = row["protein_mutation.alt"]
 
       response = mutationsTable.update_item(
-        Key={'mutationId': mut_id},
+        Key={'mutationId': mutId},
         UpdateExpression="set seqHash=:sq, callDate=:cd, genomeMutationPos=:gmp, genomeMutationRef=:gmr, genomeMutationAlt=:gma, proteinMutationGene=:pmg, proteinMutationPos=:pmp, proteinMutationRef=:pmr, proteinMutationAlt=:pma",
         ExpressionAttributeValues={
           ':sq': consensusFastaHash,
@@ -211,9 +211,7 @@ for message in messageList:
   response = sequencesTable.query(
       KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
     )
-  logger.info(f"query response: {response}")
 
-  logger.info(f"Updating status {consensusFastaHash}")
   ret = sequencesTable.update_item(
       Key={'seqHash': consensusFastaHash},
       UpdateExpression="set mutationCallDate=:d",
