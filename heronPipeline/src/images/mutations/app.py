@@ -190,10 +190,10 @@ for message in messageList:
       pmp = row["protein_mutation.pos"]
       pmr = row["protein_mutation.ref"]
       pma = row["protein_mutation.alt"]
-      
+
       response = mutationsTable.update_item(
         Key={'mutationId': mut_id},
-        UpdateExpression="set seqHash=:sq, callDate=:cd, genome_mutation.pos=:gmp, genome_mutation.ref=:gmr, genome_mutation.alt=:gma, protein_mutation.gene=:pmg, protein_mutation.pos=:pmp, protein_mutation.ref=:pmr, protein_mutation.alt=:pma",
+        UpdateExpression="set seqHash=:sq, callDate=:cd, genomeMutationPos=:gmp, genomeMutationRef=:gmr, genomeMutationAlt=:gma, proteinMutationGene=:pmg, proteinMutationPos=:pmp, proteinMutationRef=:pmr, proteinMutationAlt=:pma",
         ExpressionAttributeValues={
           ':sq': consensusFastaHash,
           ':cd': callDate,
