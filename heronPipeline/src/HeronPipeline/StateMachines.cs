@@ -77,8 +77,6 @@ namespace HeronPipeline
       mutationsTestStateMachine = new StateMachine(this, "mutationsTestStateMachine", new StateMachineProps{
         Definition = mutationsChain
       });
-
-
     }
     private void CreateProcessSampleBatchStateMachine()
     {
@@ -189,6 +187,7 @@ namespace HeronPipeline
       startSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
       startSampleProcessingMapParameters.Add("runMutations.$", "$.runMutations");
       startSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
+      startSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreads");
 
       var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -207,7 +206,8 @@ namespace HeronPipeline
           {"runPangolin", JsonPath.StringAt("$.runPangolin")},
           {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
           {"runMutations", JsonPath.StringAt("$.runMutations")},
-          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")},
+          {"goFastaThreads", JsonPath.StringAt("$.goFastaThreads")}
       };
 
       var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
@@ -242,6 +242,7 @@ namespace HeronPipeline
       launchSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
       launchSampleProcessingMapParameters.Add("runMutations.$", "$.runMutations");
       launchSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
+      launchSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreadsn");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -261,7 +262,9 @@ namespace HeronPipeline
           {"runPangolin", JsonPath.StringAt("$.runPangolin")},
           {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
           {"runMutations", JsonPath.StringAt("$.runMutations")},
-          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")},
+          {"goFastaThreads", JsonPath.StringAt("$.goFastaThreads")}
+          
       };
       var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
