@@ -148,9 +148,6 @@ namespace HeronPipeline
       this.mutationsTask.AddRetry(retryItem);
 
       skipMutationsTask = new Succeed(this, "skipMutationsTask");
-
-
-
     }
 
     private void CreateTest(){
