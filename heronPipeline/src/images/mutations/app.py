@@ -182,7 +182,6 @@ for message in messageList:
     for i, row in df.iterrows():
       mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), row["protein_mutation.gene"], str(row["protein_mutation.pos"])]) 
       print(f"Row: {row}")
-      print(f"protein_mutation.alt: {row['protein_mutation.alt']}")
 
       gmp = row["genome_mutation.pos"]
       gmr = row["genome_mutation.ref"]
@@ -191,6 +190,8 @@ for message in messageList:
       pmp = row["protein_mutation.pos"]
       pmr = row["protein_mutation.ref"]
       pma = row["protein_mutation.alt"]
+
+      print(f"protein_mutation.alt: {pma}, type: {type(pma)}")
 
       response = mutTable.update_item(
         Key={'mutationId': mut_id},
