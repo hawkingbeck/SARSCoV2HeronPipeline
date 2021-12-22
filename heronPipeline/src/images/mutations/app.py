@@ -52,6 +52,7 @@ bucketName = os.getenv('HERON_SAMPLES_BUCKET')
 sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
 iterationUUID = os.getenv('ITERATION_UUID')
 heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
+mutationsTableName = os.getenv("HERON_MUTATIONS_TABLE")
 referenceFastaPrefix = os.getenv('REF_FASTA_KEY')
 referenceGbPrefix = os.getenv('REF_GB_KEY')
 refAAFastaS3 = os.getenv("REF_AA_KEY")
@@ -64,6 +65,7 @@ s3 = boto3.resource('s3', region_name='eu-west-1')
 bucket = s3.Bucket(bucketName)
 dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
 sequencesTable = dynamodb.Table(heronSequencesTableName)
+mutTable = dynamodb.Table(mutations)
 callDate = int(datetime.now().timestamp())
 
 # Step 3. Create local paths
@@ -172,24 +174,36 @@ for message in messageList:
                     nuc_ins_tsv=outputNucInsTsvLocalFilename, 
                     ins_nuc_aa_link_tsv=outputInsNucAALinkTsvLocalFilename)
 
-    ##############################################
-    # Step 1. Update the record in dynamoDB
-    ##############################################
+  ##############################################
+  #     Update the record in dynamoDB
+  ##############################################
+  logger.info(f"Updating mut seqHash {consensusFastaHash}")
+  for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
+    for i, row in df.iterrows():
+      mut_id = "#".join([consensusFastaHash, str(row["genome_mutation.pos"]), row["protein_mutation.gene"], str(row["protein_mutation.pos"])]) 
+      response = mutTable.put_item(
+        Item={"mutationId": mut_id,
+              "seqHash": consensusFastaHash,
+              "genome_mutation.pos":  row["genome_mutation.pos"],
+              "genome_mutation.ref":  row["genome_mutation.ref"],
+              "genome_mutation.alt":  row["genome_mutation.alt"],
+              "protein_mutation.gene":  row["protein_mutation.gene"],
+              "protein_mutation.pos":  row["protein_mutation.pos"],
+              "protein_mutation.ref":  row["protein_mutation.ref"],
+              "protein_mutation.alt":  row["protein_mutation.alt"]
+        })
+      logger.debug(f"mut put response: {response}")
 
-    # dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
-    # heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-    # sequencesTable = dynamodb.Table(heronSequencesTableName)
-    # response = sequencesTable.query(
-    #       KeyConditionExpression=Key('seqHash').eq(seqHash)
-    #     )
-    # logger.info(f"response: {response}")
+  response = sequencesTable.query(
+      KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+    )
+  logger.info(f"query response: {response}")
 
-    # callDate = int(datetime.now().timestamp())
-    # logger.info(f"Updating seqHash {seqHash}")
-    # ret = sequencesTable.update_item(
-    #     Key={'seqHash': seqHash},
-    #     UpdateExpression="set mutationCallDate=:d",
-    #     ExpressionAttributeValues={
-    #       ':d': callDate
-    #     }
-    #   )
+  logger.info(f"Updating status {consensusFastaHash}")
+  ret = sequencesTable.update_item(
+      Key={'seqHash': consensusFastaHash},
+      UpdateExpression="set mutationCallDate=:d",
+      ExpressionAttributeValues={
+        ':d': callDate
+      }
+    )

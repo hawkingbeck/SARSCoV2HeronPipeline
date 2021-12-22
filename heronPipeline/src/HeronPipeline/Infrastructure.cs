@@ -27,6 +27,7 @@ namespace HeronPipeline
     public Bucket bucket;
     public Table samplesTable;
     public Table sequencesTable;
+    public Table mutationsTable;
     public Queue dailyProcessingQueue;
     public Queue reprocessingQueue;
     public Role ecsExecutionRole;
@@ -140,6 +141,12 @@ namespace HeronPipeline
       sequencesTable = new Table(this, "heronSequencesTable", new TableProps {
           BillingMode = BillingMode.PAY_PER_REQUEST,
           PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
+          PointInTimeRecovery = true
+      });
+
+      mutationsTable = new Table(this, "heronMutationsTable", new TableProps {
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "mutationId", Type = AttributeType.STRING},
           PointInTimeRecovery = true
       });
     }

@@ -31,9 +31,10 @@ namespace HeronPipeline
     private Cluster cluster;
     private Bucket bucket;
     private Table sequencesTable;
+    private Table mutationsTable;
     private RetryProps retryItem;
 
-    public MutationsModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable): base(scope, id)
+    public MutationsModel(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster, Bucket bucket, Table sequencesTable, Table mutationsTable): base(scope, id)
     {
       this.scope = scope;
       this.id = id;
@@ -42,6 +43,7 @@ namespace HeronPipeline
       this.cluster = cluster;
       this.bucket = bucket;
       this.sequencesTable = sequencesTable;
+      this.mutationsTable = mutationsTable;
       this.retryItem = new RetryProps{
         BackoffRate = 5,
         Interval = Duration.Seconds(2),
@@ -226,6 +228,10 @@ namespace HeronPipeline
                       new TaskEnvironmentVariable{
                           Name = "HERON_SEQUENCES_TABLE",
                           Value = sequencesTable.TableName
+                      },
+                      new TaskEnvironmentVariable{
+                          Name = "HERON_MUTATIONS_TABLE",
+                          Value = mutationsTable.TableName
                       },
                       new TaskEnvironmentVariable{
                           Name = "REF_FASTA_KEY",
