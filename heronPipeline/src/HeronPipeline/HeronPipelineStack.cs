@@ -43,7 +43,7 @@ namespace HeronPipeline
             var goFastaAlignment = new GoFastaAlignment(this, idToSupply+"align_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             goFastaAlignment.Create();
 
-            var mutationsModel = new MutationsModel(this, idToSupply+"mutations_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
+            var mutationsModel = new MutationsModel(this, idToSupply+"mutations_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.mutationsTable);
             mutationsModel.Create();
 
             var pangolinModel = new PangolinModel(this, idToSupply+"pango_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
