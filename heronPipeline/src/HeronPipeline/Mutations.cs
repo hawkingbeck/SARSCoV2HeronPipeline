@@ -127,6 +127,10 @@ namespace HeronPipeline
                           Value = sequencesTable.TableName
                       },
                       new TaskEnvironmentVariable{
+                          Name = "HERON_MUTATIONS_TABLE",
+                          Value = mutationsTable.TableName
+                      },
+                      new TaskEnvironmentVariable{
                           Name = "REF_FASTA_KEY",
                           Value = "resources/MN908947.fa"
                       },
