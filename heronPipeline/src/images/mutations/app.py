@@ -179,6 +179,7 @@ for message in messageList:
   ##############################################
   logger.info(f"Updating mut seqHash {consensusFastaHash}")
   for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
+    df = df.dropna(axis=0)
     for i, row in df.iterrows():
       
       mutId = "_".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
@@ -192,7 +193,7 @@ for message in messageList:
       pmr = row["protein_mutation.ref"]
       pma = row["protein_mutation.alt"]
       
-      print(f"{gmp} {type(gmp)}, {gmr} {type(gmr)}, {gma} {type(gma)}, {pmg}, {pmp}, {pmr}, {pma}")
+      print(f"{gmp} {type(gmp)}, {gmr} {type(gmr)}, {gma} {type(gma)}, {pmg} {type(pmg)}, {pmp} {type(pmp)}, {pmr} {type(pmr)}, {pma} {type(pma)}")
 
       response = mutationsTable.update_item(
         Key={'mutationId': mutId},
