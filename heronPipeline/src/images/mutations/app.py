@@ -108,117 +108,119 @@ with open(messageListLocalFilename) as messageListFile:
   messageList = json.load(messageListFile)
 
 for message in messageList:
-  print(f'Message: {message["consensusFastaPath"]}')
-  
-  consensusFastaKey = message["consensusFastaPath"]
-  consensusFastaHash = message['seqHash']
-  samFileS3Key = f"samFiles/{consensusFastaHash}.fasta.sam"
-  
-  sequenceLocalFilename = f"/tmp/seq_{consensusFastaHash}_.json"
-  
-  mode = "aa_mutations"
-  # Load or die
-  bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
-  bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
-  bucket.download_file(refAAFastaS3, refAAFastaLocalFilename)
-  bucket.download_file(consensusFastaKey, sequenceLocalFilename)
-  bucket.download_file(samFileS3Key, samLocalFilename)
-  bucket.download_file(genesTsvS3Key, genesTsvLocalFilename)
-  bucket.download_file(geneOverlapTsvS3Key, geneOverlapTsvLocalFilename)
-  
-
-  with open(sequenceLocalFilename) as fh_fasta_json_in:
-      fastaDict = json.load(fh_fasta_json_in)
-  alignedFastaStr = fastaDict['aligned']
-
-  with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
-    fh_aligned_fasta_out.write(alignedFastaStr)
-      
-  mutations.call_aa_mutations(consensusFastaHash,
-                    output_tsv=outputAAMutTsvLocalFilename,
-                    sam=samLocalFilename,
-                    reference_fasta=referenceFastaLocalFilename,
-                    reference_genbank=referenceGbLocalFilename,
-                    threads=threads)
+  try:
+    print(f'Message: {message["consensusFastaPath"]}')
     
-  mutations.call_nuc_mutations(consensusFastaHash,
-                    output_tsv=outputNucMutTsvLocalFilename,
-                    reference_fasta=referenceFastaLocalFilename,
-                    aligned_fasta=alignedFastaLocalFilename)
+    consensusFastaKey = message["consensusFastaPath"]
+    consensusFastaHash = message['seqHash']
+    samFileS3Key = f"samFiles/{consensusFastaHash}.fasta.sam"
+  
+    sequenceLocalFilename = f"/tmp/seq_{consensusFastaHash}_.json"
+    
+    mode = "aa_mutations"
+    # Load or die
+    bucket.download_file(referenceFastaPrefix, referenceFastaLocalFilename)
+    bucket.download_file(referenceGbPrefix, referenceGbLocalFilename)
+    bucket.download_file(refAAFastaS3, refAAFastaLocalFilename)
+    bucket.download_file(consensusFastaKey, sequenceLocalFilename)
+    bucket.download_file(samFileS3Key, samLocalFilename)
+    bucket.download_file(genesTsvS3Key, genesTsvLocalFilename)
+    bucket.download_file(geneOverlapTsvS3Key, geneOverlapTsvLocalFilename)
+    
 
-  mutations.call_nuc_indels(consensusFastaHash, 
-                    sam=samLocalFilename, 
-                    output_prefix=outputNucIndelLocalFilenamePrefix)
+    with open(sequenceLocalFilename) as fh_fasta_json_in:
+        fastaDict = json.load(fh_fasta_json_in)
+    alignedFastaStr = fastaDict['aligned']
 
-
-  linkMutOutDf = translate_mutations.translate_snps(
-                    genes_tsv=genesTsvLocalFilename, 
-                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
-                    ref_aa_fasta_filename=refAAFastaLocalFilename,
-                    nuc_mut_tsv=outputNucMutTsvLocalFilename, 
-                    aa_mut_tsv=outputAAMutTsvLocalFilename,
-                    snp_aa_link_tsv=outputSnpAALinkTsvLocalFilename, 
-                    gene_overlap_tsv=geneOverlapTsvLocalFilename)
-
-  linkDelOutDf = translate_mutations.translate_deletions(                        
-                    genes_tsv=genesTsvLocalFilename, 
-                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
-                    ref_aa_fasta_filename=refAAFastaLocalFilename,
-                    nuc_del_tsv=outputNucDelTsvLocalFilename, 
-                    del_nuc_aa_link_tsv=outputDelNucAALinkTsvLocalFilename)
-
-  linkInsOutDf = translate_mutations.translate_insertions(
-                    genes_tsv=genesTsvLocalFilename, 
-                    ref_nuc_fasta_filename=referenceFastaLocalFilename,
-                    ref_aa_fasta_filename=refAAFastaLocalFilename,
-                    nuc_ins_tsv=outputNucInsTsvLocalFilename, 
-                    ins_nuc_aa_link_tsv=outputInsNucAALinkTsvLocalFilename)
-
-  ##############################################
-  #     Update the record in dynamoDB
-  ##############################################
-  logger.info(f"Updating mut seqHash {consensusFastaHash}")
-  for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
-    df = df.dropna(axis=0)
-    for i, row in df.iterrows():
+    with open(alignedFastaLocalFilename, 'w') as fh_aligned_fasta_out:
+      fh_aligned_fasta_out.write(alignedFastaStr)
+        
+    mutations.call_aa_mutations(consensusFastaHash,
+                      output_tsv=outputAAMutTsvLocalFilename,
+                      sam=samLocalFilename,
+                      reference_fasta=referenceFastaLocalFilename,
+                      reference_genbank=referenceGbLocalFilename,
+                      threads=threads)
       
-      mutId = "_".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
-      print(f"Mutation ID: {mutId}")
+    mutations.call_nuc_mutations(consensusFastaHash,
+                      output_tsv=outputNucMutTsvLocalFilename,
+                      reference_fasta=referenceFastaLocalFilename,
+                      aligned_fasta=alignedFastaLocalFilename)
 
-      gmp = row["genome_mutation.pos"]
-      gmr = row["genome_mutation.ref"]
-      gma = row["genome_mutation.alt"]
-      pmg = row["protein_mutation.gene"]
-      pmp = row["protein_mutation.pos"]
-      pmr = row["protein_mutation.ref"]
-      pma = row["protein_mutation.alt"]
-      
-      print(f"{gmp} {type(gmp)}, {gmr} {type(gmr)}, {gma} {type(gma)}, {pmg} {type(pmg)}, {pmp} {type(pmp)}, {pmr} {type(pmr)}, {pma} {type(pma)}")
+    mutations.call_nuc_indels(consensusFastaHash, 
+                      sam=samLocalFilename, 
+                      output_prefix=outputNucIndelLocalFilenamePrefix)
 
-      response = mutationsTable.update_item(
-        Key={'mutationId': mutId},
-        UpdateExpression="set seqHash=:sq, callDate=:cd, genomeMutationPos=:gmp, genomeMutationRef=:gmr, genomeMutationAlt=:gma, proteinMutationGene=:pmg, proteinMutationPos=:pmp, proteinMutationRef=:pmr, proteinMutationAlt=:pma",
+
+    linkMutOutDf = translate_mutations.translate_snps(
+                      genes_tsv=genesTsvLocalFilename, 
+                      ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                      ref_aa_fasta_filename=refAAFastaLocalFilename,
+                      nuc_mut_tsv=outputNucMutTsvLocalFilename, 
+                      aa_mut_tsv=outputAAMutTsvLocalFilename,
+                      snp_aa_link_tsv=outputSnpAALinkTsvLocalFilename, 
+                      gene_overlap_tsv=geneOverlapTsvLocalFilename)
+
+    linkDelOutDf = translate_mutations.translate_deletions(                        
+                      genes_tsv=genesTsvLocalFilename, 
+                      ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                      ref_aa_fasta_filename=refAAFastaLocalFilename,
+                      nuc_del_tsv=outputNucDelTsvLocalFilename, 
+                      del_nuc_aa_link_tsv=outputDelNucAALinkTsvLocalFilename)
+
+    linkInsOutDf = translate_mutations.translate_insertions(
+                      genes_tsv=genesTsvLocalFilename, 
+                      ref_nuc_fasta_filename=referenceFastaLocalFilename,
+                      ref_aa_fasta_filename=refAAFastaLocalFilename,
+                      nuc_ins_tsv=outputNucInsTsvLocalFilename, 
+                      ins_nuc_aa_link_tsv=outputInsNucAALinkTsvLocalFilename)
+
+    ##############################################
+    #     Update the record in dynamoDB
+    ##############################################
+    for df in [linkMutOutDf, linkDelOutDf, linkInsOutDf]:
+      df = df.dropna(axis=0)
+      for i, row in df.iterrows():
+        
+        mutId = "_".join([consensusFastaHash, str(row["genome_mutation.pos"]), str(row["protein_mutation.gene"]), str(row["protein_mutation.pos"])]) 
+        # print(f"Mutation ID: {mutId}")
+
+        gmp = row["genome_mutation.pos"]
+        gmr = row["genome_mutation.ref"]
+        gma = row["genome_mutation.alt"]
+        pmg = row["protein_mutation.gene"]
+        pmp = row["protein_mutation.pos"]
+        pmr = row["protein_mutation.ref"]
+        pma = row["protein_mutation.alt"]
+        
+        # print(f"{gmp} {type(gmp)}, {gmr} {type(gmr)}, {gma} {type(gma)}, {pmg} {type(pmg)}, {pmp} {type(pmp)}, {pmr} {type(pmr)}, {pma} {type(pma)}")
+
+        response = mutationsTable.update_item(
+          Key={'mutationId': mutId},
+          UpdateExpression="set seqHash=:sq, callDate=:cd, genomeMutationPos=:gmp, genomeMutationRef=:gmr, genomeMutationAlt=:gma, proteinMutationGene=:pmg, proteinMutationPos=:pmp, proteinMutationRef=:pmr, proteinMutationAlt=:pma",
+          ExpressionAttributeValues={
+            ':sq': consensusFastaHash,
+            ':cd': callDate,
+            ':gmp': gmp,
+            ':gmr': gmr,
+            ':gma': gma,
+            ':pmg': pmg,
+            ':pmp': pmp,
+            ':pmr': pmr,
+            ':pma': pma
+          })
+        # logger.debug(f"mut put response: {response}")
+
+    response = sequencesTable.query(
+        KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
+      )
+
+    ret = sequencesTable.update_item(
+        Key={'seqHash': consensusFastaHash},
+        UpdateExpression="set mutationCallDate=:d",
         ExpressionAttributeValues={
-          ':sq': consensusFastaHash,
-          ':cd': callDate,
-          ':gmp': gmp,
-          ':gmr': gmr,
-          ':gma': gma,
-          ':pmg': pmg,
-          ':pmp': pmp,
-          ':pmr': pmr,
-          ':pma': pma
-        })
-      # logger.debug(f"mut put response: {response}")
-
-  response = sequencesTable.query(
-      KeyConditionExpression=Key('seqHash').eq(consensusFastaHash)
-    )
-
-  ret = sequencesTable.update_item(
-      Key={'seqHash': consensusFastaHash},
-      UpdateExpression="set mutationCallDate=:d",
-      ExpressionAttributeValues={
-        ':d': callDate
-      }
-    )
+          ':d': callDate
+        }
+      )
+  except:
+    print(f"Failed to process {message['consensusFastaPath']}")
