@@ -242,7 +242,7 @@ namespace HeronPipeline
       launchSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
       launchSampleProcessingMapParameters.Add("runMutations.$", "$.runMutations");
       launchSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
-      launchSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreadsn");
+      launchSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreads");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
