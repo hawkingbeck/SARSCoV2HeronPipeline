@@ -57,3 +57,8 @@ def main():
   sequencesDf.to_csv("/tmp/mutations.csv", index=False)
   bucket.upload_file("/tmp/mutations.csv", f"results/{dateString}/allMutations.csv")
 
+if __name__ == '__main__':
+  main()
+
+  print("Finished")
+
