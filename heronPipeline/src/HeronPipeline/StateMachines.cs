@@ -31,11 +31,13 @@ namespace HeronPipeline
     private GoFastaAlignment goFastaAlignment;
     private HelperFunctions helperFunctions;
     private ExportResults exportResults;
+    private ExportMutations exportMutations;
 
 
     private StateMachine processSampleBatchStateMachine;
     private StateMachine startNestedSampleProcessingStateMachine;
     private StateMachine mutationsTestStateMachine;
+    private StateMachine exportMutationsStateMachine;
 
     public StateMachines( Construct scope, 
                           string id, 
@@ -47,7 +49,8 @@ namespace HeronPipeline
                           PrepareSequences prepareSequences,
                           GoFastaAlignment goFastaAlignment,
                           HelperFunctions helperFunctions,
-                          ExportResults exportResults
+                          ExportResults exportResults,
+                          ExportMutations exportMutations
                           ): base(scope, id)
     {
       this.id = id;
@@ -60,6 +63,7 @@ namespace HeronPipeline
       this.goFastaAlignment = goFastaAlignment;
       this.helperFunctions = helperFunctions;
       this.exportResults = exportResults;
+      this.exportMutations = exportMutations;
     }
 
     public void Create()
@@ -68,6 +72,7 @@ namespace HeronPipeline
       CreateStartNestedSequenceProcessingStateMachine();
       CreatePipelineStateMachine();
       CreateMutationsTestStateMachine();
+      CreateExportMutationsStateMachine();
     }
 
     private void CreateMutationsTestStateMachine(){
@@ -76,6 +81,15 @@ namespace HeronPipeline
 
       mutationsTestStateMachine = new StateMachine(this, "mutationsTestStateMachine", new StateMachineProps{
         Definition = mutationsChain
+      });
+    }
+
+    private void CreateExportMutationsStateMachine(){
+      var exportMutationsChain = Chain
+        .Start(exportMutations.exportMutationsTask);
+
+      exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
+        Definition=exportMutationsChain
       });
     }
     private void CreateProcessSampleBatchStateMachine()
