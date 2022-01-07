@@ -224,7 +224,8 @@ namespace HeronPipeline
       });
       dynamoDBAccessPolicyStatement.AddResources(new string[]{
         samplesTable.TableArn,
-        sequencesTable.TableArn
+        sequencesTable.TableArn,
+        mutationsTable.TableArn
       });
     }
   }
