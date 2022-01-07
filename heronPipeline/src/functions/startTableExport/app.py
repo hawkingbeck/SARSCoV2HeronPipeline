@@ -24,7 +24,7 @@ def lambda_handler(event, context):
 
 	yesterday = datetime.today() - timedelta(days=1)
 	exportDate = datetime(yesterday.year, yesterday.month, yesterday.day, 0, 0, 0).timestamp()
-	exportPartition = datetime.strftime(yesterday, "%Y-%m-%D")
+	exportPartition = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
   # Create a DynamoDB Client
 	dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
@@ -37,6 +37,10 @@ def lambda_handler(event, context):
     ExportFormat='DYNAMODB_JSON'
   )
   
-	print(f"Ret: {ret}")
+	exportArn = ret['ExportDescription']['ExportArn']
+	exportState = ret['ExportDescription']['ExportStatus']
+	s3Prefix = ret['ExportDescription']['S3Prefix']
 
-	return "Hello World"
+	# print(f"Ret: {ret}")
+
+	return {'exportArn': exportArn, 'exportState': exportState, 's3Prefix': s3Prefix}
