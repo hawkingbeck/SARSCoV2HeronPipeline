@@ -37,5 +37,6 @@ def lambda_handler(event, context):
     ExportFormat='DYNAMODB_JSON'
   )
   
+	print(f"Ret: {ret}")
 
-	return ret
+	return "Hello World"
