@@ -88,12 +88,12 @@ namespace HeronPipeline
 
       
 
-      var exportMutationsChain = Chain
-        .Start(exportMutations.exportMutationsTask);
+      // var exportMutationsChain = Chain
+      //   .Start(exportMutations.exportMutationsTask);
 
-      exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
-        Definition=exportMutationsChain
-      });
+      // exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
+      //   Definition=exportMutationsChain
+      // });
     }
     private void CreateProcessSampleBatchStateMachine()
     {
