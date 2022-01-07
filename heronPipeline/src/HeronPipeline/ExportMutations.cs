@@ -24,6 +24,7 @@ namespace HeronPipeline {
     public EcsRunTask exportMutationsTask;
     public LambdaInvoke startTableExportTask;
     public LambdaInvoke getExportStatusTask;
+    public LambdaInvoke mergeExportFilesTask;
 
     private Construct scope;
     private string id;
@@ -41,6 +42,7 @@ namespace HeronPipeline {
     {
       CreateStartExportFunction();
       CreateGetExportStatus();
+      CreateMergeExportFilesFunction();
     }
 
     public void CreateStartExportFunction()
@@ -68,13 +70,13 @@ namespace HeronPipeline {
     public void CreateGetExportStatus(){
       var getExportStatusFunction = new PythonFunction(this, this.id + "_getExportStatusFunction", new PythonFunctionProps{
         Entry = "src/functions/getExportStatusFunction",
-          Runtime = Runtime.PYTHON_3_7,
-          Index = "app.py",
-          Handler = "lambda_handler",
-          Environment = new Dictionary<string, string> {
-              {"HERON_MUTATIONS_TABLE",infrastructure.mutationsTable.TableArn},
-              {"HERON_BUCKET", infrastructure.bucket.BucketName}
-          }
+        Runtime = Runtime.PYTHON_3_7,
+        Index = "app.py",
+        Handler = "lambda_handler",
+        Environment = new Dictionary<string, string> {
+            {"HERON_MUTATIONS_TABLE",infrastructure.mutationsTable.TableArn},
+            {"HERON_BUCKET", infrastructure.bucket.BucketName}
+        }
       });
       getExportStatusFunction.AddToRolePolicy(this.infrastructure.dynamoDBAccessPolicyStatement);
       getExportStatusFunction.AddToRolePolicy(this.infrastructure.s3AccessPolicyStatement);
@@ -83,6 +85,28 @@ namespace HeronPipeline {
       this.getExportStatusTask = new LambdaInvoke(this, this.id + "_getExportStatusTask", new LambdaInvokeProps{
           LambdaFunction = getExportStatusFunction,
           ResultPath = "$.exportStatus",
+          PayloadResponseOnly = true
+      });
+    }
+
+    public void CreateMergeExportFilesFunction(){
+      var mergeExportFilesFunction = new PythonFunction(this, this.id + "_mergeExportFiles", new PythonFunctionProps{
+        Entry = "src/functions/mergeExportFilesFunction",
+        Runtime = Runtime.PYTHON_3_7,
+        Index = "app.py",
+        Handler = "lambda_handler",
+        Environment = new Dictionary<string, string> {
+            {"HERON_BUCKET", infrastructure.bucket.BucketName}
+        }
+      });
+      
+      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.dynamoDBAccessPolicyStatement);
+      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.s3AccessPolicyStatement);
+      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.dynamoDBExportPolicyStatement);
+
+      this.mergeExportFilesTask = new LambdaInvoke(this, this.id + "_mergeExportFilesTask", new LambdaInvokeProps{
+          LambdaFunction = mergeExportFilesFunction,
+          ResultPath = "$.mergeResult",
           PayloadResponseOnly = true
       });
     }

@@ -92,6 +92,7 @@ namespace HeronPipeline
 
       // var endTask = new End
       var succeedTask = new Succeed(this, "exportSucceed");
+      var failedTask = new Fail(this, "exportFailed");
 
       var exportFinishedCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "COMPLETED");
       var exportInProgressCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "IN_PROGRESS");
@@ -105,9 +106,14 @@ namespace HeronPipeline
         .Start(waitTask)
         .Next(exportMutations.getExportStatusTask);
 
-      checkIfExportHasFinishedTask.When(exportInProgressCondition, waitChain);
-      checkIfExportHasFinishedTask.When(exportFinishedCondition, succeedTask);
 
+      var mergeChain = Chain
+        .Start(exportMutations.mergeExportFilesTask)
+        .Next(succeedTask);
+
+      checkIfExportHasFinishedTask.When(exportInProgressCondition, waitChain);
+      checkIfExportHasFinishedTask.When(exportFinishedCondition, mergeChain);
+      checkIfExportHasFinishedTask.When(exportFailedCondition, failedTask);
 
       var exportMutationsChain = Chain
         .Start(exportMutations.startTableExportTask)
