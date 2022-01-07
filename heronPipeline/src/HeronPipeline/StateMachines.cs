@@ -86,9 +86,33 @@ namespace HeronPipeline
 
     private void CreateExportMutationsStateMachine(){
 
+      var checkIfExportHasFinishedTask = new Choice(this, "checkIfExportTaskHasFinished", new ChoiceProps{
+        Comment = "Check if the export job has finished"
+      });
+
+      // var endTask = new End
+      var succeedTask = new Succeed(this, "exportSucceed");
+
+      var exportFinishedCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "COMPLETED");
+      var exportInProgressCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "IN_PROGRESS");
+      var exportFailedCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "FAILED");
+
+      var waitTask = new Wait(this, "waitForExport", new WaitProps {
+        Time = WaitTime.Duration(Amazon.CDK.Duration.Minutes(1))
+      });
+
+      var waitChain = Chain
+        .Start(waitTask)
+        .Next(exportMutations.getExportStatusTask);
+
+      checkIfExportHasFinishedTask.When(exportInProgressCondition, waitChain);
+      checkIfExportHasFinishedTask.When(exportFinishedCondition, succeedTask);
+
+
       var exportMutationsChain = Chain
         .Start(exportMutations.startTableExportTask)
-        .Next(exportMutations.getExportStatusTask);
+        .Next(exportMutations.getExportStatusTask)
+        .Next(checkIfExportHasFinishedTask);
 
       exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
         Definition=exportMutationsChain
