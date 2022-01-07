@@ -1,6 +1,6 @@
 import os
 from sys import exit, stderr
-import datetime
+from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -22,7 +22,7 @@ def lambda_handler(event, context):
   print(f"Bucket: {heronBucketName}")
   print(f"Table: {heronMutationsTableArn}")
 
-  exportDate = datetime(2022, 1, 7)
+  exportDate = datetime(2022, 1, 7).timestamp()
   exportPartition = datetime.strftime(exportDate, "%Y-%m-%D")
 
   # Create a DynamoDB Client
