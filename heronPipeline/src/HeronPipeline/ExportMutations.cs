@@ -29,14 +29,12 @@ namespace HeronPipeline {
     private string id;
     
     private Infrastructure infrastructure;
-    private PolicyStatement dynamoDBAccessPolicyStatement;
     
     public ExportMutations(Construct scope, string id, Infrastructure infrastructure): base(scope, id)
     {
       this.scope = scope;
       this.id = id;
       this.infrastructure = infrastructure;
-      this.dynamoDBAccessPolicyStatement = infrastructure.dynamoDBAccessPolicyStatement;
     }
 
     public void Create()
@@ -57,7 +55,8 @@ namespace HeronPipeline {
               {"HERON_BUCKET", infrastructure.bucket.BucketName}
           }
       });
-      startTableExportFunction.AddToRolePolicy(this.dynamoDBAccessPolicyStatement);
+      startTableExportFunction.AddToRolePolicy(this.infrastructure.dynamoDBAccessPolicyStatement);
+      startTableExportFunction.AddToRolePolicy(this.infrastructure.s3AccessPolicyStatement);
 
       this.startTableExportTask = new LambdaInvoke(this, this.id + "_startTableExportTask", new LambdaInvokeProps{
           LambdaFunction = startTableExportFunction,
