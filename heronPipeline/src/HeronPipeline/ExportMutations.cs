@@ -78,6 +78,7 @@ namespace HeronPipeline {
       });
       getExportStatusFunction.AddToRolePolicy(this.infrastructure.dynamoDBAccessPolicyStatement);
       getExportStatusFunction.AddToRolePolicy(this.infrastructure.s3AccessPolicyStatement);
+      getExportStatusFunction.AddToRolePolicy(this.infrastructure.dynamoDBExportPolicyStatement);
 
       this.getExportStatusTask = new LambdaInvoke(this, this.id + "_getExportStatusTask", new LambdaInvokeProps{
           LambdaFunction = getExportStatusFunction,

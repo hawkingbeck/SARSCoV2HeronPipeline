@@ -35,6 +35,7 @@ namespace HeronPipeline
     public PolicyStatement s3AccessPolicyStatement;
     public PolicyStatement sqsAccessPolicyStatement;
     public PolicyStatement dynamoDBAccessPolicyStatement;
+    public PolicyStatement dynamoDBExportPolicyStatement;
     public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
     private string id;
@@ -226,6 +227,12 @@ namespace HeronPipeline
         samplesTable.TableArn,
         sequencesTable.TableArn,
         mutationsTable.TableArn
+      });
+
+      dynamoDBExportPolicyStatement = new PolicyStatement(new PolicyStatementProps{
+        Effect = Effect.ALLOW,
+        Actions = new string[] {"dynamodb:*"},
+        Resources = new string[] {"arn:aws:dynamodb:eu-west-1:889562587392:*"}
       });
     }
   }
