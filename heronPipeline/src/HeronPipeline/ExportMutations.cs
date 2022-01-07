@@ -23,6 +23,7 @@ namespace HeronPipeline {
 
     public EcsRunTask exportMutationsTask;
     public LambdaInvoke startTableExportTask;
+    public LambdaInvoke getExportStatusTask;
 
     private Construct scope;
     private string id;
@@ -41,6 +42,7 @@ namespace HeronPipeline {
     public void Create()
     {
       CreateStartExportFunction();
+      CreateGetExportStatus();
     }
 
     public void CreateStartExportFunction()
@@ -59,68 +61,28 @@ namespace HeronPipeline {
 
       this.startTableExportTask = new LambdaInvoke(this, this.id + "_startTableExportTask", new LambdaInvokeProps{
           LambdaFunction = startTableExportFunction,
-          ResultPath = "$.exportTable",
+          ResultPath = "$.exportJob",
           PayloadResponseOnly = true
       });
     }
-    public void CreatePrev()
-    {
-      var exportMutationsImage = ContainerImage.FromAsset("src/images/exportMutations");
-      var exportMutationsTaskDefinition = new TaskDefinition(this, this.id + "_exportMutationsTaskDefinition", new TaskDefinitionProps{
-          Family = this.id + "_exportMutations",
-          Cpu = "4096",
-          MemoryMiB = "16384",
-          NetworkMode = NetworkMode.AWS_VPC,
-          Compatibility = Compatibility.FARGATE,
-          ExecutionRole = infrastructure.ecsExecutionRole,
-          TaskRole = infrastructure.ecsExecutionRole
+
+    public void CreateGetExportStatus(){
+      var getExportStatusFunction = new PythonFunction(this, this.id + "_getExportStatusFunction", new PythonFunctionProps{
+        Entry = "src/functions/getExportStatusFunction",
+          Runtime = Runtime.PYTHON_3_7,
+          Index = "app.py",
+          Handler = "lambda_handler",
+          Environment = new Dictionary<string, string> {
+              {"HERON_MUTATIONS_TABLE",infrastructure.mutationsTable.TableArn},
+              {"HERON_BUCKET", infrastructure.bucket.BucketName}
+          }
       });
-      exportMutationsTaskDefinition.AddContainer("exportMutationsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
-      {
-          Image = exportMutationsImage,
-          Logging = new AwsLogDriver(new AwsLogDriverProps
-          {
-              StreamPrefix = "exportMutations",
-              LogGroup = new LogGroup(this, "exportMutationsLogGroup", new LogGroupProps
-              {
-                  LogGroupName = this.id + "exportMutationsLogGroup",
-                  Retention = RetentionDays.ONE_WEEK,
-                  RemovalPolicy = RemovalPolicy.DESTROY
-              })
-          })
-      });
-      var exportMutationsContainer = exportMutationsTaskDefinition.FindContainer("exportMutationsContainer");
-      exportMutationsTask = new EcsRunTask(this, this.id + "_exportMutationsTask", new EcsRunTaskProps
-      {
-          IntegrationPattern = IntegrationPattern.RUN_JOB,
-          Cluster = infrastructure.cluster,
-          TaskDefinition = exportMutationsTaskDefinition,
-          AssignPublicIp = true,
-          LaunchTarget = new EcsFargateLaunchTarget(),
-          ContainerOverrides = new ContainerOverride[] {
-              new ContainerOverride {
-                  ContainerDefinition = exportMutationsContainer,
-                  Environment = new TaskEnvironmentVariable[] {
-                      new TaskEnvironmentVariable{
-                        Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "HERON_SAMPLES_BUCKET",
-                        Value = infrastructure.bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_MUTATIONS_TABLE",
-                          Value = infrastructure.mutationsTable.TableName
-                      },
-                      new TaskEnvironmentVariable{
-                        Name = "EXECUTION_ID",
-                        Value = JsonPath.StringAt("$$.Execution.Id")
-                      }
-                  }
-              }
-          },
-          ResultPath = "$.result"
+      getExportStatusFunction.AddToRolePolicy(this.dynamoDBAccessPolicyStatement);
+
+      this.getExportStatusTask = new LambdaInvoke(this, this.id + "_getExportStatusTask", new LambdaInvokeProps{
+          LambdaFunction = getExportStatusFunction,
+          ResultPath = "$.exportStatus",
+          PayloadResponseOnly = true
       });
     }
   }
