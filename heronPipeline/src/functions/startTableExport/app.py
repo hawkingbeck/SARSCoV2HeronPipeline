@@ -26,7 +26,7 @@ def lambda_handler(event, context):
   exportPartition = datetime.strftime(exportDate, "%Y-%m-%D")
 
   # Create a DynamoDB Client
-  dynamodb = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
+  dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
   ret = dynamodb.export_table_to_point_in_time(
     TableArn=heronMutationsTableArn,
     ExportTime=exportDate,
