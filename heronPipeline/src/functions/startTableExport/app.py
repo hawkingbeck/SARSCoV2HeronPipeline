@@ -17,18 +17,18 @@ config = Config(
 def lambda_handler(event, context):
 
 	heronBucketName = os.getenv("HERON_BUCKET")
-  heronMutationsTableArn = os.getenv("HERON_MUTATIONS_TABLE")
+	heronMutationsTableArn = os.getenv("HERON_MUTATIONS_TABLE")
 
-  print(f"Bucket: {heronBucketName}")
-  print(f"Table: {heronMutationsTableArn}")
+	print(f"Bucket: {heronBucketName}")
+	print(f"Table: {heronMutationsTableArn}")
 
 	yesterday = datetime.today() - timedelta(days=1)
-  exportDate = datetime(yesterday.year, yesterday.month, yesterday.day, 0, 0, 0).timestamp()
-  exportPartition = datetime.strftime(yesterday, "%Y-%m-%D")
+	exportDate = datetime(yesterday.year, yesterday.month, yesterday.day, 0, 0, 0).timestamp()
+	exportPartition = datetime.strftime(yesterday, "%Y-%m-%D")
 
   # Create a DynamoDB Client
-  dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
-  ret = dynamodb.export_table_to_point_in_time(
+	dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
+	ret = dynamodb.export_table_to_point_in_time(
     TableArn=heronMutationsTableArn,
     ExportTime=exportDate,
     S3Bucket=heronBucketName,
@@ -38,4 +38,4 @@ def lambda_handler(event, context):
   )
   
 
-  return ret
+	return ret
