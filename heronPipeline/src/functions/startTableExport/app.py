@@ -1,11 +1,5 @@
-from csv import reader
 import os
-from argparse import ArgumentParser
-from yaml import full_load as load_yaml
-from datetime import datetime
 from sys import exit, stderr
-import uuid
-import json
 import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
