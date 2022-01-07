@@ -22,6 +22,7 @@ namespace HeronPipeline {
   internal sealed class ExportMutations: Construct {
 
     public EcsRunTask exportMutationsTask;
+    public LambdaInvoke startTableExportTask;
 
     private Construct scope;
     private string id;
@@ -34,7 +35,32 @@ namespace HeronPipeline {
       this.id = id;
       this.infrastructure = infrastructure;
     }
+
     public void Create()
+    {
+      CreateStartExportFunction();
+    }
+
+    public void CreateStartExportFunction()
+    {
+      var startTableExportFunction = new PythonFunction(this, this.id + "_startTableExportFunction", new PythonFunctionProps{
+          Entry = "src/functions/startTableExport",
+          Runtime = Runtime.PYTHON_3_7,
+          Index = "app.py",
+          Handler = "lambda_handler",
+          Environment = new Dictionary<string, string> {
+              {"HERON_MUTATIONS_TABLE",infrastructure.mutationsTable.TableArn},
+              {"HERON_BUCKET", infrastructure.bucket.BucketName}
+          }
+      });
+
+      this.startTableExportTask = new LambdaInvoke(this, this.id + "_startTableExportTask", new LambdaInvokeProps{
+          LambdaFunction = startTableExportFunction,
+          ResultPath = "$.exportTable",
+          PayloadResponseOnly = true
+      });
+    }
+    public void CreatePrev()
     {
       var exportMutationsImage = ContainerImage.FromAsset("src/images/exportMutations");
       var exportMutationsTaskDefinition = new TaskDefinition(this, this.id + "_exportMutationsTaskDefinition", new TaskDefinitionProps{
