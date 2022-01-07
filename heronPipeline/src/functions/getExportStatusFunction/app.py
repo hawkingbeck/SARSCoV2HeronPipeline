@@ -16,18 +16,20 @@ config = Config(
 
 def lambda_handler(event, context):
 
-	print(f"Event: {event}, context: {context}")
+  print(f"Event: {event}, context: {context}")
 
-#   exportArn = event['exportArn']
+  exportArn = event['exportJob']['exportArn']
 #   exportArn = os.getenv("EXPORT_ARN")
 
 #   print(f"exportArn: {exportArn}")
 
   # Create a DynamoDB Client
-	# dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
+  dynamodb = boto3.client('dynamodb', region_name="eu-west-1", config=config)
   
-	# ret = dynamodb.describe_export(
-  #   ExportArn=exportArn
-  # )
+  ret = dynamodb.describe_export(
+    ExportArn=exportArn
+  )
   
-	return "Hello Wolrd" #ret['ExportStatus']
+  print(f"Ret: {ret}")
+
+  return ret['ExportStatus']
