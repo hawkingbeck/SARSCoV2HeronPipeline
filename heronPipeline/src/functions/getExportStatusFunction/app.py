@@ -32,4 +32,6 @@ def lambda_handler(event, context):
   
   print(f"Ret: {ret}")
 
-  return ret['ExportStatus']
+  exportStatus = ret['ExportDescription']['ExportStatus']
+
+  return {'exportStatus': exportStatus}
