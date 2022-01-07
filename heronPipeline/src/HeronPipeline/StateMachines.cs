@@ -87,7 +87,8 @@ namespace HeronPipeline
     private void CreateExportMutationsStateMachine(){
 
       var exportMutationsChain = Chain
-        .Start(exportMutations.startTableExportTask);
+        .Start(exportMutations.startTableExportTask)
+        .Next(exportMutations.getExportStatusTask);
 
       exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
         Definition=exportMutationsChain
