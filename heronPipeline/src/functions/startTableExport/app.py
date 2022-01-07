@@ -33,7 +33,6 @@ def lambda_handler(event, context):
     S3Bucket=heronBucketName,
     S3Prefix=f"mutations/{exportPartition}",
     S3SseAlgorithm='AES256',
-    S3SseKmsKeyId='string',
     ExportFormat='DYNAMODB_JSON'
   )
   
