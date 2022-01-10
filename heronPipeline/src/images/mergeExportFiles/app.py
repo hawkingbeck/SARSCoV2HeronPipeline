@@ -31,10 +31,10 @@ def main():
   heronBucketName = os.getenv("HERON_BUCKET")
   exportFolder = os.path.basename(exportArn)
 
-  exportManifestS3Key = f"{heronBucketName}/{s3Prefix}/AWSDynamoDB/{exportFolder}/manifest-files.json"
+  exportManifestS3Key = f"{s3Prefix}/AWSDynamoDB/{exportFolder}/manifest-files.json"
   exportManifestLocalPath = "/tmp/manifest.json"
   concatenatedLocalFilePath = "/tmp/concatenated.csv"
-  concatenatedFileS3Key = f"{heronBucketName}/{s3Prefix}/AWSDynamoDB/{exportFolder}/exported.csv"
+  concatenatedFileS3Key = f"{s3Prefix}/AWSDynamoDB/{exportFolder}/exported.csv"
   
   print(f"exportManifestS3Key: {exportManifestS3Key}")
   print(f"concatenatedFileS3Key: {concatenatedFileS3Key}")

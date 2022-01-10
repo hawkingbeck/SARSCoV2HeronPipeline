@@ -21,7 +21,6 @@ using Queue = Amazon.CDK.AWS.SQS.Queue;
 namespace HeronPipeline {
   internal sealed class ExportMutations: Construct {
 
-    public EcsRunTask exportMutationsTask;
     public LambdaInvoke startTableExportTask;
     public LambdaInvoke getExportStatusTask;
     public EcsRunTask mergeExportFilesTask;
