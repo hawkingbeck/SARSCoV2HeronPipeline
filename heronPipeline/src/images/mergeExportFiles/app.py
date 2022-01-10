@@ -11,6 +11,7 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key
 
 def createFrame(mutationItem):
+  mutationItem = json.loads(mutationItem)
   mutationItem = mutationItem['Item']
   df = pd.DataFrame({
         'mutationId': mutationItem['mutationId']['S'],
