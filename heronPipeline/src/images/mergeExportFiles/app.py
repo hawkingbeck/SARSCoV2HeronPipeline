@@ -18,9 +18,9 @@ def createFrame(mutationItem):
         'proteinMutationAlt': mutationItem['proteinMutationAlt']['S'],
         'proteinMutationGene': mutationItem['proteinMutationGene']['S'],
         'genomeMutationRef': mutationItem['genomeMutationRef']['S'],
-        'genomeMutationPos': mutationItem['genomeMutationPos']['S'],
+        'genomeMutationPos': mutationItem['genomeMutationPos']['N'],
         'proteinMutationRef' : mutationItem['proteinMutationRef']['S'],
-        'proteinMutationPos': mutationItem['proteinMutationPos']['S'],
+        'proteinMutationPos': mutationItem['proteinMutationPos']['N'],
         'seqHash' : mutationItem['seqHash']['S'],
         'genomeMutationAlt': mutationItem['genomeMutationAlt']['S']
   }, ignore_index=True)
