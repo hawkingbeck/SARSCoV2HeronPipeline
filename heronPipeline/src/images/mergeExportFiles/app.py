@@ -20,9 +20,7 @@ def extractValue(dict, key):
 def createFrame(mutationItem):
   mutationItem = json.loads(mutationItem)
   mutationItem = mutationItem['Item']
-
-  print(f"Mutation Item: {mutationItem}")
-  
+  # print(f"Mutation Item: {mutationItem}")
   df = pd.DataFrame({
         'mutationId': extractValue(mutationItem['mutationId'], 'S'),
         'proteinMutationAlt': extractValue(mutationItem['proteinMutationAlt'], 'S'),
@@ -83,7 +81,8 @@ def main():
     if len(exportDf) == 0:
       exportDf = pd.concat(frames, ignore_index=True)
     else:
-      exportDf = pd.concat([exportDf, frames], ignore_index=True)
+      frames.append(exportDf)
+      exportDf = pd.concat(frames, ignore_index=True)
 
   # Save the resulting dataframe back into S3
   exportDf.to_csv(concatenatedLocalFilePath, index=False)
