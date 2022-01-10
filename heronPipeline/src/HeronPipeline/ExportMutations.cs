@@ -24,7 +24,7 @@ namespace HeronPipeline {
     public EcsRunTask exportMutationsTask;
     public LambdaInvoke startTableExportTask;
     public LambdaInvoke getExportStatusTask;
-    public LambdaInvoke mergeExportFilesTask;
+    public EcsRunTask mergeExportFilesTask;
 
     private Construct scope;
     private string id;
@@ -42,7 +42,7 @@ namespace HeronPipeline {
     {
       CreateStartExportFunction();
       CreateGetExportStatus();
-      CreateMergeExportFilesFunction();
+      CreateMergeExportFilesTask();
     }
 
     public void CreateStartExportFunction()
@@ -89,25 +89,62 @@ namespace HeronPipeline {
       });
     }
 
-    public void CreateMergeExportFilesFunction(){
-      var mergeExportFilesFunction = new PythonFunction(this, this.id + "_mergeExportFiles", new PythonFunctionProps{
-        Entry = "src/functions/mergeExportFilesFunction",
-        Runtime = Runtime.PYTHON_3_7,
-        Index = "app.py",
-        Handler = "lambda_handler",
-        Environment = new Dictionary<string, string> {
-            {"HERON_BUCKET", infrastructure.bucket.BucketName}
-        }
-      });
+    public void CreateMergeExportFilesTask(){
       
-      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.dynamoDBAccessPolicyStatement);
-      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.s3AccessPolicyStatement);
-      mergeExportFilesFunction.AddToRolePolicy(this.infrastructure.dynamoDBExportPolicyStatement);
+      var mergeExportFilesImage = ContainerImage.FromAsset("src/images/mergeExportFiles");
+      var mergeExportFilesTaskDefinition = new TaskDefinition(this, this.id + "_mergeExportFilesTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_mergeExportFiles",
+          Cpu = "1024",
+          MemoryMiB = "2048",
+          NetworkMode = NetworkMode.AWS_VPC,
+          Compatibility = Compatibility.FARGATE,
+          ExecutionRole = this.infrastructure.ecsExecutionRole,
+          TaskRole = this.infrastructure.ecsExecutionRole,
+          Volumes = new Amazon.CDK.AWS.ECS.Volume[] { this.infrastructure.volume }
+      });
+      mergeExportFilesTaskDefinition.AddContainer("mergeExportFilesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+      {
+          Image = mergeExportFilesImage,
+          Logging = new AwsLogDriver(new AwsLogDriverProps
+          {
+              StreamPrefix = "mergeExportFiles",
+              LogGroup = new LogGroup(this, "mergeExportFilesLogGroup", new LogGroupProps
+              {
+                  LogGroupName = this.id + "mergeExportFilesLogGroup",
+                  Retention = RetentionDays.ONE_WEEK,
+                  RemovalPolicy = RemovalPolicy.DESTROY
+              })
+          })
+      });
 
-      this.mergeExportFilesTask = new LambdaInvoke(this, this.id + "_mergeExportFilesTask", new LambdaInvokeProps{
-          LambdaFunction = mergeExportFilesFunction,
-          ResultPath = "$.mergeResult",
-          PayloadResponseOnly = true
+      var mergeExportFilesContainer = mergeExportFilesTaskDefinition.FindContainer("mergeExportFilesContainer");
+
+      this.mergeExportFilesTask = new EcsRunTask(this, this.id + "_mergeExportFilesTask", new EcsRunTaskProps
+      {
+          IntegrationPattern = IntegrationPattern.RUN_JOB,
+          Cluster = infrastructure.cluster,
+          TaskDefinition = mergeExportFilesTaskDefinition,
+          AssignPublicIp = true,
+          LaunchTarget = new EcsFargateLaunchTarget(),
+          ContainerOverrides = new ContainerOverride[] {
+              new ContainerOverride {
+                  ContainerDefinition = mergeExportFilesContainer,
+                  Environment = new TaskEnvironmentVariable[] {
+                      new TaskEnvironmentVariable{
+                        Name = "EXPORT_ARN",
+                        Value = JsonPath.StringAt("$.exportJob.exportArn")
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "S3_PREFIX",
+                        Value = JsonPath.StringAt("$.exportJob.s3Prefix")
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "HERON_BUCKET",
+                        Value = infrastructure.bucket.BucketName
+                      }
+                  }
+              }
+          }
       });
     }
   }
