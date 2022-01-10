@@ -23,7 +23,7 @@ def createFrame(mutationItem):
         'proteinMutationPos': mutationItem['proteinMutationPos']['N'],
         'seqHash' : mutationItem['seqHash']['S'],
         'genomeMutationAlt': mutationItem['genomeMutationAlt']['S']
-  }, ignore_index=True)
+  }, index=[1])
 
   return df
 
@@ -71,9 +71,9 @@ def main():
 
     frames = [createFrame(f) for f in mutationLines]
     if len(exportDf) == 0:
-      exportDf = pd.concat(frames)
+      exportDf = pd.concat(frames, ignore_index=True)
     else:
-      exportDf = pd.concat([exportDf, frames])
+      exportDf = pd.concat([exportDf, frames], ignore_index=True)
 
   # Save the resulting dataframe back into S3
   exportDf.to_csv(concatenatedLocalFilePath, index=False)
