@@ -94,8 +94,8 @@ namespace HeronPipeline {
       var mergeExportFilesImage = ContainerImage.FromAsset("src/images/mergeExportFiles");
       var mergeExportFilesTaskDefinition = new TaskDefinition(this, this.id + "_mergeExportFilesTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_mergeExportFiles",
-          Cpu = "1024",
-          MemoryMiB = "2048",
+          Cpu = "4096",
+          MemoryMiB = "30720",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = this.infrastructure.ecsExecutionRole,

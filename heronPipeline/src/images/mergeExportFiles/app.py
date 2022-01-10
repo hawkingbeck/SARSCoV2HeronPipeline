@@ -36,6 +36,10 @@ def main():
   concatenatedLocalFilePath = "/tmp/concatenated.csv"
   concatenatedFileS3Key = f"{heronBucketName}/{s3Prefix}/AWSDynamoDB/{exportFolder}/exported.csv"
   
+  print(f"exportManifestS3Key: {exportManifestS3Key}")
+  print(f"concatenatedFileS3Key: {concatenatedFileS3Key}")
+
+
   #download manifest file
   s3 = boto3.resource('s3', region_name='eu-west-1')
   bucket = s3.Bucket(heronBucketName)
