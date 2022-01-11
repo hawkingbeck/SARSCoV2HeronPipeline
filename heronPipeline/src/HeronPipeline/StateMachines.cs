@@ -345,7 +345,8 @@ namespace HeronPipeline
       });
 
       var exportSequencesChain = Chain
-        .Start(exportSequencesTableStateMachine);
+        .Start(exportSequencesTableStateMachine)
+        .Next(mergeExportFiles.mergeSequenceExportFilesTask);
 
       // Export Samples
       var exportSamplesInputObject = new Dictionary<string, object>{
@@ -362,7 +363,8 @@ namespace HeronPipeline
       });
 
       var exportSamplesChain = Chain
-        .Start(exportSamplesTableStateMachine);
+        .Start(exportSamplesTableStateMachine)
+        .Next(mergeExportFiles.mergeSampleExportFilesTask);
       
 
       tableExportChainParallel.Branch(new Chain[] { exportMutationsChain, exportSequencesChain, exportSamplesChain });

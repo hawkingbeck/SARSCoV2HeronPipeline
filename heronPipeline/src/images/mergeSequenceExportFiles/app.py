@@ -20,17 +20,20 @@ def extractValue(dict, key):
 def createFrame(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
-  # print(f"Mutation Item: {mutationItem}")
   df = pd.DataFrame({
-        'mutationId': extractValue(dynamoItem['mutationId'], 'S'),
-        'proteinMutationAlt': extractValue(dynamoItem['proteinMutationAlt'], 'S'),
-        'proteinMutationGene': extractValue(dynamoItem['proteinMutationGene'], 'S'),
-        'genomeMutationRef': extractValue(dynamoItem['genomeMutationRef'], 'S'),
-        'genomeMutationPos': extractValue(dynamoItem['genomeMutationPos'], 'N'),
-        'proteinMutationRef' : extractValue(dynamoItem['proteinMutationRef'],'S'),
-        'proteinMutationPos': extractValue(dynamoItem['proteinMutationPos'], 'N'),
-        'seqHash' : extractValue(dynamoItem['seqHash'], 'S'),
-        'genomeMutationAlt': extractValue(dynamoItem['genomeMutationAlt'], 'S')
+        'seqHash': extractValue(dynamoItem['seqHash'], 'S'),
+        'pangoAmbiguityScore': extractValue(dynamoItem['pangoAmbiguityScore'], 'N'),
+        'armadillinLineage': extractValue(dynamoItem['armadillinLineage'], 'S'),
+        'scorpioCall': extractValue(dynamoItem['scorpioCall'], 'S'),
+        'scorpioSupport': extractValue(dynamoItem['scorpioSupport'], 'N'),
+        'pangoNote' : extractValue(dynamoItem['pangoNote'],'S'),
+        'pangoUsherLineage': extractValue(dynamoItem['pangoUsherLineage'], 'S'),
+        'pangoConflict' : extractValue(dynamoItem['pangoConflict'], 'N'),
+        'genotypeVariantConf' : extractValue(dynamoItem['genotypeVariantConf'], 'S'),
+        'scorpioConflict' : extractValue(dynamoItem['scorpioConflict'], 'N'),
+        'pctCoveredBases' : extractValue(dynamoItem['pctCoveredBases'], 'N'),
+        'numAlignedReads' : extractValue(dynamoItem['numAlignedReads'], 'N'),
+        'genotypeProfile' : extractValue(dynamoItem['genotypeProfile'], 'S')
   }, index=[1])
 
   return df
@@ -38,7 +41,7 @@ def createFrame(dynamoItem):
 def main():
   exportArn = os.getenv("EXPORT_ARN")
   s3Prefix = os.getenv("S3_PREFIX")
-  heronBucketName = os.getenv("HERON_BUCKET")
+  heronBucketName = os.getenv("HERON_BUCKET") 
   exportFolder = os.path.basename(exportArn)
 
   exportManifestS3Key = f"{s3Prefix}/AWSDynamoDB/{exportFolder}/manifest-files.json"
