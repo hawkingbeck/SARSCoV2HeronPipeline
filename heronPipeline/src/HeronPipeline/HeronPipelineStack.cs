@@ -62,6 +62,7 @@ namespace HeronPipeline
             exportMutations.Create();
 
             var exportDynamoDBTable = new ExportDynamoDBTable(this, idToSupply+"exportDynamo_", infrastructure);
+            exportDynamoDBTable.Create();
 
             var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, exportMutations, exportDynamoDBTable);
             stateMachines.Create();

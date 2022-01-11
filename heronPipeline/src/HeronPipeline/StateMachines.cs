@@ -37,7 +37,6 @@ namespace HeronPipeline
 
     private StateMachine processSampleBatchStateMachine;
     private StateMachine startNestedSampleProcessingStateMachine;
-    private StateMachine mutationsTestStateMachine;
     private StateMachine exportMutationsStateMachine;
 
     public StateMachines( Construct scope, 
