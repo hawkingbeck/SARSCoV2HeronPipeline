@@ -37,7 +37,7 @@ namespace HeronPipeline
 
     private StateMachine processSampleBatchStateMachine;
     private StateMachine startNestedSampleProcessingStateMachine;
-    private StateMachine exportMutationsStateMachine;
+    private StateMachine exportTableStateMachine;
 
     public StateMachines( Construct scope, 
                           string id, 
@@ -106,7 +106,7 @@ namespace HeronPipeline
         .Next(exportDynamoDBTable.getExportStatusTask)
         .Next(checkIfExportHasFinishedTask);
 
-      exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{
+      exportTableStateMachine = new StateMachine(this, "exportTableStateMachine", new StateMachineProps{
         Definition=exportMutationsChain
       });
     }
@@ -281,7 +281,6 @@ namespace HeronPipeline
         ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
         ResultPath = JsonPath.DISCARD,
         Parameters = launchSampleProcessingMapParameters
-      //   MaxConcurrency = 10
       });
 
       var stateMachineInputObject = new Dictionary<string, object> {
@@ -308,13 +307,68 @@ namespace HeronPipeline
         Input = stateMachineInput
       });
 
+      // var parallelTableExportChain
+      var tableExportChainParallel = new Parallel(this, "tableExportChainParallel", new ParallelProps{
+        OutputPath = "$.tableExport"
+      });
+      
+      // Export Mutations
+      var exportMutationsInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.mutationsTable.TableArn},
+        {"exportKey", "mutationsExport"}
+      };
+
+      var exportMutationsTableStateMachine = new StepFunctionsStartExecution(this, "startExportMutationsStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        Input = TaskInput.FromObject(exportMutationsInputObject)
+      });
+
+      var exportMutationsChain = Chain
+        .Start(exportMutationsTableStateMachine);
+
+      // Export Sequences
+      var exportSequencesInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.sequencesTable.TableArn},
+        {"exportKey", "sequencesExport"}
+      };
+
+      var exportSequencesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSequencesStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        Input = TaskInput.FromObject(exportSequencesInputObject)
+      });
+
+      var exportSequencesChain = Chain
+        .Start(exportSequencesTableStateMachine);
+
+      // Export Samples
+      var exportSamplesInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.samplesTable.TableArn},
+        {"exportKey", "samplesExport"}
+      };
+
+      var exportSamplesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSamplesStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        Input = TaskInput.FromObject(exportSamplesInputObject)
+      });
+
+      var exportSamplesChain = Chain
+        .Start(exportSamplesTableStateMachine);
+      
+
+      tableExportChainParallel.Branch(new Chain[] { exportMutationsChain, exportSequencesChain, exportSamplesChain });
+
+
       launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));            
 
       var processMessagesChain = Chain
         .Start(prepareSequences.addSequencesToQueueTask)
         .Next(helperFunctions.getMessageCountTask)
         .Next(launchSampleProcessingMap)
-        .Next(exportResults.exportResultsTask)
+        .Next(tableExportChainParallel)
+        // .Next(exportResults.exportResultsTask)
         .Next(pipelineFinishTask);
 
       var pipelineChain = Chain
