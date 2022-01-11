@@ -30,6 +30,7 @@ namespace HeronPipeline
     private PrepareSequences prepareSequences;
     private GoFastaAlignment goFastaAlignment;
     private HelperFunctions helperFunctions;
+    private ExportDynamoDBTable exportDynamoDBTable;
     private ExportResults exportResults;
     private ExportMutations exportMutations;
 
@@ -50,7 +51,8 @@ namespace HeronPipeline
                           GoFastaAlignment goFastaAlignment,
                           HelperFunctions helperFunctions,
                           ExportResults exportResults,
-                          ExportMutations exportMutations
+                          ExportMutations exportMutations,
+                          ExportDynamoDBTable exportDynamoDBTable
                           ): base(scope, id)
     {
       this.id = id;
@@ -64,6 +66,7 @@ namespace HeronPipeline
       this.helperFunctions = helperFunctions;
       this.exportResults = exportResults;
       this.exportMutations = exportMutations;
+      this.exportDynamoDBTable = exportDynamoDBTable;
     }
 
     public void Create()
@@ -71,26 +74,15 @@ namespace HeronPipeline
       CreateProcessSampleBatchStateMachine();
       CreateStartNestedSequenceProcessingStateMachine();
       CreatePipelineStateMachine();
-      CreateMutationsTestStateMachine();
-      CreateExportMutationsStateMachine();
+      CreateExportDynamoDBTableStateMachine();
     }
 
-    private void CreateMutationsTestStateMachine(){
-      var mutationsChain = Chain 
-        .Start(mutationsModel.mutationsTestTask);
-
-      mutationsTestStateMachine = new StateMachine(this, "mutationsTestStateMachine", new StateMachineProps{
-        Definition = mutationsChain
-      });
-    }
-
-    private void CreateExportMutationsStateMachine(){
+    private void CreateExportDynamoDBTableStateMachine(){
 
       var checkIfExportHasFinishedTask = new Choice(this, "checkIfExportTaskHasFinished", new ChoiceProps{
         Comment = "Check if the export job has finished"
       });
 
-      // var endTask = new End
       var succeedTask = new Succeed(this, "exportSucceed");
       var failedTask = new Fail(this, "exportFailed");
 
@@ -104,20 +96,15 @@ namespace HeronPipeline
 
       var waitChain = Chain
         .Start(waitTask)
-        .Next(exportMutations.getExportStatusTask);
-
-
-      var mergeChain = Chain
-        .Start(exportMutations.mergeExportFilesTask)
-        .Next(succeedTask);
+        .Next(exportDynamoDBTable.getExportStatusTask);
 
       checkIfExportHasFinishedTask.When(exportInProgressCondition, waitChain);
-      checkIfExportHasFinishedTask.When(exportFinishedCondition, mergeChain);
+      checkIfExportHasFinishedTask.When(exportFinishedCondition, succeedTask);
       checkIfExportHasFinishedTask.When(exportFailedCondition, failedTask);
 
       var exportMutationsChain = Chain
-        .Start(exportMutations.startTableExportTask)
-        .Next(exportMutations.getExportStatusTask)
+        .Start(exportDynamoDBTable.startTableExportTask)
+        .Next(exportDynamoDBTable.getExportStatusTask)
         .Next(checkIfExportHasFinishedTask);
 
       exportMutationsStateMachine = new StateMachine(this, "exportMutationsStateMachine", new StateMachineProps{

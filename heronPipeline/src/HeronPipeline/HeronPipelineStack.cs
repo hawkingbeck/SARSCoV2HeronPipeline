@@ -61,7 +61,9 @@ namespace HeronPipeline
             var exportMutations = new ExportMutations(this, idToSupply+"export_mut_", infrastructure);
             exportMutations.Create();
 
-            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, exportMutations);
+            var exportDynamoDBTable = new ExportDynamoDBTable(this, idToSupply+"exportDynamo_", infrastructure);
+
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, exportMutations, exportDynamoDBTable);
             stateMachines.Create();
         }
     }
