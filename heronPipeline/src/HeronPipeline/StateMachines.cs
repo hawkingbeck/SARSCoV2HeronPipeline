@@ -32,7 +32,7 @@ namespace HeronPipeline
     private HelperFunctions helperFunctions;
     private ExportDynamoDBTable exportDynamoDBTable;
     private ExportResults exportResults;
-    private ExportMutations exportMutations;
+    private MergeExportFiles mergeExportFiles;
 
 
     private StateMachine processSampleBatchStateMachine;
@@ -50,7 +50,7 @@ namespace HeronPipeline
                           GoFastaAlignment goFastaAlignment,
                           HelperFunctions helperFunctions,
                           ExportResults exportResults,
-                          ExportMutations exportMutations,
+                          MergeExportFiles mergeExportFiles,
                           ExportDynamoDBTable exportDynamoDBTable
                           ): base(scope, id)
     {
@@ -64,7 +64,7 @@ namespace HeronPipeline
       this.goFastaAlignment = goFastaAlignment;
       this.helperFunctions = helperFunctions;
       this.exportResults = exportResults;
-      this.exportMutations = exportMutations;
+      this.mergeExportFiles = mergeExportFiles;
       this.exportDynamoDBTable = exportDynamoDBTable;
     }
 
@@ -72,8 +72,8 @@ namespace HeronPipeline
     {
       CreateProcessSampleBatchStateMachine();
       CreateStartNestedSequenceProcessingStateMachine();
-      CreatePipelineStateMachine();
       CreateExportDynamoDBTableStateMachine();
+      CreatePipelineStateMachine();
     }
 
     private void CreateExportDynamoDBTableStateMachine(){
@@ -322,11 +322,13 @@ namespace HeronPipeline
       var exportMutationsTableStateMachine = new StepFunctionsStartExecution(this, "startExportMutationsStateMachine", new StepFunctionsStartExecutionProps{
         StateMachine = exportTableStateMachine,
         IntegrationPattern = IntegrationPattern.RUN_JOB,
+        ResultPath = "$.exportMutations",
         Input = TaskInput.FromObject(exportMutationsInputObject)
       });
 
       var exportMutationsChain = Chain
-        .Start(exportMutationsTableStateMachine);
+        .Start(exportMutationsTableStateMachine)
+        .Next(mergeExportFiles.mergeMutationExportFilesTask);
 
       // Export Sequences
       var exportSequencesInputObject = new Dictionary<string, object>{

@@ -15,13 +15,9 @@ config = Config(
 )
 
 def lambda_handler(event, context):
-
-  # heronBucketName = os.getenv("HERON_BUCKET")
-  # heronTableArn = os.getenv("HERON_TABLE")
-  
   print(f"Input event: {event}")
   heronBucketName = event['heronBucket']
-  heronTableArn = event["hronTable"]
+  heronTableArn = event["heronTable"]
   exportKey = event['exportKey']
 
   print(f"Bucket: {heronBucketName}")

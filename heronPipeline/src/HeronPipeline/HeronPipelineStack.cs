@@ -58,13 +58,13 @@ namespace HeronPipeline
             var exportResults = new ExportResults(this, idToSupply+"export_", infrastructure);
             exportResults.Create();
 
-            var exportMutations = new ExportMutations(this, idToSupply+"export_mut_", infrastructure);
-            exportMutations.Create();
+            var mergeExportFiles = new MergeExportFiles(this, idToSupply+"merge_", infrastructure);
+            mergeExportFiles.Create();
 
             var exportDynamoDBTable = new ExportDynamoDBTable(this, idToSupply+"exportDynamo_", infrastructure);
             exportDynamoDBTable.Create();
 
-            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, exportMutations, exportDynamoDBTable);
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, mergeExportFiles, exportDynamoDBTable);
             stateMachines.Create();
         }
     }

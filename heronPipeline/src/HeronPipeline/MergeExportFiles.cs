@@ -19,15 +19,15 @@ using Queue = Amazon.CDK.AWS.SQS.Queue;
 
 
 namespace HeronPipeline {
-  internal sealed class ExportMutations: Construct {
-    public EcsRunTask mergeExportFilesTask;
+  internal sealed class MergeExportFiles: Construct {
+    public EcsRunTask mergeMutationExportFilesTask;
 
     private Construct scope;
     private string id;
     
     private Infrastructure infrastructure;
     
-    public ExportMutations(Construct scope, string id, Infrastructure infrastructure): base(scope, id)
+    public MergeExportFiles(Construct scope, string id, Infrastructure infrastructure): base(scope, id)
     {
       this.scope = scope;
       this.id = id;
@@ -36,13 +36,13 @@ namespace HeronPipeline {
 
     public void Create()
     {
-      CreateMergeExportFilesTask();
+      CreateMergeMutationExportFilesTask();
     }
-    public void CreateMergeExportFilesTask(){
+    public void CreateMergeMutationExportFilesTask(){
       
-      var mergeExportFilesImage = ContainerImage.FromAsset("src/images/mergeExportFiles");
-      var mergeExportFilesTaskDefinition = new TaskDefinition(this, this.id + "_mergeExportFilesTaskDefinition", new TaskDefinitionProps{
-          Family = this.id + "_mergeExportFiles",
+      var mergeMutationExportFilesImage = ContainerImage.FromAsset("src/images/mergeMutationExportFiles");
+      var mergeMutationExportFilesTaskDefinition = new TaskDefinition(this, this.id + "_mergeMutationExportFilesTaskDefinition", new TaskDefinitionProps{
+          Family = this.id + "_mergeMutationExportFiles",
           Cpu = "4096",
           MemoryMiB = "30720",
           NetworkMode = NetworkMode.AWS_VPC,
@@ -51,33 +51,33 @@ namespace HeronPipeline {
           TaskRole = this.infrastructure.ecsExecutionRole,
           Volumes = new Amazon.CDK.AWS.ECS.Volume[] { this.infrastructure.volume }
       });
-      mergeExportFilesTaskDefinition.AddContainer("mergeExportFilesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+      mergeMutationExportFilesTaskDefinition.AddContainer("mergeMutationExportFilesContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
       {
-          Image = mergeExportFilesImage,
+          Image = mergeMutationExportFilesImage,
           Logging = new AwsLogDriver(new AwsLogDriverProps
           {
-              StreamPrefix = "mergeExportFiles",
-              LogGroup = new LogGroup(this, "mergeExportFilesLogGroup", new LogGroupProps
+              StreamPrefix = "mergeMutationExportFiles",
+              LogGroup = new LogGroup(this, "mergeMutationExportFilesLogGroup", new LogGroupProps
               {
-                  LogGroupName = this.id + "mergeExportFilesLogGroup",
+                  LogGroupName = this.id + "mergeMutationExportFilesLogGroup",
                   Retention = RetentionDays.ONE_WEEK,
                   RemovalPolicy = RemovalPolicy.DESTROY
               })
           })
       });
 
-      var mergeExportFilesContainer = mergeExportFilesTaskDefinition.FindContainer("mergeExportFilesContainer");
+      var mergeMutationExportFilesContainer = mergeMutationExportFilesTaskDefinition.FindContainer("mergeMutationExportFilesContainer");
 
-      this.mergeExportFilesTask = new EcsRunTask(this, this.id + "_mergeExportFilesTask", new EcsRunTaskProps
+      this.mergeMutationExportFilesTask = new EcsRunTask(this, this.id + "_mergeMutationExportFilesTask", new EcsRunTaskProps
       {
           IntegrationPattern = IntegrationPattern.RUN_JOB,
           Cluster = infrastructure.cluster,
-          TaskDefinition = mergeExportFilesTaskDefinition,
+          TaskDefinition = mergeMutationExportFilesTaskDefinition,
           AssignPublicIp = true,
           LaunchTarget = new EcsFargateLaunchTarget(),
           ContainerOverrides = new ContainerOverride[] {
               new ContainerOverride {
-                  ContainerDefinition = mergeExportFilesContainer,
+                  ContainerDefinition = mergeMutationExportFilesContainer,
                   Environment = new TaskEnvironmentVariable[] {
                       new TaskEnvironmentVariable{
                         Name = "EXPORT_ARN",
