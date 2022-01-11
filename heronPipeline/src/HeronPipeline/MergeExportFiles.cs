@@ -81,11 +81,11 @@ namespace HeronPipeline {
                   Environment = new TaskEnvironmentVariable[] {
                       new TaskEnvironmentVariable{
                         Name = "EXPORT_ARN",
-                        Value = JsonPath.StringAt("$.exportJob.exportArn")
+                        Value = JsonPath.StringAt("$.exportMutations.Output.exportJob.exportArn")
                       },
                       new TaskEnvironmentVariable{
                         Name = "S3_PREFIX",
-                        Value = JsonPath.StringAt("$.exportJob.s3Prefix")
+                        Value = JsonPath.StringAt("$.exportMutations.Output.exportJob.s3Prefix")
                       },
                       new TaskEnvironmentVariable{
                         Name = "HERON_BUCKET",
