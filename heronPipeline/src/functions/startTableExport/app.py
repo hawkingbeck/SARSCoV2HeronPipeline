@@ -22,7 +22,7 @@ def lambda_handler(event, context):
   print(f"Input event: {event}")
   heronBucketName = event['heronBucket']
   heronTableArn = event("hronTable")
-  exportKey = event['heronBucket']
+  exportKey = event['exportKey']
 
   print(f"Bucket: {heronBucketName}")
   print(f"Table: {heronTableArn}")
