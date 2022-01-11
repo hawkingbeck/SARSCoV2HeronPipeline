@@ -11,26 +11,30 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key
 
 
-def extractValue(dict, key):
-  if key in dict.keys():
-    return dict[key]
+def extractValue(dict, param, key):
+  if param in dict.keys():
+    paramDict = dict[param]
+    if key in paramDict.keys():
+      return paramDict[key]
+    else:
+      return "N/A"
   else:
     return "N/A"
 
 def createFrame(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
-  # print(f"Mutation Item: {mutationItem}")
+  
   df = pd.DataFrame({
-        'mutationId': extractValue(dynamoItem['mutationId'], 'S'),
-        'proteinMutationAlt': extractValue(dynamoItem['proteinMutationAlt'], 'S'),
-        'proteinMutationGene': extractValue(dynamoItem['proteinMutationGene'], 'S'),
-        'genomeMutationRef': extractValue(dynamoItem['genomeMutationRef'], 'S'),
-        'genomeMutationPos': extractValue(dynamoItem['genomeMutationPos'], 'N'),
-        'proteinMutationRef' : extractValue(dynamoItem['proteinMutationRef'],'S'),
-        'proteinMutationPos': extractValue(dynamoItem['proteinMutationPos'], 'N'),
-        'seqHash' : extractValue(dynamoItem['seqHash'], 'S'),
-        'genomeMutationAlt': extractValue(dynamoItem['genomeMutationAlt'], 'S')
+        'mutationId': extractValue(dynamoItem, 'mutationId', 'S'),
+        'proteinMutationAlt': extractValue(dynamoItem, 'proteinMutationAlt', 'S'),
+        'proteinMutationGene': extractValue(dynamoItem, 'proteinMutationGene', 'S'),
+        'genomeMutationRef': extractValue(dynamoItem, 'genomeMutationRef', 'S'),
+        'genomeMutationPos': extractValue(dynamoItem, 'genomeMutationPos', 'N'),
+        'proteinMutationRef' : extractValue(dynamoItem, 'proteinMutationRef','S'),
+        'proteinMutationPos': extractValue(dynamoItem, 'proteinMutationPos', 'N'),
+        'seqHash' : extractValue(dynamoItem, 'seqHash', 'S'),
+        'genomeMutationAlt': extractValue(dynamoItem, 'genomeMutationAlt', 'S')
   }, index=[1])
 
   return df

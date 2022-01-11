@@ -11,9 +11,13 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key
 
 
-def extractValue(dict, key):
-  if key in dict.keys():
-    return dict[key]
+def extractValue(dict, param, key):
+  if param in dict.keys():
+    paramDict = dict[param]
+    if key in paramDict.keys():
+      return paramDict[key]
+    else:
+      return "N/A"
   else:
     return "N/A"
 
@@ -21,19 +25,19 @@ def createFrame(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
   df = pd.DataFrame({
-        'seqHash': extractValue(dynamoItem['seqHash'], 'S'),
-        'pangoAmbiguityScore': extractValue(dynamoItem['pangoAmbiguityScore'], 'N'),
-        'armadillinLineage': extractValue(dynamoItem['armadillinLineage'], 'S'),
-        'scorpioCall': extractValue(dynamoItem['scorpioCall'], 'S'),
-        'scorpioSupport': extractValue(dynamoItem['scorpioSupport'], 'N'),
-        'pangoNote' : extractValue(dynamoItem['pangoNote'],'S'),
-        'pangoUsherLineage': extractValue(dynamoItem['pangoUsherLineage'], 'S'),
-        'pangoConflict' : extractValue(dynamoItem['pangoConflict'], 'N'),
-        'genotypeVariantConf' : extractValue(dynamoItem['genotypeVariantConf'], 'S'),
-        'scorpioConflict' : extractValue(dynamoItem['scorpioConflict'], 'N'),
-        'pctCoveredBases' : extractValue(dynamoItem['pctCoveredBases'], 'N'),
-        'numAlignedReads' : extractValue(dynamoItem['numAlignedReads'], 'N'),
-        'genotypeProfile' : extractValue(dynamoItem['genotypeProfile'], 'S')
+        'seqHash': extractValue(dynamoItem, 'seqHash', 'S'),
+        'pangoAmbiguityScore': extractValue(dynamoItem, 'pangoAmbiguityScore', 'N'),
+        'armadillinLineage': extractValue(dynamoItem, 'armadillinLineage', 'S'),
+        'scorpioCall': extractValue(dynamoItem, 'scorpioCall', 'S'),
+        'scorpioSupport': extractValue(dynamoItem, 'scorpioSupport', 'N'),
+        'pangoNote' : extractValue(dynamoItem, 'pangoNote','S'),
+        'pangoUsherLineage': extractValue(dynamoItem, 'pangoUsherLineage', 'S'),
+        'pangoConflict' : extractValue(dynamoItem, 'pangoConflict', 'N'),
+        'genotypeVariantConf' : extractValue(dynamoItem, 'genotypeVariantConf', 'S'),
+        'scorpioConflict' : extractValue(dynamoItem, 'scorpioConflict', 'N'),
+        'pctCoveredBases' : extractValue(dynamoItem, 'pctCoveredBases', 'N'),
+        'numAlignedReads' : extractValue(dynamoItem, 'numAlignedReads', 'N'),
+        'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S')
   }, index=[1])
 
   return df

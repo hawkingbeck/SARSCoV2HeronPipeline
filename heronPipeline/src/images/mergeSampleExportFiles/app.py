@@ -11,9 +11,13 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key
 
 
-def extractValue(dict, key):
-  if key in dict.keys():
-    return dict[key]
+def extractValue(dict, param, key):
+  if param in dict.keys():
+    paramDict = dict[param]
+    if key in paramDict.keys():
+      return paramDict[key]
+    else:
+      return "N/A"
   else:
     return "N/A"
 
@@ -22,14 +26,14 @@ def createFrame(dynamoItem):
   dynamoItem = dynamoItem['Item']
   # print(f"Mutation Item: {mutationItem}")
   df = pd.DataFrame({
-        'cogUkId': extractValue(dynamoItem['cogUkId'], 'S'),
-        'runMetaData': extractValue(dynamoItem['runMetaData'], 'S'),
-        'seqHash': extractValue(dynamoItem['consensusFastaHash'], 'S'),
-        'runCompleteDate': extractValue(dynamoItem['runCompleteDate'], 'N'),
-        'lastChangedDate': extractValue(dynamoItem['lastChangedDate'], 'N'),
-        'run' : extractValue(dynamoItem['run'],'N'),
-        'lane': extractValue(dynamoItem['lane'], 'N'),
-        'tag' : extractValue(dynamoItem['tag'], 'N')
+        'cogUkId': extractValue(dynamoItem, 'cogUkId', 'S'),
+        'runMetaData': extractValue(dynamoItem, 'runMetaData', 'S'),
+        'seqHash': extractValue(dynamoItem, 'consensusFastaHash', 'S'),
+        'runCompleteDate': extractValue(dynamoItem, 'runCompleteDate', 'N'),
+        'lastChangedDate': extractValue(dynamoItem, 'lastChangedDate', 'N'),
+        'run' : extractValue(dynamoItem, 'run','N'),
+        'lane': extractValue(dynamoItem, 'lane', 'N'),
+        'tag' : extractValue(dynamoItem, 'tag', 'N')
   }, index=[1])
 
   return df
