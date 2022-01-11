@@ -79,6 +79,7 @@ namespace HeronPipeline {
           TaskDefinition = mergeMutationExportFilesTaskDefinition,
           AssignPublicIp = true,
           LaunchTarget = new EcsFargateLaunchTarget(),
+          ResultPath = JsonPath.DISCARD,
           ContainerOverrides = new ContainerOverride[] {
               new ContainerOverride {
                   ContainerDefinition = mergeMutationExportFilesContainer,
@@ -138,6 +139,7 @@ namespace HeronPipeline {
           TaskDefinition = mergeSampleExportFilesTaskDefinition,
           AssignPublicIp = true,
           LaunchTarget = new EcsFargateLaunchTarget(),
+          ResultPath = JsonPath.DISCARD,
           ContainerOverrides = new ContainerOverride[] {
               new ContainerOverride {
                   ContainerDefinition = mergeSampleExportFilesContainer,
@@ -197,6 +199,7 @@ namespace HeronPipeline {
           TaskDefinition = mergeSequenceExportFilesTaskDefinition,
           AssignPublicIp = true,
           LaunchTarget = new EcsFargateLaunchTarget(),
+          ResultPath = JsonPath.DISCARD,
           ContainerOverrides = new ContainerOverride[] {
               new ContainerOverride {
                   ContainerDefinition = mergeSequenceExportFilesContainer,
