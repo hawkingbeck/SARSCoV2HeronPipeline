@@ -321,6 +321,7 @@ namespace HeronPipeline
 
       var exportMutationsTableStateMachine = new StepFunctionsStartExecution(this, "startExportMutationsStateMachine", new StepFunctionsStartExecutionProps{
         StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
         Input = TaskInput.FromObject(exportMutationsInputObject)
       });
 
@@ -336,6 +337,7 @@ namespace HeronPipeline
 
       var exportSequencesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSequencesStateMachine", new StepFunctionsStartExecutionProps{
         StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
         Input = TaskInput.FromObject(exportSequencesInputObject)
       });
 
@@ -351,6 +353,7 @@ namespace HeronPipeline
 
       var exportSamplesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSamplesStateMachine", new StepFunctionsStartExecutionProps{
         StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
         Input = TaskInput.FromObject(exportSamplesInputObject)
       });
 
