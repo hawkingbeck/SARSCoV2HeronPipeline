@@ -40,7 +40,7 @@ namespace HeronPipeline {
       var exportResultsTaskDefinition = new TaskDefinition(this, this.id + "_exportResultsTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_exportResults",
           Cpu = "4096",
-          MemoryMiB = "16384",
+          MemoryMiB = "30720",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = infrastructure.ecsExecutionRole,

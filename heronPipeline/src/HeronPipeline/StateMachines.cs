@@ -377,7 +377,7 @@ namespace HeronPipeline
         .Next(helperFunctions.getMessageCountTask)
         .Next(launchSampleProcessingMap)
         .Next(tableExportChainParallel)
-        // .Next(exportResults.exportResultsTask)
+        .Next(exportResults.exportResultsTask)
         .Next(pipelineFinishTask);
 
       var pipelineChain = Chain

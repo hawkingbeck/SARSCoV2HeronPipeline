@@ -40,9 +40,10 @@ def lambda_handler(event, context):
   )
   
   exportArn = ret['ExportDescription']['ExportArn']
+  exportUUID = os.path.basename(ret['ExportDescription']['ExportArn'])
   exportState = ret['ExportDescription']['ExportStatus']
   s3Prefix = ret['ExportDescription']['S3Prefix']
 
 	# print(f"Ret: {ret}")
 
-  return {'exportArn': exportArn, 'exportState': exportState, 's3Prefix': s3Prefix, 'exportKey': exportKey}
+  return {'exportArn': exportArn, 'exportUUID': exportUUID, 'exportState': exportState, 's3Prefix': s3Prefix, 'exportKey': exportKey}
