@@ -74,19 +74,19 @@ namespace HeronPipeline {
                   Environment = new TaskEnvironmentVariable[] {
                       new TaskEnvironmentVariable{
                         Name = "BRANCH_ZERO",
-                        Value = JsonPath.StringAt("$[0].exportMutations.Output.exportJob.resultS3Prefix")
+                        Value = JsonPath.StringAt("$.export[0].exportMutations.Output.exportJob.resultS3Prefix")
                       },
                       new TaskEnvironmentVariable{
                         Name = "BRANCH_ONE",
-                        Value = JsonPath.StringAt("$[1].exportSequences.Output.exportJob.resultS3Prefix")
+                        Value = JsonPath.StringAt("$.export[1].exportSequences.Output.exportJob.resultS3Prefix")
                       },
                       new TaskEnvironmentVariable{
                         Name = "BRANCH_TWO",
-                        Value = JsonPath.StringAt("$[2].exportSamples.Output.exportJob.resultS3Prefix")
+                        Value = JsonPath.StringAt("$.export[2].exportSamples.Output.exportJob.resultS3Prefix")
                       },
                       new TaskEnvironmentVariable{
                         Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$[0].date")
+                        Value = JsonPath.StringAt("$.date")
                       },
                       new TaskEnvironmentVariable{
                         Name = "HERON_SAMPLES_BUCKET",
