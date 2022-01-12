@@ -43,7 +43,8 @@ def lambda_handler(event, context):
   exportUUID = os.path.basename(ret['ExportDescription']['ExportArn'])
   exportState = ret['ExportDescription']['ExportStatus']
   s3Prefix = ret['ExportDescription']['S3Prefix']
+  resultS3Prefix = f"{s3Prefix}/AWSDynamoDB/{exportUUID}/exported.csv"
 
 	# print(f"Ret: {ret}")
 
-  return {'exportArn': exportArn, 'exportUUID': exportUUID, 'exportState': exportState, 's3Prefix': s3Prefix, 'exportKey': exportKey}
+  return {'exportArn': exportArn, 'exportUUID': exportUUID, 'exportState': exportState, 's3Prefix': s3Prefix, 'exportKey': exportKey, 'resultS3Prefix': resultS3Prefix}
