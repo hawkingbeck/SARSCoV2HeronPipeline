@@ -309,7 +309,7 @@ namespace HeronPipeline
 
       // var parallelTableExportChain
       var tableExportChainParallel = new Parallel(this, "tableExportChainParallel", new ParallelProps{
-        
+        ResultPath = "$.export"
       });
       
       // Export Mutations
