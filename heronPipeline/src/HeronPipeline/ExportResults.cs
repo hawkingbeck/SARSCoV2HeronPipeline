@@ -86,7 +86,7 @@ namespace HeronPipeline {
                       },
                       new TaskEnvironmentVariable{
                         Name = "DATE_PARTITION",
-                        Value = JsonPath.StringAt("$.date")
+                        Value = JsonPath.StringAt("$[0].date")
                       },
                       new TaskEnvironmentVariable{
                         Name = "HERON_SAMPLES_BUCKET",
