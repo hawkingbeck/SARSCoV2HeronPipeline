@@ -21,11 +21,11 @@ def extractValue(dict, param, key):
   else:
     return "N/A"
 
-def createFrame(dynamoItem):
+def createDict(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
   
-  df = pd.DataFrame({
+  newDict = {
         'mutationId': extractValue(dynamoItem, 'mutationId', 'S'),
         'proteinMutationAlt': extractValue(dynamoItem, 'proteinMutationAlt', 'S'),
         'proteinMutationGene': extractValue(dynamoItem, 'proteinMutationGene', 'S'),
@@ -35,9 +35,9 @@ def createFrame(dynamoItem):
         'proteinMutationPos': extractValue(dynamoItem, 'proteinMutationPos', 'N'),
         'seqHash' : extractValue(dynamoItem, 'seqHash', 'S'),
         'genomeMutationAlt': extractValue(dynamoItem, 'genomeMutationAlt', 'S')
-  }, index=[1])
+  }
 
-  return df
+  return newDict
 
 def main():
   exportArn = os.getenv("EXPORT_ARN")
@@ -63,7 +63,7 @@ def main():
   with open(exportManifestLocalPath) as file:
     manifestFiles = file.readlines()
 
-  exportDf = pd.DataFrame()
+  allDicts = []
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -81,12 +81,10 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createFrame(f) for f in dynamoLines]
-    if len(exportDf) == 0:
-      exportDf = pd.concat(frames, ignore_index=True)
-    else:
-      frames.append(exportDf)
-      exportDf = pd.concat(frames, ignore_index=True)
+    frames = [createDict(f) for f in dynamoLines]
+    allDicts.extend(frames)
+  
+  exportDf = pd.DataFrame(allDicts)
 
   # Save the resulting dataframe back into S3
   exportDf.to_csv(concatenatedLocalFilePath, index=False)

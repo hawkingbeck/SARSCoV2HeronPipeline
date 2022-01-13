@@ -21,22 +21,22 @@ def extractValue(dict, param, key):
   else:
     return "N/A"
 
-def createFrame(dynamoItem):
+def createDict(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
-  # print(f"Mutation Item: {mutationItem}")
-  df = pd.DataFrame({
+  
+  newDict = {
         'cogUkId': extractValue(dynamoItem, 'cogUkId', 'S'),
         'runMetaData': extractValue(dynamoItem, 'runMetaData', 'S'),
-        'seqHash': extractValue(dynamoItem, 'consensusFastaHash', 'S'),
+        'consensusFastaHash': extractValue(dynamoItem, 'consensusFastaHash', 'S'),
         'runCompleteDate': extractValue(dynamoItem, 'runCompleteDate', 'N'),
         'lastChangedDate': extractValue(dynamoItem, 'lastChangedDate', 'N'),
         'run' : extractValue(dynamoItem, 'run','N'),
         'lane': extractValue(dynamoItem, 'lane', 'N'),
         'tag' : extractValue(dynamoItem, 'tag', 'N')
-  }, index=[1])
+  }
 
-  return df
+  return newDict
 
 def main():
   exportArn = os.getenv("EXPORT_ARN")
@@ -62,7 +62,7 @@ def main():
   with open(exportManifestLocalPath) as file:
     manifestFiles = file.readlines()
 
-  exportDf = pd.DataFrame()
+  allDicts = []
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -80,14 +80,11 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createFrame(f) for f in dynamoLines]
-    if len(exportDf) == 0:
-      exportDf = pd.concat(frames, ignore_index=True)
-    else:
-      frames.append(exportDf)
-      exportDf = pd.concat(frames, ignore_index=True)
+    frames = [createDict(f) for f in dynamoLines]
+    allDicts.extend(frames)
 
   # Save the resulting dataframe back into S3
+  exportDf = pd.DataFrame(allDicts)
   exportDf.to_csv(concatenatedLocalFilePath, index=False)
   bucket.upload_file(concatenatedLocalFilePath, concatenatedFileS3Key)
 

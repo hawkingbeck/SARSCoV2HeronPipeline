@@ -21,10 +21,11 @@ def extractValue(dict, param, key):
   else:
     return "N/A"
 
-def createFrame(dynamoItem):
+def createDict(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
-  df = pd.DataFrame({
+  
+  newDict = {
         'seqHash': extractValue(dynamoItem, 'seqHash', 'S'),
         'pangoAmbiguityScore': extractValue(dynamoItem, 'pangoAmbiguityScore', 'N'),
         'armadillinLineage': extractValue(dynamoItem, 'armadillinLineage', 'S'),
@@ -33,14 +34,21 @@ def createFrame(dynamoItem):
         'pangoNote' : extractValue(dynamoItem, 'pangoNote','S'),
         'pangoUsherLineage': extractValue(dynamoItem, 'pangoUsherLineage', 'S'),
         'pangoConflict' : extractValue(dynamoItem, 'pangoConflict', 'N'),
+        'pangoLearnVersion': extractValue(dynamoItem, 'pangoLearnVersion', 'S'),
         'genotypeVariantConf' : extractValue(dynamoItem, 'genotypeVariantConf', 'S'),
+        'pangoVersion': extractValue(dynamoItem, 'pangoVersion', 'S'),
         'scorpioConflict' : extractValue(dynamoItem, 'scorpioConflict', 'N'),
+        'version': extractValue(dynamoItem, 'version', 'S'),
+        'pangoLineage': extractValue(dynamoItem, 'pangoLineage', 'S'),
+        'consensusFastaPath': extractValue(dynamoItem, 'consensusFastaPath', 'S'),
+        'genotypeVariant': extractValue(dynamoItem, 'genotypeVariant', 'S'),
         'pctCoveredBases' : extractValue(dynamoItem, 'pctCoveredBases', 'N'),
+        'pangolinVersion': extractValue(dynamoItem, 'pangolinVersion', 'S'),
         'numAlignedReads' : extractValue(dynamoItem, 'numAlignedReads', 'N'),
         'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S')
-  }, index=[1])
+  }
 
-  return df
+  return newDict
 
 def main():
   exportArn = os.getenv("EXPORT_ARN")
@@ -66,7 +74,7 @@ def main():
   with open(exportManifestLocalPath) as file:
     manifestFiles = file.readlines()
 
-  exportDf = pd.DataFrame()
+  allDicts = []
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -84,14 +92,11 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createFrame(f) for f in dynamoLines]
-    if len(exportDf) == 0:
-      exportDf = pd.concat(frames, ignore_index=True)
-    else:
-      frames.append(exportDf)
-      exportDf = pd.concat(frames, ignore_index=True)
-
+    frames = [createDict(f) for f in dynamoLines]
+    allDicts.extend(frames)
+    
   # Save the resulting dataframe back into S3
+  exportDf = pd.DataFrame(allDicts)
   exportDf.to_csv(concatenatedLocalFilePath, index=False)
   bucket.upload_file(concatenatedLocalFilePath, concatenatedFileS3Key)
 
