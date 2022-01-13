@@ -66,6 +66,7 @@ def main():
 
   allDicts = []
   exportDf = pd.DataFrame()
+  runNumber = 0
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -86,12 +87,17 @@ def main():
     frames = [createDict(f) for f in dynamoLines]
     allDicts.extend(frames)
     tmpDf = pd.DataFrame(frames)
-    exportDf = pd.concat([exportDf, tmpDf])
+    if runNumber == 0:
+      tmpDf.to_csv(concatenatedLocalFilePath, index=False)
+    else:
+      tmpDf.to_csv(concatenatedLocalFilePath, index=False, header=False, mode="a")
+    
+    runNumber += 1
 
   # exportDf = pd.DataFrame(allDicts)
-
+  # exportDf = pd.concat([exportDf, tmpDf])
   # Save the resulting dataframe back into S3
-  exportDf.to_csv(concatenatedLocalFilePath, index=False)
+  # exportDf.to_csv(concatenatedLocalFilePath, index=False)
   bucket.upload_file(concatenatedLocalFilePath, concatenatedFileS3Key)
 
 
