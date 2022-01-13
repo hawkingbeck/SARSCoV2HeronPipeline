@@ -11,6 +11,7 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 from decimal import Decimal
 import json
+import platform
 
 config = Config(
    retries = {
@@ -101,6 +102,8 @@ def main():
 
 if __name__ == '__main__':
   main()
+
+  print(f"OS: {os.name}, Platform: {platform.system()}, Release: {platform.release()}")
 
   print("Finished")
         
