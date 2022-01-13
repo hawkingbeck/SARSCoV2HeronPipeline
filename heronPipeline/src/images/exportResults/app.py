@@ -89,7 +89,7 @@ def main():
   sortedValues = [seqHashDict[f] for f in sortedKeys]
   seqHashMutationDf = pd.DataFrame({'seqHash': sortedKeys, 'mutations': sortedValues})
   joinedSequences = pd.merge(sequencesDf, seqHashMutationDf, left_on="seqHash", right_on="seqHash", how="inner")
-  joinedDf = pd.merge(samplesDf, joinedSequences, left_on="seqHash", right_on="seqHash", how="inner")
+  joinedDf = pd.merge(samplesDf, joinedSequences, left_on="consensusFastaHash", right_on="seqHash", how="inner")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Upload to S3
