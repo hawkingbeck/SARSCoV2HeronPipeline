@@ -9,6 +9,7 @@ import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
+import platform
 
 
 def extractValue(dict, param, key):
@@ -64,6 +65,7 @@ def main():
     manifestFiles = file.readlines()
 
   allDicts = []
+  exportDf = pd.DataFrame()
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -83,8 +85,10 @@ def main():
 
     frames = [createDict(f) for f in dynamoLines]
     allDicts.extend(frames)
-  
-  exportDf = pd.DataFrame(allDicts)
+    tmpDf = pd.DataFrame(frames)
+    exportDf = pd.concat([exportDf, tmpDf])
+
+  # exportDf = pd.DataFrame(allDicts)
 
   # Save the resulting dataframe back into S3
   exportDf.to_csv(concatenatedLocalFilePath, index=False)
@@ -92,6 +96,8 @@ def main():
 
 
 if __name__ == '__main__':
+  
+  print(f"OS: {os.name}, Platform: {platform.system()}, Release: {platform.release()}")
   main()
 
   print("Finished")
