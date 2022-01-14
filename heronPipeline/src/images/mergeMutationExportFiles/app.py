@@ -85,7 +85,7 @@ def main():
       dynamoLines = f.readlines()
 
     frames = [createDict(f) for f in dynamoLines]
-    allDicts.extend(frames)
+    # allDicts.extend(frames)
     tmpDf = pd.DataFrame(frames)
     if runNumber == 0:
       tmpDf.to_csv(concatenatedLocalFilePath, index=False)
