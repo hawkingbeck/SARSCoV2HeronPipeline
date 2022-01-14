@@ -49,6 +49,7 @@ namespace HeronPipeline {
           Family = this.id + "_mergeMutationExportFiles",
           Cpu = "4096",
           MemoryMiB = "30720",
+          EphemeralStorageGiB = 100,
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = this.infrastructure.ecsExecutionRole,
