@@ -25,7 +25,7 @@ def lambda_handler(event, context):
   print(f"export Key: {exportKey}")
 
   yesterday = datetime.today() - timedelta(days=0)
-  exportDate = datetime(yesterday.year, yesterday.month, yesterday.day, 0, 0, 0).timestamp()
+  exportDate = yesterday.timestamp() #datetime(yesterday.year, yesterday.month, yesterday.day, 0, 0, 0).timestamp()
   exportPartition = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
   # Create a DynamoDB Client
