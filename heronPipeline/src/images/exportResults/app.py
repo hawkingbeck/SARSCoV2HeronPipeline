@@ -68,28 +68,28 @@ def main():
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Append the mutations for each sequence
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  seqHashList = sequencesDf['seqHash'].to_list()
-  seqHashDict = dict.fromkeys(seqHashList, '')
-  mutationsDf.dropna(inplace=True)
-  mutationsList = mutationsDf.to_dict(orient='records')
-  for mutation in mutationsList:
-    mutationValue = get_mutation(mutation)
-    seqHash = mutation['seqHash']
-    prevValue = seqHashDict[seqHash]
-    if prevValue == '':
-      seqHashDict[seqHash] =  mutationValue
-    else:
-      seqHashDict[seqHash] = str(seqHashDict[seqHash]) + "|" + mutationValue
+  # seqHashList = sequencesDf['seqHash'].to_list()
+  # seqHashDict = dict.fromkeys(seqHashList, '')
+  # mutationsDf.dropna(inplace=True)
+  # mutationsList = mutationsDf.to_dict(orient='records')
+  # for mutation in mutationsList:
+  #   mutationValue = get_mutation(mutation)
+  #   seqHash = mutation['seqHash']
+  #   prevValue = seqHashDict[seqHash]
+  #   if prevValue == '':
+  #     seqHashDict[seqHash] =  mutationValue
+  #   else:
+  #     seqHashDict[seqHash] = str(seqHashDict[seqHash]) + "|" + mutationValue
 
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Join on the seqHash
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  allKeys = seqHashDict.keys()
-  sortedKeys = sorted(allKeys)
-  sortedValues = [seqHashDict[f] for f in sortedKeys]
-  seqHashMutationDf = pd.DataFrame({'seqHash': sortedKeys, 'mutations': sortedValues})
-  joinedSequences = pd.merge(sequencesDf, seqHashMutationDf, left_on="seqHash", right_on="seqHash", how="inner")
+  # allKeys = seqHashDict.keys()
+  # sortedKeys = sorted(allKeys)
+  # sortedValues = [seqHashDict[f] for f in sortedKeys]
+  # seqHashMutationDf = pd.DataFrame({'seqHash': sortedKeys, 'mutations': sortedValues})
+  joinedSequences = pd.merge(sequencesDf, mutationsDf, left_on="seqHash", right_on="seqHash", how="inner")
   joinedDf = pd.merge(samplesDf, joinedSequences, left_on="consensusFastaHash", right_on="seqHash", how="inner")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++

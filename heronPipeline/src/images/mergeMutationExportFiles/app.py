@@ -10,7 +10,15 @@ from botocore.exceptions import ClientError
 from botocore.config import Config
 from boto3.dynamodb.conditions import Key
 import platform
+from collections import defaultdict
+import csv
 
+
+def get_mutation(row):
+  if row["proteinMutationRef"] != row["proteinMutationAlt"]:
+    return f"{row['proteinMutationGene']}:{row['proteinMutationRef']}{int(row['proteinMutationPos'])}{row['proteinMutationAlt']}"
+  else:
+    return f"synSNP:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
 
 def extractValue(dict, param, key):
   if param in dict.keys():
@@ -23,7 +31,12 @@ def extractValue(dict, param, key):
     return "N/A"
 
 def createDict(dynamoItem):
-  dynamoItem = json.loads(dynamoItem)
+  try:
+    dynamoItem = json.loads(dynamoItem)
+  except:
+    print(f"Error loading: {dynamoItem}")
+    return False, 'seqHash', 'mutation'
+    
   dynamoItem = dynamoItem['Item']
   
   newDict = {
@@ -38,7 +51,8 @@ def createDict(dynamoItem):
         'genomeMutationAlt': extractValue(dynamoItem, 'genomeMutationAlt', 'S')
   }
 
-  return newDict
+  mutation = get_mutation(newDict)
+  return True, newDict['seqHash'], mutation
 
 def main():
   exportArn = os.getenv("EXPORT_ARN")
@@ -64,9 +78,8 @@ def main():
   with open(exportManifestLocalPath) as file:
     manifestFiles = file.readlines()
 
-  allDicts = []
-  exportDf = pd.DataFrame()
   runNumber = 0
+  allMutations = defaultdict(str)
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -80,24 +93,24 @@ def main():
       with open(localDataFilePathUnZipped, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
 
-
+    print(f"Processing {localDataFilePathUnZipped}")
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
     frames = [createDict(f) for f in dynamoLines]
-    # allDicts.extend(frames)
-    tmpDf = pd.DataFrame(frames)
-    if runNumber == 0:
-      tmpDf.to_csv(concatenatedLocalFilePath, index=False)
-    else:
-      tmpDf.to_csv(concatenatedLocalFilePath, index=False, header=False, mode="a")
+    for frame in frames:
+      if frame[0] == True:
+        allMutations[frame[1]] += frame[2] + "|"
     
     runNumber += 1
 
-  # exportDf = pd.DataFrame(allDicts)
-  # exportDf = pd.concat([exportDf, tmpDf])
-  # Save the resulting dataframe back into S3
-  # exportDf.to_csv(concatenatedLocalFilePath, index=False)
+  allSeq = list(allMutations.keys())
+  with open(concatenatedLocalFilePath, 'w') as f:
+    writer = csv.writer(f)
+    writer.writerow(['seqHash', 'mutations'])
+    for seq in allSeq:
+      writer.writerow([seq, allMutations[seq][:-1]])
+  
   bucket.upload_file(concatenatedLocalFilePath, concatenatedFileS3Key)
 
 
