@@ -11,6 +11,7 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 from decimal import Decimal
 import json
+import platform
 
 config = Config(
    retries = {
@@ -19,81 +20,81 @@ config = Config(
    }
 )
 
+def get_mutation(row):
+  if row["proteinMutationRef"] != row["proteinMutationAlt"]:
+    return f"{row['proteinMutationGene']}:{row['proteinMutationRef']}{int(row['proteinMutationPos'])}{row['proteinMutationAlt']}"
+  else:
+    return f"synSNP:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
 
 def main():
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Read environment variables
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  heronSequencesTableName = os.getenv("HERON_SEQUENCES_TABLE")
-  heronSamplesTableName = os.getenv("HERON_SAMPLES_TABLE")
+  branchZero = os.getenv("BRANCH_ZERO")
+  branchOne = os.getenv("BRANCH_ONE")
+  branchTwo = os.getenv("BRANCH_TWO")
   heronBucketName = os.getenv("HERON_SAMPLES_BUCKET")
   dateString = os.getenv("DATE_PARTITION")
   executionId = os.getenv("EXECUTION_ID")
   
+  print(f"Branch Zero: {branchZero}")
+  print(f"Branch One: {branchOne}")
+  print(f"Branch Two: {branchTwo}")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Create AWS resource clients
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  sqs = boto3.resource('sqs')
-  dynamodbClient = boto3.resource('dynamodb', region_name="eu-west-1", config=config)
-  sequencesTable = dynamodbClient.Table(heronSequencesTableName)
-  samplesTable = dynamodbClient.Table(heronSamplesTableName)
-
-
   s3 = boto3.resource('s3', region_name='eu-west-1')
   bucket = s3.Bucket(heronBucketName)
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # Extract all data from the sequences table
+  # Download the results files
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  scan_kwargs = dict()
-  startKey = "N/A"
-  sequencesDf = pd.DataFrame()
-  while startKey is not None:
-    response = sequencesTable.scan(**scan_kwargs)
-    if len(response['Items']) > 0:
-      startKey = response.get('LastEvaluatedKey', None)
-      scan_kwargs['ExclusiveStartKey'] = startKey
-      sequencesDf = sequencesDf.append(pd.DataFrame(response['Items']))
-      
-  print(f"Extracted {len(sequencesDf)} sequences")
-  sequencesDf.to_csv("/tmp/sequences.csv", index=False)
-  bucket.upload_file("/tmp/sequences.csv", f"results/{dateString}/allSequences.csv")
-
-  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # Extract all data from the samples table
-  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  scan_kwargs = dict()
-  startKey = "N/A"
-  samplesDf = pd.DataFrame()
-  while startKey is not None:
-    response = samplesTable.scan(**scan_kwargs)
-    if len(response['Items']) > 0:
-      startKey = response.get('LastEvaluatedKey', None)
-      scan_kwargs['ExclusiveStartKey'] = startKey
-      samplesDf = samplesDf.append(pd.DataFrame(response['Items']), ignore_index=True)
-
-  print(f"Extracted {len(samplesDf)} samples")
-
-  samplesDf.to_csv("/tmp/samples.csv", index=False)
-  bucket.upload_file("/tmp/samples.csv", f"results/{dateString}/allSamples.csv")
-
+  mutationsFilename = "/tmp/mutationsExported.csv"
+  samplesFilename = "/tmp/samplesExported.csv"
+  sequencesFilesname = "/tmp/sequencesExported.csv"
   
+  bucket.download_file(branchZero, mutationsFilename)
+  bucket.download_file(branchOne, sequencesFilesname)
+  bucket.download_file(branchTwo, samplesFilename)
+  
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  # Load the files into memory
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  mutationsDf = pd.read_csv(mutationsFilename)
+  samplesDf = pd.read_csv(samplesFilename)
+  sequencesDf = pd.read_csv(sequencesFilesname)
+
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  # Append the mutations for each sequence
+  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
+  # seqHashList = sequencesDf['seqHash'].to_list()
+  # seqHashDict = dict.fromkeys(seqHashList, '')
+  # mutationsDf.dropna(inplace=True)
+  # mutationsList = mutationsDf.to_dict(orient='records')
+  # for mutation in mutationsList:
+  #   mutationValue = get_mutation(mutation)
+  #   seqHash = mutation['seqHash']
+  #   prevValue = seqHashDict[seqHash]
+  #   if prevValue == '':
+  #     seqHashDict[seqHash] =  mutationValue
+  #   else:
+  #     seqHashDict[seqHash] = str(seqHashDict[seqHash]) + "|" + mutationValue
+
+
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Join on the seqHash
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  joinedDf = pd.merge(samplesDf, sequencesDf, left_on="consensusFastaHash", right_on="seqHash", how="inner")
-  print(f"JoinedDf has length {len(joinedDf)}")
-
-  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # Remove any duplicated cogUkId's
-  #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  # deDupResults = joinedDf.sort_values(['cogUkId', 'pctCoveredBases', 'lastChangedDate']).drop_duplicates('cogUkId',keep='last')
+  # allKeys = seqHashDict.keys()
+  # sortedKeys = sorted(allKeys)
+  # sortedValues = [seqHashDict[f] for f in sortedKeys]
+  # seqHashMutationDf = pd.DataFrame({'seqHash': sortedKeys, 'mutations': sortedValues})
+  joinedSequences = pd.merge(sequencesDf, mutationsDf, left_on="seqHash", right_on="seqHash", how="inner")
+  joinedDf = pd.merge(samplesDf, joinedSequences, left_on="consensusFastaHash", right_on="seqHash", how="inner")
 
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
   # Upload to S3
   #+++++++++++++++++++++++++++++++++++++++++++++++++++++
-  fileName = f"{str(uuid.uuid4())}.csv"
   fileName = f"{executionId}.csv"
   
   joinedDf.to_csv(f"/tmp/{fileName}", index=False)
@@ -101,6 +102,8 @@ def main():
 
 if __name__ == '__main__':
   main()
+
+  print(f"OS: {os.name}, Platform: {platform.system()}, Release: {platform.release()}")
 
   print("Finished")
         

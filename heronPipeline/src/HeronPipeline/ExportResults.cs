@@ -37,10 +37,11 @@ namespace HeronPipeline {
     public void Create()
     {
       var exportResultsImage = ContainerImage.FromAsset("src/images/exportResults");
+      
       var exportResultsTaskDefinition = new TaskDefinition(this, this.id + "_exportResultsTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_exportResults",
           Cpu = "4096",
-          MemoryMiB = "16384",
+          MemoryMiB = "30720",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = infrastructure.ecsExecutionRole,
@@ -73,20 +74,24 @@ namespace HeronPipeline {
                   ContainerDefinition = exportResultsContainer,
                   Environment = new TaskEnvironmentVariable[] {
                       new TaskEnvironmentVariable{
+                        Name = "BRANCH_ZERO",
+                        Value = JsonPath.StringAt("$.export[0].exportMutations.Output.exportJob.resultS3Prefix")
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "BRANCH_ONE",
+                        Value = JsonPath.StringAt("$.export[1].exportSequences.Output.exportJob.resultS3Prefix")
+                      },
+                      new TaskEnvironmentVariable{
+                        Name = "BRANCH_TWO",
+                        Value = JsonPath.StringAt("$.export[2].exportSamples.Output.exportJob.resultS3Prefix")
+                      },
+                      new TaskEnvironmentVariable{
                         Name = "DATE_PARTITION",
                         Value = JsonPath.StringAt("$.date")
                       },
                       new TaskEnvironmentVariable{
                         Name = "HERON_SAMPLES_BUCKET",
                         Value = infrastructure.bucket.BucketName
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SEQUENCES_TABLE",
-                          Value = infrastructure.sequencesTable.TableName
-                      },
-                      new TaskEnvironmentVariable{
-                          Name = "HERON_SAMPLES_TABLE",
-                          Value = infrastructure.samplesTable.TableName
                       },
                       new TaskEnvironmentVariable{
                         Name = "EXECUTION_ID",

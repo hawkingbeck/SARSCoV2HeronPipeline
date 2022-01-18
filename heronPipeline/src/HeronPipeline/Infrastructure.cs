@@ -27,6 +27,7 @@ namespace HeronPipeline
     public Bucket bucket;
     public Table samplesTable;
     public Table sequencesTable;
+    public Table mutationsTable;
     public Queue dailyProcessingQueue;
     public Queue reprocessingQueue;
     public Role ecsExecutionRole;
@@ -34,6 +35,7 @@ namespace HeronPipeline
     public PolicyStatement s3AccessPolicyStatement;
     public PolicyStatement sqsAccessPolicyStatement;
     public PolicyStatement dynamoDBAccessPolicyStatement;
+    public PolicyStatement dynamoDBExportPolicyStatement;
     public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
     private string id;
@@ -142,6 +144,12 @@ namespace HeronPipeline
           PartitionKey = new Attribute { Name = "seqHash", Type = AttributeType.STRING},
           PointInTimeRecovery = true
       });
+
+      mutationsTable = new Table(this, "heronMutationsTable", new TableProps {
+          BillingMode = BillingMode.PAY_PER_REQUEST,
+          PartitionKey = new Attribute { Name = "mutationId", Type = AttributeType.STRING},
+          PointInTimeRecovery = true
+      });
     }
     private void CreateQueues()
     {
@@ -217,7 +225,14 @@ namespace HeronPipeline
       });
       dynamoDBAccessPolicyStatement.AddResources(new string[]{
         samplesTable.TableArn,
-        sequencesTable.TableArn
+        sequencesTable.TableArn,
+        mutationsTable.TableArn
+      });
+
+      dynamoDBExportPolicyStatement = new PolicyStatement(new PolicyStatementProps{
+        Effect = Effect.ALLOW,
+        Actions = new string[] {"dynamodb:*"},
+        Resources = new string[] {"arn:aws:dynamodb:eu-west-1:889562587392:*"}
       });
     }
   }

@@ -26,14 +26,18 @@ namespace HeronPipeline
     private PangolinModel pangolinModel;
     private ArmadillinModel armadillinModel;
     private GenotypeVariantsModel genotypeVariantsModel;
+    private MutationsModel mutationsModel;
     private PrepareSequences prepareSequences;
     private GoFastaAlignment goFastaAlignment;
     private HelperFunctions helperFunctions;
+    private ExportDynamoDBTable exportDynamoDBTable;
     private ExportResults exportResults;
+    private MergeExportFiles mergeExportFiles;
 
 
     private StateMachine processSampleBatchStateMachine;
     private StateMachine startNestedSampleProcessingStateMachine;
+    private StateMachine exportTableStateMachine;
 
     public StateMachines( Construct scope, 
                           string id, 
@@ -41,10 +45,13 @@ namespace HeronPipeline
                           PangolinModel pangolinModel,
                           ArmadillinModel armadillinModel,
                           GenotypeVariantsModel genotypeVariantsModel,
+                          MutationsModel mutationsModel,
                           PrepareSequences prepareSequences,
                           GoFastaAlignment goFastaAlignment,
                           HelperFunctions helperFunctions,
-                          ExportResults exportResults
+                          ExportResults exportResults,
+                          MergeExportFiles mergeExportFiles,
+                          ExportDynamoDBTable exportDynamoDBTable
                           ): base(scope, id)
     {
       this.id = id;
@@ -52,19 +59,57 @@ namespace HeronPipeline
       this.pangolinModel = pangolinModel;
       this.armadillinModel = armadillinModel;
       this.genotypeVariantsModel = genotypeVariantsModel;
+      this.mutationsModel = mutationsModel;
       this.prepareSequences = prepareSequences;
       this.goFastaAlignment = goFastaAlignment;
       this.helperFunctions = helperFunctions;
       this.exportResults = exportResults;
+      this.mergeExportFiles = mergeExportFiles;
+      this.exportDynamoDBTable = exportDynamoDBTable;
     }
 
     public void Create()
     {
       CreateProcessSampleBatchStateMachine();
       CreateStartNestedSequenceProcessingStateMachine();
+      CreateExportDynamoDBTableStateMachine();
       CreatePipelineStateMachine();
     }
 
+    private void CreateExportDynamoDBTableStateMachine(){
+
+      var checkIfExportHasFinishedTask = new Choice(this, "checkIfExportTaskHasFinished", new ChoiceProps{
+        Comment = "Check if the export job has finished"
+      });
+
+      var succeedTask = new Succeed(this, "exportSucceed");
+      var failedTask = new Fail(this, "exportFailed");
+
+      var exportFinishedCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "COMPLETED");
+      var exportInProgressCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "IN_PROGRESS");
+      var exportFailedCondition = Condition.StringEquals(JsonPath.StringAt("$.exportStatus.exportStatus"), "FAILED");
+
+      var waitTask = new Wait(this, "waitForExport", new WaitProps {
+        Time = WaitTime.Duration(Amazon.CDK.Duration.Minutes(1))
+      });
+
+      var waitChain = Chain
+        .Start(waitTask)
+        .Next(exportDynamoDBTable.getExportStatusTask);
+
+      checkIfExportHasFinishedTask.When(exportInProgressCondition, waitChain);
+      checkIfExportHasFinishedTask.When(exportFinishedCondition, succeedTask);
+      checkIfExportHasFinishedTask.When(exportFailedCondition, failedTask);
+
+      var exportMutationsChain = Chain
+        .Start(exportDynamoDBTable.startTableExportTask)
+        .Next(exportDynamoDBTable.getExportStatusTask)
+        .Next(checkIfExportHasFinishedTask);
+
+      exportTableStateMachine = new StateMachine(this, "exportTableStateMachine", new StateMachineProps{
+        Definition=exportMutationsChain
+      });
+    }
     private void CreateProcessSampleBatchStateMachine()
     {
       var processSamplesFinishTask = new Succeed(this, "processSamplesSucceedTask");
@@ -124,7 +169,19 @@ namespace HeronPipeline
       var genotypeVariantsChain = Chain
           .Start(shouldRunGenotypeModel);
 
-      placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain });
+      var shouldRunMutationsModel = new Choice(this, "shouldRunMutations", new ChoiceProps{
+        Comment = "Check to see if we should run Mutations Model"
+      });
+      var runMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), true);
+      var dontRunMutationsCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runMutations"), false);
+
+      shouldRunMutationsModel.When(runMutationsCondition, mutationsModel.mutationsTask);
+      shouldRunMutationsModel.When(dontRunMutationsCondition, mutationsModel.skipMutationsTask);
+
+      var mutationsModelChain = Chain
+        .Start(shouldRunMutationsModel);
+
+      placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain, mutationsModelChain });
 
       var processSamplesChain = Chain
         .Start(prepareSequences.prepareSequencesTask)
@@ -160,7 +217,9 @@ namespace HeronPipeline
       startSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
       startSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
       startSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      startSampleProcessingMapParameters.Add("runMutations.$", "$.runMutations");
       startSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
+      startSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreads");
 
       var startSampleProcessingMap = new Map(this, "startSampleProcessingMap", new MapProps {
         InputPath = "$",
@@ -178,7 +237,9 @@ namespace HeronPipeline
           {"executionMode", JsonPath.StringAt("$.executionMode")},
           {"runPangolin", JsonPath.StringAt("$.runPangolin")},
           {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
-          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
+          {"runMutations", JsonPath.StringAt("$.runMutations")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")},
+          {"goFastaThreads", JsonPath.StringAt("$.goFastaThreads")}
       };
 
       var stateMachineInput2 = TaskInput.FromObject(stateMachineInputObject2);
@@ -211,14 +272,15 @@ namespace HeronPipeline
       launchSampleProcessingMapParameters.Add("executionMode.$", "$.executionMode");
       launchSampleProcessingMapParameters.Add("runPangolin.$", "$.runPangolin");
       launchSampleProcessingMapParameters.Add("runGenotyping.$", "$.runGenotyping");
+      launchSampleProcessingMapParameters.Add("runMutations.$", "$.runMutations");
       launchSampleProcessingMapParameters.Add("runArmadillin.$", "$.runArmadillin");
+      launchSampleProcessingMapParameters.Add("goFastaThreads.$", "$.goFastaThreads");
 
       var launchSampleProcessingMap = new Map(this, "launchSampleProcessingMap", new MapProps {
         InputPath = "$",
         ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
         ResultPath = JsonPath.DISCARD,
         Parameters = launchSampleProcessingMapParameters
-      //   MaxConcurrency = 10
       });
 
       var stateMachineInputObject = new Dictionary<string, object> {
@@ -230,7 +292,10 @@ namespace HeronPipeline
           {"executionMode", JsonPath.StringAt("$.executionMode")},
           {"runPangolin", JsonPath.StringAt("$.runPangolin")},
           {"runGenotyping", JsonPath.StringAt("$.runGenotyping")},
-          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")}
+          {"runMutations", JsonPath.StringAt("$.runMutations")},
+          {"runArmadillin", JsonPath.StringAt("$.runArmadillin")},
+          {"goFastaThreads", JsonPath.StringAt("$.goFastaThreads")}
+          
       };
       var stateMachineInput = TaskInput.FromObject(stateMachineInputObject);
               
@@ -242,12 +307,76 @@ namespace HeronPipeline
         Input = stateMachineInput
       });
 
+      // var parallelTableExportChain
+      var tableExportChainParallel = new Parallel(this, "tableExportChainParallel", new ParallelProps{
+        ResultPath = "$.export"
+      });
+      
+      // Export Mutations
+      var exportMutationsInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.mutationsTable.TableArn},
+        {"exportKey", "mutationsExport"}
+      };
+
+      var exportMutationsTableStateMachine = new StepFunctionsStartExecution(this, "startExportMutationsStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
+        ResultPath = "$.exportMutations",
+        Input = TaskInput.FromObject(exportMutationsInputObject)
+      });
+
+      var exportMutationsChain = Chain
+        .Start(exportMutationsTableStateMachine)
+        .Next(mergeExportFiles.mergeMutationExportFilesTask);
+
+      // Export Sequences
+      var exportSequencesInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.sequencesTable.TableArn},
+        {"exportKey", "sequencesExport"}
+      };
+
+      var exportSequencesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSequencesStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
+        ResultPath = "$.exportSequences",
+        Input = TaskInput.FromObject(exportSequencesInputObject)
+      });
+
+      var exportSequencesChain = Chain
+        .Start(exportSequencesTableStateMachine)
+        .Next(mergeExportFiles.mergeSequenceExportFilesTask);
+
+      // Export Samples
+      var exportSamplesInputObject = new Dictionary<string, object>{
+        {"heronBucket", infrastructure.bucket.BucketName},
+        {"heronTable", infrastructure.samplesTable.TableArn},
+        {"exportKey", "samplesExport"}
+      };
+
+      var exportSamplesTableStateMachine = new StepFunctionsStartExecution(this, "startExportSamplesStateMachine", new StepFunctionsStartExecutionProps{
+        StateMachine = exportTableStateMachine,
+        IntegrationPattern = IntegrationPattern.RUN_JOB,
+        ResultPath = "$.exportSamples",
+        Input = TaskInput.FromObject(exportSamplesInputObject)
+      });
+
+      var exportSamplesChain = Chain
+        .Start(exportSamplesTableStateMachine)
+        .Next(mergeExportFiles.mergeSampleExportFilesTask);
+      
+
+      tableExportChainParallel.Branch(new Chain[] { exportMutationsChain, exportSequencesChain, exportSamplesChain });
+
+
       launchSampleProcessingMap.Iterator(Chain.Start(startNestedStateMachine));            
 
       var processMessagesChain = Chain
         .Start(prepareSequences.addSequencesToQueueTask)
         .Next(helperFunctions.getMessageCountTask)
         .Next(launchSampleProcessingMap)
+        .Next(tableExportChainParallel)
         .Next(exportResults.exportResultsTask)
         .Next(pipelineFinishTask);
 

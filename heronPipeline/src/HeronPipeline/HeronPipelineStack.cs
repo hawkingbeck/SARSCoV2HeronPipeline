@@ -43,6 +43,9 @@ namespace HeronPipeline
             var goFastaAlignment = new GoFastaAlignment(this, idToSupply+"align_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             goFastaAlignment.Create();
 
+            var mutationsModel = new MutationsModel(this, idToSupply+"mutations_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.mutationsTable);
+            mutationsModel.Create();
+
             var pangolinModel = new PangolinModel(this, idToSupply+"pango_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable);
             pangolinModel.Create();
 
@@ -55,7 +58,13 @@ namespace HeronPipeline
             var exportResults = new ExportResults(this, idToSupply+"export_", infrastructure);
             exportResults.Create();
 
-            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults);
+            var mergeExportFiles = new MergeExportFiles(this, idToSupply+"merge_", infrastructure);
+            mergeExportFiles.Create();
+
+            var exportDynamoDBTable = new ExportDynamoDBTable(this, idToSupply+"exportDynamo_", infrastructure);
+            exportDynamoDBTable.Create();
+
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, mergeExportFiles, exportDynamoDBTable);
             stateMachines.Create();
         }
     }
