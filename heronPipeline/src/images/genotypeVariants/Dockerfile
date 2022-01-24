@@ -14,6 +14,7 @@ RUN python -m pip install boto3
 RUN python -m pip install pyyaml
 
 COPY app.py .
+COPY recipe_graph.py .
 COPY genotype-variants.py .
 COPY phe-recipes.yml .
 
