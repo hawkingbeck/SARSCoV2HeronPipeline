@@ -12,7 +12,11 @@ namespace HeronPipeline
             var app = new App();
             var pipeline = new HeronPipelineStack(app, "HeronProdStack", new StackProps
             {
-                
+              Env = new Amazon.CDK.Environment
+              {
+                  Account = System.Environment.GetEnvironmentVariable("ACCOUNT_ID"),
+                  Region = "eu-west-1",
+              }
             });
 
             Tags.Of(pipeline).Add("service-class", "prod");
@@ -20,7 +24,11 @@ namespace HeronPipeline
 
             var testPipeline = new HeronPipelineStack(app, "HeronTestStack", new StackProps
             {
-                
+                Env = new Amazon.CDK.Environment
+              {
+                  Account = System.Environment.GetEnvironmentVariable("ACCOUNT_ID"),
+                  Region = "eu-west-1",
+              }
             });
 
             Tags.Of(testPipeline).Add("service-class", "test");
@@ -28,7 +36,11 @@ namespace HeronPipeline
 
             var devPipeline = new HeronPipelineStack(app, "HeronDevStack", new StackProps
             {
-                
+                Env = new Amazon.CDK.Environment
+              {
+                  Account = System.Environment.GetEnvironmentVariable("ACCOUNT_ID"),
+                  Region = "eu-west-1",
+              }
             });
 
             Tags.Of(devPipeline).Add("service-class", "dev");
