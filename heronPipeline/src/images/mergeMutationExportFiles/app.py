@@ -15,10 +15,14 @@ import csv
 
 
 def get_mutation(row):
-  if row["proteinMutationRef"] != row["proteinMutationAlt"]:
-    return f"{row['proteinMutationGene']}:{row['proteinMutationRef']}{int(row['proteinMutationPos'])}{row['proteinMutationAlt']}"
-  else:
-    return f"synSNP:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
+    if "del" in row["genomeMutationAlt"]:
+        return f"del:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
+    elif "ins" in row["genomeMutationAlt"]:
+        return f"insert:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
+    elif row["proteinMutationRef"] != row["proteinMutationAlt"]:
+        return f"{row['proteinMutationGene']}:{row['proteinMutationRef']}{int(row['proteinMutationPos'])}{row['proteinMutationAlt']}"
+    else:
+        return f"synSNP:{row['genomeMutationRef']}{int(row['genomeMutationPos'])}{row['genomeMutationAlt']}"
 
 def extractValue(dict, param, key):
   if param in dict.keys():
@@ -97,7 +101,7 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createDict(f) for f in dynamoLines]
+    frames = set([createDict(f) for f in dynamoLines])
     for frame in frames:
       if frame[0] == True:
         allMutations[frame[1]] += frame[2] + "|"
