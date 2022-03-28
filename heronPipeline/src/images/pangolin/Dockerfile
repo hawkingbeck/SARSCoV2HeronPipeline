@@ -4,7 +4,7 @@ ARG FUNCTION_DIR="/home/app/"
 
 RUN conda --version
 RUN conda --version
-RUN echo "Updating for PLearn"
+RUN echo "Updating for PLearn update"
 RUN git clone https://github.com/cov-lineages/pangolin.git --branch v3.1.17
 # RUN git clone https://github.com/cov-lineages/pangolin.git
 WORKDIR /pangolin
