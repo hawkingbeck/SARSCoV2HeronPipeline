@@ -83,7 +83,7 @@ def main():
     manifestFiles = file.readlines()
 
   runNumber = 0
-  allMutations = defaultdict(str)
+  allMutations = defaultdict(set)
   for manifestLine in manifestFiles:
     manifestItem = json.loads(manifestLine)
     dataFileKey = manifestItem['dataFileS3Key']
@@ -101,10 +101,12 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = set([createDict(f) for f in dynamoLines])
+    frames = [createDict(f) for f in dynamoLines]
     for frame in frames:
       if frame[0] == True:
-        allMutations[frame[1]] += frame[2] + "|"
+        allMutations[frame[1]].add(frame[2])
+
+    allMutations = {k:"|".join(list(v)) for k,v in allMutations.items()}
     
     runNumber += 1
 
