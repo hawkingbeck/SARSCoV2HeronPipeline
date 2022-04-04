@@ -32,10 +32,12 @@ dateString = os.getenv('DATE_PARTITION')
 # The root of the EFS attached to the container
 sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
 
+# Remove all files under this path for each run of the state machine
+efsFolder = f"{sampleDataRoot}/{dateString}"
 
+# Get a list of directories that we wish to delete
+directoryList = os.listdir(sampleDataRoot)
 
-# I need to remove all files under this path for each run of the state machine
-efsFolder = f"{sampleDataRoot}/{dateString}
-
-shutil.rmtree(efsFolder, ignore_errors=False, onerror=None)
+for directory in directoryList:
+  shutil.rmtree(directory, ignore_errors=False, onerror=None)
 
