@@ -39,6 +39,7 @@ namespace HeronPipeline
     public Amazon.CDK.AWS.Lambda.FileSystem lambdaPipelineFileSystem;
     private Construct scope;
     private string id;
+    private int provisionedThroughput;
     private SecurityGroup secGroup;
 
     
@@ -61,16 +62,20 @@ namespace HeronPipeline
     private void CreateVPC()
     {
       var numberOfAzs = 1;
+      this.provisionedThroughput = 0;
       var CidrString = "";
       if (this.id == "HeronProdStack_infra_"){
         numberOfAzs = 3;
         CidrString = "12.0.0.0/16";
+        this.provisionedThroughput = 30;
       }else if (this.id == "HeronTestStack_infra_"){
         numberOfAzs = 1;
         CidrString = "13.0.0.0/16";
+        this.provisionedThroughput = 10;
       } else if (this.id == "HeronDevStack_infra_"){
         numberOfAzs = 1;
         CidrString = "14.0.0.0/16";
+        this.provisionedThroughput = 10;
       }
       vpc = new Vpc(this, "vpc", new VpcProps{
                 MaxAzs = numberOfAzs, ///TODO: Increase this once EIP's are freed
@@ -94,7 +99,7 @@ namespace HeronPipeline
       var pipelineEFS = new Amazon.CDK.AWS.EFS.FileSystem(this, "pipelineEFS", new FileSystemProps{
           Vpc = vpc,
           ThroughputMode = ThroughputMode.PROVISIONED,
-          ProvisionedThroughputPerSecond = Size.Mebibytes(30),
+          ProvisionedThroughputPerSecond = Size.Mebibytes(this.provisionedThroughput),
           PerformanceMode = PerformanceMode.GENERAL_PURPOSE,
           RemovalPolicy = RemovalPolicy.DESTROY,
           Encrypted = false,
