@@ -39,5 +39,11 @@ efsFolder = f"{sampleDataRoot}/{dateString}"
 directoryList = os.listdir(sampleDataRoot)
 
 for directory in directoryList:
+  print(f"Deleting Directory: {directory}")
   shutil.rmtree(directory, ignore_errors=False, onerror=None)
+
+directoryList = os.listdir(sampleDataRoot)
+for directory in directoryList:
+  print(f"Directory: {directory}")
+
 
