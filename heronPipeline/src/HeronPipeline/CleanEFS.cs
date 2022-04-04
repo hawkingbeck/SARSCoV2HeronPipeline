@@ -21,6 +21,7 @@ using Queue = Amazon.CDK.AWS.SQS.Queue;
 namespace HeronPipeline {
   internal sealed class CleanEFS: Construct {
     public EcsRunTask cleanEfsTask;
+    public EcsRunTask cleanAllEfsTask;
     private Construct scope;
     private string id;
     private Role ecsExecutionRole;
@@ -28,7 +29,9 @@ namespace HeronPipeline {
     private Cluster cluster;
     private RetryProps retryItem;
     private TaskDefinition cleanEfsTaskDefinition;
+    private TaskDefinition cleanAllEfsTaskDefinition;
     private Amazon.CDK.AWS.ECS.ContainerDefinition cleanEfsContainer;
+    private Amazon.CDK.AWS.ECS.ContainerDefinition cleanAllEfsContainer;
     public CleanEFS(Construct scope, string id, Role executionRole, Amazon.CDK.AWS.ECS.Volume volume, Cluster cluster): base(scope, id)
     {
       this.scope = scope;
@@ -104,8 +107,56 @@ namespace HeronPipeline {
           },
           ResultPath = JsonPath.DISCARD
       });
-      
       this.cleanEfsTask.AddRetry(this.retryItem);
+      this.CreateCleanAll();
+    }
+
+    private void CreateCleanAll(){
+      var cleanAllEfsImage = ContainerImage.FromAsset("src/images/cleanAllEfs", new AssetImageProps
+      { 
+      });
+      this.cleanAllEfsTaskDefinition = new TaskDefinition(this, this.id + "_cleanAllEfs", new TaskDefinitionProps{
+          Family = this.id + "_cleanAllEfs",
+          Cpu = "1024",
+          MemoryMiB = "4096",
+          NetworkMode = NetworkMode.AWS_VPC,
+          Compatibility = Compatibility.FARGATE,
+          ExecutionRole = ecsExecutionRole,
+          TaskRole = ecsExecutionRole,
+          Volumes = new Amazon.CDK.AWS.ECS.Volume[] { volume }
+      });
+      this.cleanAllEfsTaskDefinition.AddContainer("cleanAllEfsContainer", new Amazon.CDK.AWS.ECS.ContainerDefinitionOptions
+      {
+          Image = cleanAllEfsImage,
+          Logging = new AwsLogDriver(new AwsLogDriverProps
+          {
+              StreamPrefix = "cleanAllEfs",
+              LogGroup = new LogGroup(this, "cleanAllEfsLogGroup", new LogGroupProps
+              {
+                  LogGroupName = this.id + "cleanAllEfsLogGroup",
+                  Retention = RetentionDays.ONE_WEEK,
+                  RemovalPolicy = RemovalPolicy.DESTROY
+              })
+          })
+      });
+      this.cleanAllEfsContainer = this.cleanAllEfsTaskDefinition.FindContainer("cleanAllEfsContainer");
+      cleanAllEfsContainer.AddMountPoints(new MountPoint[] {
+              new MountPoint {
+                  SourceVolume = "efsVolume",
+                  ContainerPath = "/mnt/efs0",
+                  ReadOnly = false,
+              }
+          });
+      this.cleanAllEfsTask = new EcsRunTask(this, this.id + "_cleanAllEfsPlaceTask", new EcsRunTaskProps
+      {
+          IntegrationPattern = IntegrationPattern.RUN_JOB,
+          Cluster = cluster,
+          TaskDefinition = this.cleanAllEfsTaskDefinition,
+          AssignPublicIp = true,
+          LaunchTarget = new EcsFargateLaunchTarget(),
+          ResultPath = JsonPath.DISCARD
+      });
+      this.cleanAllEfsTask.AddRetry(this.retryItem);
     }
   }
 }
