@@ -93,9 +93,11 @@ if os.path.isfile(seqFile) == True:
   # Update pLearn calls
   # +++++++++++++++++++++++++++++++++++++++++
   for index, row in pLearnJoinedDf.iterrows():
+    if index == 0:
+      print(f"row: {row}")
     seqHash = row["seqHash"]
     lineage = row["lineage"]
-    print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
+    # print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
     conflict = Decimal(str(row['conflict']))
     ambiguityScore = Decimal(str(row['ambiguity_score']))
 
@@ -105,10 +107,10 @@ if os.path.isfile(seqFile) == True:
       ambiguityScore = Decimal(0.0)
     
     # pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
-    version = row['version']
-    pangolinVersion = row['pangolin_version']
-    pangoLearnVersion = row['pangoLEARN_version']
-    pangoVersion = row['pango_version']
+    version = "version" #row['version']
+    pangolinVersion = "version" #row['pangolin_version']
+    pangoLearnVersion = "version" #row['pangoLEARN_version']
+    pangoVersion = "version" #row['pango_version']
     pangoNote = str(row['note'])
     
     print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
