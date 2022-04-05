@@ -35,6 +35,9 @@ namespace HeronPipeline
             var helperFunctions = new HelperFunctions(this, idToSupply+"helper_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue, infrastructure.sqsAccessPolicyStatement, infrastructure.s3AccessPolicyStatement, infrastructure.dynamoDBAccessPolicyStatement);
             helperFunctions.Create();
 
+            var cleanEfs = new CleanEFS(this, idToSupply+"cleanEfs_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster);
+            cleanEfs.Create();
+
             var prepareSequences = new PrepareSequences(this, idToSupply+"prep_", infrastructure.ecsExecutionRole, infrastructure.volume, infrastructure.cluster, infrastructure.bucket, infrastructure.sequencesTable, infrastructure.reprocessingQueue, infrastructure.dailyProcessingQueue);
             prepareSequences.CreateAddSequencesToQueue();
             prepareSequences.CreatePrepareSequences();
@@ -64,7 +67,7 @@ namespace HeronPipeline
             var exportDynamoDBTable = new ExportDynamoDBTable(this, idToSupply+"exportDynamo_", infrastructure);
             exportDynamoDBTable.Create();
 
-            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, mergeExportFiles, exportDynamoDBTable);
+            var stateMachines = new StateMachines(this, idToSupply+"stateMachine_", infrastructure, pangolinModel, armadillinModel, genotypeVariantsModel, mutationsModel, prepareSequences, goFastaAlignment, helperFunctions, exportResults, mergeExportFiles, exportDynamoDBTable, cleanEfs);
             stateMachines.Create();
         }
     }

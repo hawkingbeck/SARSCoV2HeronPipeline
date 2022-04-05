@@ -33,6 +33,7 @@ namespace HeronPipeline
     private ExportDynamoDBTable exportDynamoDBTable;
     private ExportResults exportResults;
     private MergeExportFiles mergeExportFiles;
+    private CleanEFS cleanEfs;
 
 
     private StateMachine processSampleBatchStateMachine;
@@ -51,7 +52,8 @@ namespace HeronPipeline
                           HelperFunctions helperFunctions,
                           ExportResults exportResults,
                           MergeExportFiles mergeExportFiles,
-                          ExportDynamoDBTable exportDynamoDBTable
+                          ExportDynamoDBTable exportDynamoDBTable,
+                          CleanEFS cleanEfs
                           ): base(scope, id)
     {
       this.id = id;
@@ -66,6 +68,7 @@ namespace HeronPipeline
       this.exportResults = exportResults;
       this.mergeExportFiles = mergeExportFiles;
       this.exportDynamoDBTable = exportDynamoDBTable;
+      this.cleanEfs = cleanEfs;
     }
 
     public void Create()
@@ -378,6 +381,7 @@ namespace HeronPipeline
         .Next(launchSampleProcessingMap)
         .Next(tableExportChainParallel)
         .Next(exportResults.exportResultsTask)
+        .Next(cleanEfs.cleanEfsTask)
         .Next(pipelineFinishTask);
 
       var pipelineChain = Chain
