@@ -51,17 +51,17 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 print(f"Processing seqBatchFile: {seqConsensusFile}")
 # Print the pango version
 
-print(f"Pangolin D Version")
-command = ["pangolin", "-dv"]
-subprocess.run(command)
+# print(f"Pangolin D Version")
+# command = ["pangolin", "-dv"]
+# subprocess.run(command)
 
-print(f"Pangolin Version")
-command = ["pangolin", "-v"]
-subprocess.run(command)
+# print(f"Pangolin Version")
+# command = ["pangolin", "-v"]
+# subprocess.run(command)
 
-print(f"PangoLearn Version")
-command = ["pangolin", "-pv"]
-subprocess.run(command)
+# print(f"PangoLearn Version")
+# command = ["pangolin", "-pv"]
+# subprocess.run(command)
 
 if os.path.isfile(seqFile) == True:
   # command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
