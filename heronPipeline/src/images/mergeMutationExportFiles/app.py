@@ -105,10 +105,10 @@ def main():
     for frame in frames:
       if frame[0] == True:
         allMutations[frame[1]].add(frame[2])
-
-    allMutations = {k:"|".join(list(v)) for k,v in allMutations.items()}
     
     runNumber += 1
+    
+  allMutations = {k:"|".join(list(v)) for k,v in allMutations.items()}
 
   allSeq = list(allMutations.keys())
   with open(concatenatedLocalFilePath, 'w') as f:
