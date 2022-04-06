@@ -56,8 +56,8 @@ namespace HeronPipeline
       });
       var pangolinTaskDefinition = new TaskDefinition(this, this.id + "_pangolinTaskDefinition", new TaskDefinitionProps{
           Family = this.id + "_pangolin",
-          Cpu = "2048",
-          MemoryMiB = "8192",
+          Cpu = "4096",
+          MemoryMiB = "16384",
           NetworkMode = NetworkMode.AWS_VPC,
           Compatibility = Compatibility.FARGATE,
           ExecutionRole = ecsExecutionRole,

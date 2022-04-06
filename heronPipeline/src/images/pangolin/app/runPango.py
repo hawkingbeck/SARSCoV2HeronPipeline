@@ -64,14 +64,15 @@ print(f"Processing seqBatchFile: {seqConsensusFile}")
 # subprocess.run(command)
 
 if os.path.isfile(seqFile) == True:
-  # command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
-  command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv"]
+  command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
   print(f"Running Command: {command}")
   subprocess.run(command)
+  print(f"Completed running in accurate mode")
 
-  command = ["pangolin", "--verbose", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
+  command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
   print(f"Running Command: {command}")
   subprocess.run(command)
+  print(f"Completed running in fast mode")
 
   # S3Key = f"pangolin/outputUsher.csv"
   # bucket.upload_file("/tmp/outputUsher.csv", S3Key)
