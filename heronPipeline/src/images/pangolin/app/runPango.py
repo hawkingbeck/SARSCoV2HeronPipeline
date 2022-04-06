@@ -66,12 +66,19 @@ print(f"Processing seqBatchFile: {seqConsensusFile}")
 if os.path.isfile(seqFile) == True:
   command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
   print(f"Running Command: {command}")
-  subprocess.run(command)
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Accurate mode error: {e}")
   print(f"Completed running in accurate mode")
 
   command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
   print(f"Running Command: {command}")
-  subprocess.run(command)
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Fast mode error: {e}")
+    
   print(f"Completed running in fast mode")
 
   # S3Key = f"pangolin/outputUsher.csv"
