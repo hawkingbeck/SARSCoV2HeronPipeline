@@ -229,7 +229,7 @@ namespace HeronPipeline
         ItemsPath = "$.mapIterations",
         ResultPath = JsonPath.DISCARD,
         Parameters = startSampleProcessingMapParameters,
-        MaxConcurrency = 20
+        MaxConcurrency = 40
       });
 
       var stateMachineInputObject2 = new Dictionary<string, object> {
@@ -285,7 +285,7 @@ namespace HeronPipeline
         ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
         ResultPath = JsonPath.DISCARD,
         Parameters = launchSampleProcessingMapParameters,
-        MaxConcurrency=20
+        MaxConcurrency=40
       });
 
       var stateMachineInputObject = new Dictionary<string, object> {
