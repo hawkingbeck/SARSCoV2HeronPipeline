@@ -64,14 +64,22 @@ print(f"Processing seqBatchFile: {seqConsensusFile}")
 # subprocess.run(command)
 
 if os.path.isfile(seqFile) == True:
-  # command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv", "--alignment"]
-  command = ["pangolin", "--verbose", "--usher", seqFile, "--outfile", "/tmp/outputUsher.csv"]
+  command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
   print(f"Running Command: {command}")
-  subprocess.run(command)
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Accurate mode error: {e}")
+  print(f"Completed running in accurate mode")
 
-  command = ["pangolin", "--verbose", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
+  command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
   print(f"Running Command: {command}")
-  subprocess.run(command)
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Fast mode error: {e}")
+    
+  print(f"Completed running in fast mode")
 
   # S3Key = f"pangolin/outputUsher.csv"
   # bucket.upload_file("/tmp/outputUsher.csv", S3Key)
@@ -93,9 +101,11 @@ if os.path.isfile(seqFile) == True:
   # Update pLearn calls
   # +++++++++++++++++++++++++++++++++++++++++
   for index, row in pLearnJoinedDf.iterrows():
+    if index == 0:
+      print(f"row: {row}")
     seqHash = row["seqHash"]
     lineage = row["lineage"]
-    print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
+    # print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
     conflict = Decimal(str(row['conflict']))
     ambiguityScore = Decimal(str(row['ambiguity_score']))
 
@@ -105,13 +115,13 @@ if os.path.isfile(seqFile) == True:
       ambiguityScore = Decimal(0.0)
     
     # pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
-    version = row['version']
-    pangolinVersion = row['pangolin_version']
-    pangoLearnVersion = row['pangoLEARN_version']
-    pangoVersion = row['pango_version']
+    version = "version" #row['version']
+    pangolinVersion = "version" #row['pangolin_version']
+    pangoLearnVersion = "version" #row['pangoLEARN_version']
+    pangoVersion = "version" #row['pango_version']
     pangoNote = str(row['note'])
     
-    print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
+    # print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
     scorpioCall = row['scorpio_call']
     
     scorpioSupport = Decimal(str(row["scorpio_support"]))
@@ -124,17 +134,17 @@ if os.path.isfile(seqFile) == True:
     if not isinstance(scorpioCall, str):
       scorpioCall = "N/A"
       
-    print(f"Scorpio output {scorpioCall}, {scorpioSupport}, {scorpioConflict}")
+    # print(f"Scorpio output {scorpioCall}, {scorpioSupport}, {scorpioConflict}")
     seqId = row['seqId']
     # Create query for dynamoDB
     # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
     sequencesTable = dynamodb.Table(heronSequencesTableName)
     response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-    print(f"{str(type(lineage))}, {str(type(callDate))}, {str(type(ambiguityScore))}, {str(type(version))}, {str(type(pangolinVersion))}, {str(type(pangoLearnVersion))}, {str(type(pangoVersion))}, {str(type(conflict))}, {str(type(scorpioSupport))}, {str(type(scorpioConflict))}, {str(type(scorpioCall))}, {str(type(pangoNote))}")
+    # print(f"{str(type(lineage))}, {str(type(callDate))}, {str(type(ambiguityScore))}, {str(type(version))}, {str(type(pangolinVersion))}, {str(type(pangoLearnVersion))}, {str(type(pangoVersion))}, {str(type(conflict))}, {str(type(scorpioSupport))}, {str(type(scorpioConflict))}, {str(type(scorpioCall))}, {str(type(pangoNote))}")
     if 'Items' in response:
       if len(response['Items']) == 1:
         item = response['Items'][0]
-        print(f"Updating: {seqHash}")
+        # print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
             UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn, pangoNote=:n",
@@ -175,7 +185,7 @@ if os.path.isfile(seqFile) == True:
     if 'Items' in response:
       if len(response['Items']) == 1:
         item = response['Items'][0]
-        print(f"Updating: {seqHash}")
+        # print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
             UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
@@ -186,7 +196,7 @@ if os.path.isfile(seqFile) == True:
           )
         updateCount += 1
 
-  print(f"Updated {updateCount} out of {len(usherJoinedDf)}")
+  # print(f"Updated {updateCount} out of {len(usherJoinedDf)}")
 
   print(f"keyFileDf length: {len(keyFileDf)}")
   print(f"lineageDf length: {len(usherLineageDf)}")

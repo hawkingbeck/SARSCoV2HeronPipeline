@@ -228,7 +228,8 @@ namespace HeronPipeline
         InputPath = "$",
         ItemsPath = "$.mapIterations",
         ResultPath = JsonPath.DISCARD,
-        Parameters = startSampleProcessingMapParameters
+        Parameters = startSampleProcessingMapParameters,
+        MaxConcurrency = 40
       });
 
       var stateMachineInputObject2 = new Dictionary<string, object> {
@@ -283,7 +284,8 @@ namespace HeronPipeline
         InputPath = "$",
         ItemsPath = "$.messageCount.manageProcessSequencesBatchMapConfig",
         ResultPath = JsonPath.DISCARD,
-        Parameters = launchSampleProcessingMapParameters
+        Parameters = launchSampleProcessingMapParameters,
+        MaxConcurrency=40
       });
 
       var stateMachineInputObject = new Dictionary<string, object> {
@@ -307,7 +309,7 @@ namespace HeronPipeline
         StateMachine = startNestedSampleProcessingStateMachine,
         IntegrationPattern = IntegrationPattern.RUN_JOB,
         ResultPath = JsonPath.DISCARD,
-        Input = stateMachineInput
+        Input = stateMachineInput,
       });
 
       // var parallelTableExportChain
