@@ -282,7 +282,7 @@ def find_all_matching_recipes(recipes: dict, sequence: str) -> Tuple[str, str, s
             recipe=recipe, 
             sequence=sequence,
             cached_results=matched_recipe_name_to_conf)
-
+        print(f"Matched Receipe Conf: {confidence} - {recipe['unique-id']}")
         if confidence != "NA":
             recipe_name = recipe["unique-id"]
             matched_recipe_name_to_conf[recipe_name] = confidence
