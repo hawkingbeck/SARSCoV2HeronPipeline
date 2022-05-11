@@ -7,6 +7,10 @@ from sys import exit, stderr
 import subprocess
 import uuid
 import json
+from recipe_graph import RecipeDirectedGraph
+from typing import Tuple
+
+from genotypeVariants import find_all_matching_recipes
 import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -20,6 +24,7 @@ config = Config(
    }
 )
 
+WUHAN_REFERENCE_LENGTH = 29903
 ##############################################
 # Step 1. Get Env Vars
 ##############################################
@@ -64,6 +69,9 @@ bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
 with open(messageListLocalFilename) as messageListFile:
    messageList = json.load(messageListFile)
 
+with open(localRecipeFilename) as genotype_recipe_file:
+    recipes = load_yaml(genotype_recipe_file)
+
 for message in messageList:
   # Download the fasta file for this message
   print(f'Message: {message["consensusFastaPath"]}')
@@ -83,17 +91,31 @@ for message in messageList:
   with open(sequenceLocalFilename, "r") as fasta:
     seqData = json.load(fasta)
     alignedFasta = seqData['aligned']
-
-
+  
   # Download the files as unique local filenames to avoid any clashes with /tmp directory
   localFastaFilename = f"/tmp/{str(uuid.uuid4())}.fasta"
-
   with open(localFastaFilename, "w") as fasta:
     fasta.write(alignedFasta)
 
-  cmd = ["python", "genotype-variants.py", localFastaFilename, "phe-recipes.yml", "--verbose"]
-  proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
-  vocProfile, vocVui, confidence, timestamp = proc.stdout.strip().split("\t")
+  with open(localFastaFilename) as fasta_file:
+    header = fasta_file.readline()
+    if header[0] != ">":
+        print(f"Error with fasta header line: {header[0]}")
+        exit(-1)
+    sequence = fasta_file.readline().rstrip()
+    if len(sequence) != WUHAN_REFERENCE_LENGTH:
+        print(f"Error, sequence doesn't match Wuhan reference length.")
+        exit(-1)
+
+
+  vocProfile, vocVui, confidence = find_all_matching_recipes(recipes=recipes, sequence=sequence)
+  timestamp = datetime.now()
+  
+  # cmd = ["python", "genotype-variants.py", localFastaFilename, "phe-recipes.yml", "--verbose"] 
+  # proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
+  # vocProfile, vocVui, confidence, timestamp = proc.stdout.strip().split("\t")
+
+
   
   print(f"{vocProfile}, {vocVui}, {confidence}, {timestamp}")
 
