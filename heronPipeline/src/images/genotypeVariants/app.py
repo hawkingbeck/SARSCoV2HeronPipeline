@@ -335,6 +335,9 @@ bucket.download_file(messageListS3Key, messageListLocalFilename)
 with open(messageListLocalFilename) as messageListFile:
    messageList = json.load(messageListFile)
 
+files = os.listdir("/tmp")
+print(f"Files: {files}")
+assert(False)
 with open(localRecipeFilename) as genotype_recipe_file:
     recipes = load_yaml(genotype_recipe_file)
 
