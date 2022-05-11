@@ -10,7 +10,7 @@ animating-thermos:
   description: This variant is a cluster of E484K containing genomes
   information-sources:
     -
-      variants:
+  variants:
     - codon-change: ATC-ATT
       gene: ORF1ab
       one-based-reference-position: 3961
