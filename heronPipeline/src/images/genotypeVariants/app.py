@@ -54,7 +54,7 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 messageListS3Key = f"messageLists/{dateString}/messageList{iterationUUID}.json"
 messageListLocalFilename = "/tmp/messageList.json"
 # localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
-localRecipeFilename = f"./phe-recipes.yml"
+localRecipeFilename = f"/resources/phe-recipes.yml"
 
 WUHAN_REFERENCE_LENGTH = 29903
 
