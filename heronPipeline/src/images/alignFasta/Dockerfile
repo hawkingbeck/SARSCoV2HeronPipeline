@@ -40,7 +40,7 @@ RUN python -m pip install pandas
 RUN python -m pip install boto3
 RUN python -m pip install cython
 # RUN python -m pip install pysam
-RUN python -m pip install pysam==0.16.0.1
+# RUN python -m pip install pysam==0.16.0.1
 # RUN git clone https://github.com/cov-ert/datafunk.git
 RUN python -m pip install git+https://github.com/cov-ert/datafunk.git
 # WORKDIR /datafunk
@@ -54,8 +54,8 @@ RUN git clone https://github.com/lh3/minimap2
 WORKDIR /usr/local/minimap2
 
 RUN pwd
-RUN git checkout v2.3
-RUN make && chmod 777 minimap2
+# RUN git checkout v2.3
+RUN make sse2only=1 arm_neon=1 aarch64=1 && chmod 777 minimap2
 # ./minimap2
 # ENV PATH $PATH:/usr/local/minimap2
 # ENV PATH="/usr/local/minimap2:${PATH}"
