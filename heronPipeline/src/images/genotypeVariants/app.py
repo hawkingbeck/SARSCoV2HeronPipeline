@@ -53,7 +53,8 @@ seqConsensusFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iteration
 keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 messageListS3Key = f"messageLists/{dateString}/messageList{iterationUUID}.json"
 messageListLocalFilename = "/tmp/messageList.json"
-localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
+# localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
+localRecipeFilename = f"phe-recipes.yml"
 
 WUHAN_REFERENCE_LENGTH = 29903
 
@@ -328,7 +329,7 @@ callDate = int(datetime.now().timestamp())
 # Download the message file that contains the references to all the sequences that we need to process
 bucket.download_file(messageListS3Key, messageListLocalFilename)
 # Download the recipe file that we need to assign variants from
-bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
+# bucket.download_file(genotypeRecipeS3Key, localRecipeFilename)
 
 with open(messageListLocalFilename) as messageListFile:
    messageList = json.load(messageListFile)
