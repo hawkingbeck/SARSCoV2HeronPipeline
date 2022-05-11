@@ -125,6 +125,7 @@ def get_recipe_match_confidence(recipe: dict, sequence: str, cached_results: dic
     """
     print(f"Processing Recipe: {recipe_name}")
     recipe_name = recipe["unique-id"]
+    print(f"Processing Recipe: {recipe_name}")
     if recipe_name in cached_results:
         # logger.debug("Using cached results: " + cached_results[recipe_name])
         return cached_results[recipe_name]
