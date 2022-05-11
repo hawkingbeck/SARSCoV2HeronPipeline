@@ -54,7 +54,7 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 messageListS3Key = f"messageLists/{dateString}/messageList{iterationUUID}.json"
 messageListLocalFilename = "/tmp/messageList.json"
 # localRecipeFilename = f"/tmp/{str(uuid.uuid4())}.recipe"
-localRecipeFilename = f"./phe-recipes.yml"
+localRecipeFilename = f"/resources/phe-recipes.yml"
 
 WUHAN_REFERENCE_LENGTH = 29903
 
@@ -123,7 +123,7 @@ def get_recipe_match_confidence(recipe: dict, sequence: str, cached_results: dic
     The confidence of the match for the recipe, taking into account all ancestral recipes if any
 
     """
-
+    print(f"Processing Recipe: {recipe_name}")
     recipe_name = recipe["unique-id"]
     if recipe_name in cached_results:
         # logger.debug("Using cached results: " + cached_results[recipe_name])
