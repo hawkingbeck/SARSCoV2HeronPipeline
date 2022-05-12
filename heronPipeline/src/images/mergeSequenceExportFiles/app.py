@@ -45,7 +45,9 @@ def createDict(dynamoItem):
         'pctCoveredBases' : extractValue(dynamoItem, 'pctCoveredBases', 'N'),
         'pangolinVersion': extractValue(dynamoItem, 'pangolinVersion', 'S'),
         'numAlignedReads' : extractValue(dynamoItem, 'numAlignedReads', 'N'),
-        'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S')
+        'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S'),
+        'genotypeCallDate': extractValue(dynamoItem, 'genotypeCallDate', 'N'),
+        'pangoCallDate': extractValue(dynamoItem, 'pangoCallDate', 'N'),
   }
 
   return newDict
