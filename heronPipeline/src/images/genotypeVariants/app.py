@@ -339,8 +339,6 @@ files = os.listdir("/tmp")
 print(f"Files: {files}")
 
 with open(localRecipeFilename) as genotype_recipe_file:
-  # txt = genotype_recipe_file.readlines()
-  # print(f"Contents: {txt}")
   recipes = load_yaml(genotype_recipe_file)
 
 # assert(False)
