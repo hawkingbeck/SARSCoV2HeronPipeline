@@ -86,7 +86,7 @@ with open(outputFastaFile, "w+") as outputFile:
       outputFile.writelines(alignedSeq)
     except:
       print(f"Could not download key: {s3Key}")
-      assert(False)
+      # assert(False)
     
   
   if os.path.isfile(localFilename):
@@ -109,7 +109,7 @@ with open(outputFastaConsensusFile, "w+") as outputFile:
       outputFile.writelines(alignedSeq)
     except:
       print(f"Could not download key: {s3Key}")
-      assert(False)
+      # assert(False)
   
   if os.path.isfile(localFilename):
     os.remove(localFilename)
