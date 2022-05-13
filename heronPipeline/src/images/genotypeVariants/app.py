@@ -320,7 +320,7 @@ def find_all_matching_recipes(recipes: dict, sequence: str) -> Tuple[str, str, s
         matched_recipe_phe_label = 'none'
         matched_confidence = 'NA'
 
-    return matched_recipe_phe_label, matched_recipe_pango_alias, matched_confidence
+    return matched_recipe_phe_label, matched_recipe_pango_alias, matched_confidence, matched_recipe_name_to_conf
 
 
 
@@ -379,7 +379,7 @@ for message in messageList:
         exit(-1)
 
 
-  vocProfile, vocVui, confidence = find_all_matching_recipes(recipes=recipes, sequence=sequence)
+  vocProfile, vocVui, confidence, matched_recipe_name_to_conf = find_all_matching_recipes(recipes=recipes, sequence=sequence)
   timestamp = datetime.now()
   
   # cmd = ["python", "genotype-variants.py", localFastaFilename, "phe-recipes.yml", "--verbose"] 
@@ -403,11 +403,12 @@ for message in messageList:
       item['processingState'] = 'aligned'
       ret = sequencesTable.update_item(
           Key={'seqHash': consensusFastaHash},
-          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d, genotypeProfile=:p",
+          UpdateExpression="set genotypeVariant=:v, genotypeVariantConf=:c, genotypeCallDate=:d, genotypeProfile=:p, matchedGenotypeProfiles=:m",
           ExpressionAttributeValues={
             ':v': vocProfile,
             ':c': confidence,
             ':d': callDate,
-            ':p': vocVui
+            ':p': vocVui,
+            ':m': matched_recipe_name_to_conf
           }
         )
