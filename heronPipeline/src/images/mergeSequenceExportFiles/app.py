@@ -48,6 +48,7 @@ def createDict(dynamoItem):
         'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S'),
         'genotypeCallDate': extractValue(dynamoItem, 'genotypeCallDate', 'N'),
         'pangoCallDate': extractValue(dynamoItem, 'pangoCallDate', 'N'),
+        'matchedGenotypeProfiles': extractValue(dynamoItem, 'matchedGenotypeProfiles', 'S')
   }
 
   return newDict
