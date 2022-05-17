@@ -2444,7 +2444,7 @@ outmost-resubmit:
   description: This variant is a recombinant lineage. It comtains BA.1 nsp1-6 and BA.2 nsp7-N8393
   information-sources:
   - https://github.com/cov-lineages/pango-designation/issues/454
-  
+  requires: plausible-scanner
   variants:
   - amino-acid-change: K38R
     codon-change: AAG-AGG
