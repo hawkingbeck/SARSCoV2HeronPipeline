@@ -51,13 +51,15 @@ def createDict(dynamoItem):
   }
 
   matchedGenotypeProfiles = extractValue(dynamoItem, 'matchedGenotypeProfiles', 'M')
-  keys = list(matchedGenotypeProfiles.keys())
-  matchedGenotypes = ""
-  for key in keys:
-    conf = matchedGenotypeProfiles[key]['S']
-    matchedGenotypes += f"{key}:{conf} "
-  
-  newDict['matchedGenotypeProfiles'] = matchedGenotypes[0:-1]
+  if isinstance(matchedGenotypeProfiles, dict):
+    keys = list(matchedGenotypeProfiles.keys())
+    matchedGenotypes = ""
+    for key in keys:
+      conf = matchedGenotypeProfiles[key]['S']
+      matchedGenotypes += f"{key}:{conf} "
+    newDict['matchedGenotypeProfiles'] = matchedGenotypes[0:-1]
+  else:
+    newDict['matchedGenotypeProfiles'] = "N/A"
   
   return newDict
 
