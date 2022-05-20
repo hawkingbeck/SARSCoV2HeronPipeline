@@ -92,7 +92,7 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createDict(f) for f in dynamoLines]
+    frames = [createDict(f) for f in dynamoLines if f != '\n']
     allDicts.extend(frames)
     
   # Save the resulting dataframe back into S3

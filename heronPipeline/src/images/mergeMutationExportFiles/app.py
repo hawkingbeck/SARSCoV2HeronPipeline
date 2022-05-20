@@ -101,7 +101,7 @@ def main():
     with open(localDataFilePathUnZipped) as f:
       dynamoLines = f.readlines()
 
-    frames = [createDict(f) for f in dynamoLines]
+    frames = [createDict(f) for f in dynamoLines if f != '\n']
     for frame in frames:
       if frame[0] == True:
         allMutations[frame[1]].add(frame[2])
