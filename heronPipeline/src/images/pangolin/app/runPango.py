@@ -49,19 +49,6 @@ seqConsensusFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iteration
 keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 
 print(f"Processing seqBatchFile: {seqConsensusFile}")
-# Print the pango version
-
-# print(f"Pangolin D Version")
-# command = ["pangolin", "-dv"]
-# subprocess.run(command)
-
-# print(f"Pangolin Version")
-# command = ["pangolin", "-v"]
-# subprocess.run(command)
-
-# print(f"PangoLearn Version")
-# command = ["pangolin", "-pv"]
-# subprocess.run(command)
 
 if os.path.isfile(seqFile) == True:
   command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
@@ -100,12 +87,11 @@ if os.path.isfile(seqFile) == True:
   # +++++++++++++++++++++++++++++++++++++++++
   # Update pLearn calls
   # +++++++++++++++++++++++++++++++++++++++++
+  print(f"fast mode header: {pLearnJoinedDf.columns}")
+  print(f"accurate mode heaer: {pLearnJoinedDf.columns}")
   for index, row in pLearnJoinedDf.iterrows():
-    if index == 0:
-      print(f"row: {row}")
     seqHash = row["seqHash"]
     lineage = row["lineage"]
-    # print(f"Conflict: {row['conflict']} ambiguity: {row['ambiguity_score']}")
     conflict = Decimal(str(row['conflict']))
     ambiguityScore = Decimal(str(row['ambiguity_score']))
 
@@ -114,18 +100,15 @@ if os.path.isfile(seqFile) == True:
     if np.isnan(float(ambiguityScore)):
       ambiguityScore = Decimal(0.0)
     
-    # pangoVersion = f"{row['version']} - {row['pangolin_version']} - {row['pangoLEARN_version']} - {row['pango_version']}"
-    version = "version" #row['version']
-    pangolinVersion = "version" #row['pangolin_version']
-    pangoLearnVersion = "version" #row['pangoLEARN_version']
-    pangoVersion = "version" #row['pango_version']
-    pangoNote = str(row['note'])
-    
-    # print(f"Scorpio Row: {row['scorpio_call']}, {row['scorpio_support']}, {row['scorpio_conflict']}")
+    version = "version"
+    pangolinVersion = "version"
+    pangoLearnVersion = "version"
+    pangoVersion = "version"
     scorpioCall = row['scorpio_call']
     
     scorpioSupport = Decimal(str(row["scorpio_support"]))
     scorpioConflict = Decimal(str(row["scorpio_conflict"]))
+    scorpioNote = Decimal(str(row["scorpio_conflict"]))
 
     if np.isnan(float(scorpioSupport)):
       scorpioSupport = Decimal(0.0)
@@ -134,20 +117,15 @@ if os.path.isfile(seqFile) == True:
     if not isinstance(scorpioCall, str):
       scorpioCall = "N/A"
       
-    # print(f"Scorpio output {scorpioCall}, {scorpioSupport}, {scorpioConflict}")
     seqId = row['seqId']
-    # Create query for dynamoDB
-    # taxon,lineage,conflict,ambiguity_score,scorpio_call,scorpio_support,scorpio_conflict,version,pangolin_version,pangoLEARN_version,pango_version,status,note\n
     sequencesTable = dynamodb.Table(heronSequencesTableName)
     response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-    # print(f"{str(type(lineage))}, {str(type(callDate))}, {str(type(ambiguityScore))}, {str(type(version))}, {str(type(pangolinVersion))}, {str(type(pangoLearnVersion))}, {str(type(pangoVersion))}, {str(type(conflict))}, {str(type(scorpioSupport))}, {str(type(scorpioConflict))}, {str(type(scorpioCall))}, {str(type(pangoNote))}")
     if 'Items' in response:
       if len(response['Items']) == 1:
         item = response['Items'][0]
-        # print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn, pangoNote=:n",
+            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn",
             ExpressionAttributeValues={
               ':l': lineage,
               ':d': callDate,
@@ -159,8 +137,7 @@ if os.path.isfile(seqFile) == True:
               ':c': conflict,
               ':sc': scorpioCall,
               ':ss': scorpioSupport,
-              ':sn': scorpioConflict,
-              ':n': pangoNote
+              ':sn': scorpioConflict
             }
           )
         updateCount += 1
@@ -178,6 +155,8 @@ if os.path.isfile(seqFile) == True:
     seqHash = row["seqHash"]
     lineage = row["lineage"]
     seqId = row['seqId']
+    pangoNote = str(row['note'])
+    scorpioNote = str(row['scorpio_notes'])
     # Create query for dynamoDB
     
     sequencesTable = dynamodb.Table(heronSequencesTableName)
@@ -185,13 +164,14 @@ if os.path.isfile(seqFile) == True:
     if 'Items' in response:
       if len(response['Items']) == 1:
         item = response['Items'][0]
-        # print(f"Updating: {seqHash}")
         ret = sequencesTable.update_item(
             Key={'seqHash': seqHash},
-            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d",
+            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d, pangoNote=:n, scorpioNote=:s",
             ExpressionAttributeValues={
               ':l': lineage,
-              ':d': callDate
+              ':d': callDate,
+              ':n': pangoNote,
+              ':s': scorpioNote
             }
           )
         updateCount += 1

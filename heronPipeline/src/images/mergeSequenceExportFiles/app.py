@@ -45,9 +45,22 @@ def createDict(dynamoItem):
         'pctCoveredBases' : extractValue(dynamoItem, 'pctCoveredBases', 'N'),
         'pangolinVersion': extractValue(dynamoItem, 'pangolinVersion', 'S'),
         'numAlignedReads' : extractValue(dynamoItem, 'numAlignedReads', 'N'),
-        'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S')
+        'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S'),
+        'genotypeCallDate': extractValue(dynamoItem, 'genotypeCallDate', 'N'),
+        'pangoCallDate': extractValue(dynamoItem, 'pangoCallDate', 'N')
   }
 
+  matchedGenotypeProfiles = extractValue(dynamoItem, 'matchedGenotypeProfiles', 'M')
+  if isinstance(matchedGenotypeProfiles, dict):
+    keys = list(matchedGenotypeProfiles.keys())
+    matchedGenotypes = ""
+    for key in keys:
+      conf = matchedGenotypeProfiles[key]['S']
+      matchedGenotypes += f"{key}:{conf} "
+    newDict['matchedGenotypeProfiles'] = matchedGenotypes[0:-1]
+  else:
+    newDict['matchedGenotypeProfiles'] = "N/A"
+  
   return newDict
 
 def main():

@@ -16,6 +16,6 @@ RUN python -m pip install pyyaml
 COPY app.py .
 COPY recipe_graph.py .
 COPY genotype-variants.py .
-COPY phe-recipes.yml .
+COPY phe-recipes.yml /tmp/phe-recipes.yml
 
 ENTRYPOINT [ "python", "app.py" ]

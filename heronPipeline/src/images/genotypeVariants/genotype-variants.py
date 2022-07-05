@@ -296,46 +296,46 @@ def find_all_matching_recipes(recipes: dict, sequence: str) -> Tuple[str, str, s
     return matched_recipe_phe_label, matched_recipe_pango_alias, matched_confidence
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    parser = ArgumentParser(description='Genotype an aligned sequence on specified variants of interest')
-    parser.add_argument('fasta_filename', help="Single sample fasta, wuhan aligned")
-    parser.add_argument('genotype_recipe_filename', help="Concatenated YAML of PHE VOC/VUI recipes")
-    parser.add_argument("--verbose", help="increase output verbosity",
-                        action="store_true")
+#     parser = ArgumentParser(description='Genotype an aligned sequence on specified variants of interest')
+#     parser.add_argument('fasta_filename', help="Single sample fasta, wuhan aligned")
+#     parser.add_argument('genotype_recipe_filename', help="Concatenated YAML of PHE VOC/VUI recipes")
+#     parser.add_argument("--verbose", help="increase output verbosity",
+#                         action="store_true")
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
-    if args.verbose:
-        ch.setLevel(logging.DEBUG)
-    else:
-        ch.setLevel(logging.WARN)
-    # add ch to logger
-    logger.addHandler(ch)
+#     if args.verbose:
+#         ch.setLevel(logging.DEBUG)
+#     else:
+#         ch.setLevel(logging.WARN)
+#     # add ch to logger
+#     logger.addHandler(ch)
 
-    matched_recipe_pango_alias = "none"
-    matched_recipe_phe_label = "none"
-    matched_confidence = "NA"
+#     matched_recipe_pango_alias = "none"
+#     matched_recipe_phe_label = "none"
+#     matched_confidence = "NA"
 
-    logger.debug("Processing " + args.fasta_filename)
-    with open(args.fasta_filename) as fasta_file:
-        header = fasta_file.readline()
-        if header[0] != ">":
-            logger.error("Error with fasta header line. "+header[0])
-            exit(-1)
-        sequence = fasta_file.readline().rstrip()
-        if len(sequence) != WUHAN_REFERENCE_LENGTH:
-            logger.error("Error, sequence doesn't match Wuhan reference length.")
-            exit(-1)
+#     logger.debug("Processing " + args.fasta_filename)
+#     with open(args.fasta_filename) as fasta_file:
+#         header = fasta_file.readline()
+#         if header[0] != ">":
+#             logger.error("Error with fasta header line. "+header[0])
+#             exit(-1)
+#         sequence = fasta_file.readline().rstrip()
+#         if len(sequence) != WUHAN_REFERENCE_LENGTH:
+#             logger.error("Error, sequence doesn't match Wuhan reference length.")
+#             exit(-1)
 
-    with open(args.genotype_recipe_filename) as genotype_recipe_file:
-        recipes = load_yaml(genotype_recipe_file)
+#     with open(args.genotype_recipe_filename) as genotype_recipe_file:
+#         recipes = load_yaml(genotype_recipe_file)
     
-    (matched_recipe_phe_label, 
-    matched_recipe_pango_alias, 
-    matched_confidence) = find_all_matching_recipes(recipes=recipes, sequence=sequence)
+#     (matched_recipe_phe_label, 
+#     matched_recipe_pango_alias, 
+#     matched_confidence) = find_all_matching_recipes(recipes=recipes, sequence=sequence)
 
-    print(matched_recipe_phe_label, matched_recipe_pango_alias, matched_confidence, datetime.now(), sep="\t")
+#     print(matched_recipe_phe_label, matched_recipe_pango_alias, matched_confidence, datetime.now(), sep="\t")
 
 
 
