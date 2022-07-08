@@ -51,7 +51,7 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 print(f"Processing seqBatchFile: {seqConsensusFile}")
 
 if os.path.isfile(seqFile) == True:
-  command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
+  command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputAccurate.csv"]
   print(f"Running Command: {command}")
   try:
     subprocess.run(command, check=True)
@@ -59,125 +59,106 @@ if os.path.isfile(seqFile) == True:
     print(f"Accurate mode error: {e}")
   print(f"Completed running in accurate mode")
 
-  command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
-  print(f"Running Command: {command}")
-  try:
-    subprocess.run(command, check=True)
-  except subprocess.CalledProcessError as e:
-    print(f"Fast mode error: {e}")
-    
-  print(f"Completed running in fast mode")
+  # command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputFast.csv"]
+  # print(f"Running Command: {command}")
+  # try:
+  #   subprocess.run(command, check=True)
+  # except subprocess.CalledProcessError as e:
+  #   print(f"Fast mode error: {e}")
 
-  # S3Key = f"pangolin/outputUsher.csv"
-  # bucket.upload_file("/tmp/outputUsher.csv", S3Key)
+  # pLearnLineageDf = pd.read_csv("/tmp/outputFast.csv")
+  # usherLineageDf = pd.read_csv("/tmp/outputAccurate.csv")  
+  # fastModeDf = pd.read_csv("/tmp/outputFast.csv")
+  accurateModeDf = pd.read_csv("/tmp/outputAccurate.csv")
 
-  pLearnLineageDf = pd.read_csv("/tmp/outputPlearn.csv")
-  usherLineageDf = pd.read_csv("/tmp/outputUsher.csv")
-
-  pLearnLineageDf['taxon'] = [f">{f}" for f in pLearnLineageDf['taxon']]
-  usherLineageDf['taxon'] = [f">{f}" for f in usherLineageDf['taxon']]
+  # fastModeDf['taxon'] = [f">{f}" for f in fastModeDf['taxon']]
+  accurateModeDf['taxon'] = [f">{f}" for f in accurateModeDf['taxon']]
   keyFileDf = pd.read_json(keyFile, orient="records")
 
-  pLearnJoinedDf = pd.merge(pLearnLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
-  usherJoinedDf = pd.merge(usherLineageDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
+  # fastModeJoinedDf = pd.merge(fastModeDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
+  accurateModeJoinedDf = pd.merge(accurateModeDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
 
   callDate = int(datetime.now().timestamp())
   updateCount = 0
 
   # +++++++++++++++++++++++++++++++++++++++++
-  # Update pLearn calls
+  # Update accurate mode pangolin calls
   # +++++++++++++++++++++++++++++++++++++++++
-  print(f"fast mode header: {pLearnJoinedDf.columns}")
-  print(f"accurate mode heaer: {pLearnJoinedDf.columns}")
-  for index, row in pLearnJoinedDf.iterrows():
+  for index, row in accurateModeJoinedDf.iterrows():
     seqHash = row["seqHash"]
     lineage = row["lineage"]
     conflict = Decimal(str(row['conflict']))
     ambiguityScore = Decimal(str(row['ambiguity_score']))
-
+    scorpioCall = row['scorpio_call']
+    scorpioSupport = Decimal(str(row["scorpio_support"]))
+    scorpioConflict = Decimal(str(row["scorpio_conflict"]))
+    scorpioNote = Decimal(str(row["scorpio_notes"]))
+    version = str(row["version"]) # A version number that represents both pangolin-data version number
+    pangolinVersion = str(row["pangolin_version"]) # The version of pangolin software running.
+    scorpioVersion = str(row["scorpio_version"]) # The version of the scorpio software installed.
+    constellationVersion = str(row["constellation_version"]) # The version of constellations that scorpio has used to curate the lineage 
+    isDesignated = str(row["is_designated"])
+    qcStatus = str(row["qc_status"])
+    qcNotes = str(row["qc_notes"])
+    note = str(row["note"])
+    
+    
+    # Clean up the results
     if np.isnan(float(conflict)):
       conflict = Decimal(0.0)
     if np.isnan(float(ambiguityScore)):
       ambiguityScore = Decimal(0.0)
-    
-    version = "version"
-    pangolinVersion = "version"
-    pangoLearnVersion = "version"
-    pangoVersion = "version"
-    scorpioCall = row['scorpio_call']
-    
-    scorpioSupport = Decimal(str(row["scorpio_support"]))
-    scorpioConflict = Decimal(str(row["scorpio_conflict"]))
-    scorpioNote = Decimal(str(row["scorpio_conflict"]))
-
     if np.isnan(float(scorpioSupport)):
       scorpioSupport = Decimal(0.0)
     if np.isnan(float(scorpioConflict)):
       scorpioConflict = Decimal(0.0)
     if not isinstance(scorpioCall, str):
       scorpioCall = "N/A"
-      
-    seqId = row['seqId']
-    sequencesTable = dynamodb.Table(heronSequencesTableName)
-    response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-    if 'Items' in response:
-      if len(response['Items']) == 1:
-        item = response['Items'][0]
-        ret = sequencesTable.update_item(
-            Key={'seqHash': seqHash},
-            UpdateExpression="set pangoLineage=:l, pangoCallDate=:d, pangoConflict=:c, pangoAmbiguityScore=:a, version=:v, pangolinVersion=:plnv, pangoLearnVersion=:plv, pangoVersion=:pv, scorpioCall=:sc, scorpioSupport=:ss, scorpioConflict=:sn",
-            ExpressionAttributeValues={
-              ':l': lineage,
-              ':d': callDate,
-              ':a': ambiguityScore,
-              ':v': version,
-              ':plnv': pangolinVersion,
-              ':plv': pangoLearnVersion,
-              ':pv': pangoVersion,
-              ':c': conflict,
-              ':sc': scorpioCall,
-              ':ss': scorpioSupport,
-              ':sn': scorpioConflict
-            }
-          )
-        updateCount += 1
-
-  print(f"Updated {updateCount} out of {len(pLearnJoinedDf)}")
-
-  print(f"keyFileDf length: {len(keyFileDf)}")
-  print(f"lineageDf length: {len(pLearnLineageDf)}")
-  print(f"JoinedDf length: {len(pLearnJoinedDf)}")
-
-  # +++++++++++++++++++++++++++++++++++++++++
-  # Update Usher calls
-  # +++++++++++++++++++++++++++++++++++++++++
-  for index, row in usherJoinedDf.iterrows():
-    seqHash = row["seqHash"]
-    lineage = row["lineage"]
-    seqId = row['seqId']
-    pangoNote = str(row['note'])
-    scorpioNote = str(row['scorpio_notes'])
-    # Create query for dynamoDB
     
-    sequencesTable = dynamodb.Table(heronSequencesTableName)
-    response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-    if 'Items' in response:
-      if len(response['Items']) == 1:
-        item = response['Items'][0]
-        ret = sequencesTable.update_item(
-            Key={'seqHash': seqHash},
-            UpdateExpression="set pangoUsherLineage=:l, pangoUsherCallDate=:d, pangoNote=:n, scorpioNote=:s",
-            ExpressionAttributeValues={
-              ':l': lineage,
-              ':d': callDate,
-              ':n': pangoNote,
-              ':s': scorpioNote
+
+    updateExpression = "remove armadillinCallDate, armadillinLineage, pangoLearnVersion, pangoUsherCallDate, pangoUsherLineage, pangoVersion, version set pangoCallDate=:pangoCallDate, pangoLineage=:pangoLineage, pangoConflict=:pangoConflict, pangoAmbiguityScore=:pangoAmbiguityScore, scorpioCall=:scorpioCall, scorpioSupport=:scorpioSupport, scorpioConflict=:scorpioConflict, scorpioNote=:scorpioNote, pangoSoftwareVersion=:pangoSoftwareVersion, pangolinVersion=:pangolinVersion, scorpioVersion=:scorpioVersion, constellationVersion=:constellationVersion, isDesignated=:isDesignated, pangoQcStatus=:qcStatus, pangoQcNotes=:qcNotes, pangoNote=:pangoNote" 
+    
+    seqKey = {'seqHash': seqHash}
+
+    pangolinPayload = {
+              ':pangoCallDate': callDate,
+              ':pangoLineage': lineage,
+              ':pangoConflict': conflict,
+              ':pangoAmbiguityScore': ambiguityScore,
+              ':scorpioCall': scorpioCall,
+              ':scorpioSupport': scorpioSupport,
+              ':scorpioConflict': scorpioConflict,
+              ':scorpioNote': scorpioNote,
+              ':pangoSoftwareVersion': version,
+              ':pangolinVersion': pangolinVersion,
+              ':scorpioVersion': scorpioVersion,
+              ':constellationVersion': constellationVersion,
+              ':isDesignated': isDesignated,
+              ':qcStatus': qcStatus,
+              ':qcNotes': qcNotes,
+              ':pangoNote': note
             }
+
+
+    seqId = row['seqId']
+    sequencesTable = dynamodb.Table(heronSequencesTableName)
+    ret = sequencesTable.update_item(
+            Key=seqKey,
+            UpdateExpression=updateExpression,
+            ExpressionAttributeValues=pangolinPayload
           )
-        updateCount += 1
+    updateCount += 1
 
-  # print(f"Updated {updateCount} out of {len(usherJoinedDf)}")
 
-  print(f"keyFileDf length: {len(keyFileDf)}")
-  print(f"lineageDf length: {len(usherLineageDf)}")
-  print(f"JoinedDf length: {len(usherJoinedDf)}")
+    # response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
+    # if 'Items' in response:
+    #   if len(response['Items']) == 1:
+    #     item = response['Items'][0]
+    #     ret = sequencesTable.update_item(
+    #         Key=seqKey,
+    #         UpdateExpression=updateExpression,
+    #         ExpressionAttributeValues=pangolinPayload
+    #       )
+    #     updateCount += 1
+
+  print(f"Updated {updateCount} out of {len(accurateModeJoinedDf)}")
