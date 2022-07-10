@@ -92,7 +92,7 @@ if os.path.isfile(seqFile) == True:
     scorpioCall = row['scorpio_call']
     scorpioSupport = Decimal(str(row["scorpio_support"]))
     scorpioConflict = Decimal(str(row["scorpio_conflict"]))
-    scorpioNote = Decimal(str(row["scorpio_notes"]))
+    scorpioNote = str(row["scorpio_notes"])
     version = str(row["version"]) # A version number that represents both pangolin-data version number
     pangolinVersion = str(row["pangolin_version"]) # The version of pangolin software running.
     scorpioVersion = str(row["scorpio_version"]) # The version of the scorpio software installed.
