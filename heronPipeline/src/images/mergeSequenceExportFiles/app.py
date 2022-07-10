@@ -26,41 +26,6 @@ def createDict(dynamoItem):
   dynamoItem = dynamoItem['Item']
   
 
-  v = {
-    "seqHash": "57c6ff91955da8a1b76a2fd3621c76ce",
-    "consensusFastaPath": "fasta/57c6ff91955da8a1b76a2fd3621c76ce.fasta",
-    "constellationVersion": "v0.1.10",
-    "genotypeCallDate": 1657310939,
-    "genotypeProfile": "BA.5",
-    "genotypeVariant": "V-22APR-04",
-    "genotypeVariantConf": "confirmed",
-    "isDesignated": "False",
-    "matchedGenotypeProfiles": {
-      "dipped-bubbling": "confirmed",
-      "plausible-scanner": "probable"
-    },
-    "mutationCallDate": 1657310929,
-    "numAlignedReads": 2520448,
-    "pangoAmbiguityScore": 0,
-    "pangoCallDate": 1657441509,
-    "pangoConflict": 0,
-    "pangoLineage": "BA.5.2.1",
-    "pangolinVersion": "4.1.1",
-    "pangoNote": "Usher placements: BA.5.2.1(1/1)",
-    "pangoQcNotes": "Ambiguous_content:0.02",
-    "pangoQcStatus": "pass",
-    "pangoSoftwareVersion": "PUSHER-v1.11",
-    "pctCoveredBases": 99.44,
-    "processingState": "aligned",
-    "scorpioCall": "Omicron (BA.5-like)",
-    "scorpioConflict": 0.02,
-    "scorpioNote": "scorpio call: Alt alleles 60; Ref alleles 1; Amb alleles 0; Oth alleles 0",
-    "scorpioSupport": 0.98,
-    "scorpioVersion": "0.3.17"
-  }
-
-
-
   newDict = {
         'seqHash': extractValue(dynamoItem, 'seqHash', 'S'),
         'pangoAmbiguityScore': extractValue(dynamoItem, 'pangoAmbiguityScore', 'N'),
