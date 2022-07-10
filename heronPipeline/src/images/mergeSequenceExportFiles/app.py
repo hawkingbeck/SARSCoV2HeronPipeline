@@ -25,29 +25,67 @@ def createDict(dynamoItem):
   dynamoItem = json.loads(dynamoItem)
   dynamoItem = dynamoItem['Item']
   
+
+  v = {
+    "seqHash": "57c6ff91955da8a1b76a2fd3621c76ce",
+    "consensusFastaPath": "fasta/57c6ff91955da8a1b76a2fd3621c76ce.fasta",
+    "constellationVersion": "v0.1.10",
+    "genotypeCallDate": 1657310939,
+    "genotypeProfile": "BA.5",
+    "genotypeVariant": "V-22APR-04",
+    "genotypeVariantConf": "confirmed",
+    "isDesignated": "False",
+    "matchedGenotypeProfiles": {
+      "dipped-bubbling": "confirmed",
+      "plausible-scanner": "probable"
+    },
+    "mutationCallDate": 1657310929,
+    "numAlignedReads": 2520448,
+    "pangoAmbiguityScore": 0,
+    "pangoCallDate": 1657441509,
+    "pangoConflict": 0,
+    "pangoLineage": "BA.5.2.1",
+    "pangolinVersion": "4.1.1",
+    "pangoNote": "Usher placements: BA.5.2.1(1/1)",
+    "pangoQcNotes": "Ambiguous_content:0.02",
+    "pangoQcStatus": "pass",
+    "pangoSoftwareVersion": "PUSHER-v1.11",
+    "pctCoveredBases": 99.44,
+    "processingState": "aligned",
+    "scorpioCall": "Omicron (BA.5-like)",
+    "scorpioConflict": 0.02,
+    "scorpioNote": "scorpio call: Alt alleles 60; Ref alleles 1; Amb alleles 0; Oth alleles 0",
+    "scorpioSupport": 0.98,
+    "scorpioVersion": "0.3.17"
+  }
+
+
+
   newDict = {
         'seqHash': extractValue(dynamoItem, 'seqHash', 'S'),
         'pangoAmbiguityScore': extractValue(dynamoItem, 'pangoAmbiguityScore', 'N'),
-        'armadillinLineage': extractValue(dynamoItem, 'armadillinLineage', 'S'),
         'scorpioCall': extractValue(dynamoItem, 'scorpioCall', 'S'),
         'scorpioSupport': extractValue(dynamoItem, 'scorpioSupport', 'N'),
         'pangoNote' : extractValue(dynamoItem, 'pangoNote','S'),
-        'pangoUsherLineage': extractValue(dynamoItem, 'pangoUsherLineage', 'S'),
-        'pangoConflict' : extractValue(dynamoItem, 'pangoConflict', 'N'),
-        'pangoLearnVersion': extractValue(dynamoItem, 'pangoLearnVersion', 'S'),
-        'genotypeVariantConf' : extractValue(dynamoItem, 'genotypeVariantConf', 'S'),
-        'pangoVersion': extractValue(dynamoItem, 'pangoVersion', 'S'),
-        'scorpioConflict' : extractValue(dynamoItem, 'scorpioConflict', 'N'),
-        'version': extractValue(dynamoItem, 'version', 'S'),
         'pangoLineage': extractValue(dynamoItem, 'pangoLineage', 'S'),
+        'pangoConflict' : extractValue(dynamoItem, 'pangoConflict', 'N'),
+        'genotypeVariantConf' : extractValue(dynamoItem, 'genotypeVariantConf', 'S'),
+        'scorpioConflict' : extractValue(dynamoItem, 'scorpioConflict', 'N'),
         'consensusFastaPath': extractValue(dynamoItem, 'consensusFastaPath', 'S'),
         'genotypeVariant': extractValue(dynamoItem, 'genotypeVariant', 'S'),
         'pctCoveredBases' : extractValue(dynamoItem, 'pctCoveredBases', 'N'),
-        'pangolinVersion': extractValue(dynamoItem, 'pangolinVersion', 'S'),
         'numAlignedReads' : extractValue(dynamoItem, 'numAlignedReads', 'N'),
         'genotypeProfile' : extractValue(dynamoItem, 'genotypeProfile', 'S'),
         'genotypeCallDate': extractValue(dynamoItem, 'genotypeCallDate', 'N'),
-        'pangoCallDate': extractValue(dynamoItem, 'pangoCallDate', 'N')
+        'pangoCallDate': extractValue(dynamoItem, 'pangoCallDate', 'N'),
+        'scorpioNote': extractValue(dynamoItem, 'scorpioNote', 'S'),
+        'pangoQcNotes': extractValue(dynamoItem, 'pangoQcNotes', 'S'),
+        'pangoQcStatus': extractValue(dynamoItem, 'pangoQcStatus', 'S'),
+        'pangolinVersion': extractValue(dynamoItem, 'pangolinVersion', 'S'),
+        'constellationVersion': extractValue(dynamoItem, 'constellationVersion', 'S'),
+        'isDesignated': extractValue(dynamoItem, 'isDesignated', 'S'),
+        'pangoSoftwareVersion': extractValue(dynamoItem, 'pangoSoftwareVersion', 'S'),
+        'scorpioVersion': extractValue(dynamoItem, 'scorpioVersion', 'S')
   }
 
   matchedGenotypeProfiles = extractValue(dynamoItem, 'matchedGenotypeProfiles', 'M')
