@@ -148,20 +148,20 @@ namespace HeronPipeline
           .Start(shouldRunPangolin);
 
 
-      var shouldRunArmadillin = new Choice(this, "shouldRunArmadillin", new ChoiceProps{
-        Comment = "Check if we should run Armadillin"
-      });
-      var runArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), true);
-      var dontRunArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), false);
+      // var shouldRunArmadillin = new Choice(this, "shouldRunArmadillin", new ChoiceProps{
+      //   Comment = "Check if we should run Armadillin"
+      // });
+      // var runArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), true);
+      // var dontRunArmadillinCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runArmadillin"), false);
       
-      shouldRunArmadillin.When(runArmadillinCondition, armadillinModel.armadillinTask);
-      shouldRunArmadillin.When(dontRunArmadillinCondition, armadillinModel.skipArmadillinTask);
+      // shouldRunArmadillin.When(runArmadillinCondition, armadillinModel.armadillinTask);
+      // shouldRunArmadillin.When(dontRunArmadillinCondition, armadillinModel.skipArmadillinTask);
 
-      var armadillinChain = Chain
-          .Start(shouldRunArmadillin);
+      // var armadillinChain = Chain
+      //     .Start(shouldRunArmadillin);
 
       var shouldRunGenotypeModel = new Choice(this, "shouldRunGenotype", new ChoiceProps{
-        Comment = "Check if we shoudl run Genotype model"
+        Comment = "Check if we should run Genotype model"
       });
       var runGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), true);
       var dontRunGenotypeModelCondition = Condition.BooleanEquals(JsonPath.StringAt("$.runGenotyping"), false);
@@ -184,7 +184,7 @@ namespace HeronPipeline
       var mutationsModelChain = Chain
         .Start(shouldRunMutationsModel);
 
-      placeSequencesParallel.Branch(new Chain[] { armadillinChain, pangolinChain, genotypeVariantsChain, mutationsModelChain });
+      placeSequencesParallel.Branch(new Chain[] { pangolinChain, genotypeVariantsChain, mutationsModelChain });
 
       var processSamplesChain = Chain
         .Start(prepareSequences.prepareSequencesTask)
