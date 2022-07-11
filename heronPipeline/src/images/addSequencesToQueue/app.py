@@ -53,7 +53,7 @@ def main():
   if executionMode == "REPROCESS":
     queueName = reprocessingQueueName
   else:
-    scan_kwargs['FilterExpression'] = Attr("processingState").eq("consensus") | Attr("armadillinCallDate").not_exists() | Attr("pangoCallDate").not_exists() | Attr("genotypeCallDate").not_exists()
+    scan_kwargs['FilterExpression'] = Attr("processingState").eq("consensus") | Attr("pangoCallDate").not_exists() | Attr("genotypeCallDate").not_exists()
   
   # Create the queue object
   queue = sqs.Queue(queueName)
