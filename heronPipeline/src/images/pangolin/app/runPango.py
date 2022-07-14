@@ -48,13 +48,27 @@ seqFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.fasta"
 seqConsensusFile = f"{sampleDataRootSeqBatchesDir}/sequences_consensus{iterationUUID}.fasta"
 keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 
+print(f"Update Pangolin Data")
+command = ["pangolin", "--update-data"]
 print(f"Processing seqBatchFile: {seqConsensusFile}")
+try:
+  subprocess.run(command, check=True)
+except subprocess.CalledProcessError as e:
+  print(f"Update Data error: {e}")
+print(f"Completed pangolin data update")
+
+print("Print pango versions")
+command = ["pangolin", "--all-versions"]
+try:
+  subprocess.run(command, check=True)
+except subprocess.CalledProcessError as e:
+  print(f"Print versions error: {e}")
 
 if os.path.isfile(seqFile) == True:
   command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputUsher.csv"]
   print(f"Running Command: {command}")
   try:
-    subprocess.run(command, check=True)
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
   except subprocess.CalledProcessError as e:
     print(f"Accurate mode error: {e}")
   print(f"Completed running in accurate mode")
@@ -62,7 +76,7 @@ if os.path.isfile(seqFile) == True:
   command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputPlearn.csv"]
   print(f"Running Command: {command}")
   try:
-    subprocess.run(command, check=True)
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
   except subprocess.CalledProcessError as e:
     print(f"Fast mode error: {e}")
     
