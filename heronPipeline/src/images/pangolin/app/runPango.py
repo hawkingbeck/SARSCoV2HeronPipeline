@@ -72,28 +72,16 @@ if os.path.isfile(seqFile) == True:
   command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputAccurate.csv"]
   print(f"Running Command: {command}")
   try:
-    subprocess.run(command, check=True)
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
   except subprocess.CalledProcessError as e:
     print(f"Accurate mode error: {e}")
   print(f"Completed running in accurate mode")
 
-  # command = ["pangolin", "--analysis-mode", "fast", seqFile, "--outfile", "/tmp/outputFast.csv"]
-  # print(f"Running Command: {command}")
-  # try:
-  #   subprocess.run(command, check=True)
-  # except subprocess.CalledProcessError as e:
-  #   print(f"Fast mode error: {e}")
-
-  # pLearnLineageDf = pd.read_csv("/tmp/outputFast.csv")
-  # usherLineageDf = pd.read_csv("/tmp/outputAccurate.csv")  
-  # fastModeDf = pd.read_csv("/tmp/outputFast.csv")
   accurateModeDf = pd.read_csv("/tmp/outputAccurate.csv")
 
-  # fastModeDf['taxon'] = [f">{f}" for f in fastModeDf['taxon']]
   accurateModeDf['taxon'] = [f">{f}" for f in accurateModeDf['taxon']]
   keyFileDf = pd.read_json(keyFile, orient="records")
 
-  # fastModeJoinedDf = pd.merge(fastModeDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
   accurateModeJoinedDf = pd.merge(accurateModeDf, keyFileDf, left_on="taxon", right_on="seqId", how="inner")
 
   callDate = int(datetime.now().timestamp())
@@ -167,16 +155,5 @@ if os.path.isfile(seqFile) == True:
           )
     updateCount += 1
 
-
-    # response = sequencesTable.query(KeyConditionExpression=Key('seqHash').eq(seqHash))
-    # if 'Items' in response:
-    #   if len(response['Items']) == 1:
-    #     item = response['Items'][0]
-    #     ret = sequencesTable.update_item(
-    #         Key=seqKey,
-    #         UpdateExpression=updateExpression,
-    #         ExpressionAttributeValues=pangolinPayload
-    #       )
-    #     updateCount += 1
 
   print(f"Updated {updateCount} out of {len(accurateModeJoinedDf)}")
