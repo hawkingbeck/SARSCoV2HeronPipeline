@@ -51,6 +51,24 @@ keyFile = f"{sampleDataRootSeqBatchesDir}/sequences_{iterationUUID}.json"
 print(f"Processing seqBatchFile: {seqConsensusFile}")
 
 if os.path.isfile(seqFile) == True:
+
+  print(f"Update Pangolin Data")
+  command = ["pangolin", "--update-data"]
+  print(f"Processing seqBatchFile: {seqConsensusFile}")
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Update Data error: {e}")
+  print(f"Completed pangolin data update")
+
+  print("Print pango versions")
+  command = ["pangolin", "--all-versions"]
+  try:
+    subprocess.run(command, check=True)
+  except subprocess.CalledProcessError as e:
+    print(f"Print versions error: {e}")
+
+
   command = ["pangolin", "--analysis-mode", "accurate", seqFile, "--outfile", "/tmp/outputAccurate.csv"]
   print(f"Running Command: {command}")
   try:
