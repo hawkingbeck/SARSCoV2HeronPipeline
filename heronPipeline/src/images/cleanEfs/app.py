@@ -34,11 +34,14 @@ sampleDataRoot = os.getenv('SEQ_DATA_ROOT')
 
 # Remove all files under this path for each run of the state machine
 efsFolder = f"{sampleDataRoot}/{dateString}"
-shutil.rmtree(efsFolder, ignore_errors=False, onerror=None)
-# Get a list of directories that we wish to delete
-directoryList = os.listdir(sampleDataRoot)
+try:
+  shutil.rmtree(efsFolder, ignore_errors=True, onerror=None)
+  # Get a list of directories that we wish to delete
+  directoryList = os.listdir(sampleDataRoot)
 
-for directory in directoryList:
-  print(f"Directory: {directory}")
+  for directory in directoryList:
+    print(f"Directory: {directory}")
+except:
+  pass
 
 
